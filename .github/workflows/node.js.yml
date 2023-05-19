@@ -19,7 +19,7 @@ jobs:
         node-version: [18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     env:
-      WORK_DIR: 'ClientApp'
+      WORK_DIR: 'WebCrawler/ClientApp'
 
     steps:
     - uses: actions/checkout@v3
@@ -28,10 +28,10 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        working-directory: $WORK_DIR
+        working-directory: 'WebCrawler/ClientApp'
     - run: npm ci
-      working-directory: $WORK_DIR
+      working-directory: 'WebCrawler/ClientApp'
     - run: npm run build --if-present
-      working-directory: $WORK_DIR
+      working-directory: 'WebCrawler/ClientApp'
     - run: npm test
-      working-directory: $WORK_DIR
+      working-directory: 'WebCrawler/ClientApp'
