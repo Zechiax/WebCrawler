@@ -27,7 +27,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
     - run: npm ci
       working-directory: "$WORK_DIR"
     - run: npm run build --if-present
