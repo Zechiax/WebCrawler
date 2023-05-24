@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebCrawler.Models;
 
+[Table("Execution")]
 public class Execution
 {
-    public WebsiteRecord EntryWebsite { get; set; } = new();
+    [Key]
+    public int Id { get; set; }
     
     public ICollection<Website> Websites { get; set; } = new List<Website>();
     

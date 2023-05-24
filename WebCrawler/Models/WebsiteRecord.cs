@@ -19,7 +19,5 @@ public class WebsiteRecord
     
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     
-    [ForeignKey("LastExecution")]
-    public int? LastExecutionId { get; set; }
     public Execution? LastExecution { get; set; }
 }
