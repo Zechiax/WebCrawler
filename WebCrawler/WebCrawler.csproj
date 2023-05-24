@@ -12,6 +12,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
