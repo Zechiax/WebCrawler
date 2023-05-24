@@ -5,5 +5,5 @@ namespace WebCrawler.Interfaces;
 public interface IExecutor
 {
     void StartCrawl();
-    WebsiteModel GetAllCrawledWebsites();
+    Website GetAllCrawledWebsites();
 }

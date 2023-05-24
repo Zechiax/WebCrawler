@@ -3,12 +3,7 @@
 /// <summary>
 /// Database object.
 /// </summary>
-public abstract class ExecutorModel
+public class Executor
 {
-    public WebsiteRecordModel EntryWebsite { get; init; }
-
-    public ExecutorModel(WebsiteRecordModel entryWebsite)
-    {
-        EntryWebsite = entryWebsite;
-    }
+    public WebsiteRecord EntryWebsite { get; init; }
 }
