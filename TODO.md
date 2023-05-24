@@ -23,7 +23,7 @@
 
 ## Endpoints
 
-1. `/record{id}` - GET
+1. `/record/{id}` - GET
 
 1. `/records` - GET
 
@@ -43,3 +43,5 @@
 - REACT bootstrap
 
 # DEADLINE
+
+- 31.05.2023
