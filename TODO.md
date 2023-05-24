@@ -2,14 +2,23 @@
 
 1. Controllery layer
 
+   - pepa
+
 1. Executor implementace
 
    - plus managment - paralelne
+   - tomas
 
 1. Model layer
+
+   - SQL lite - MILAN
+
 1. Knihovna na visualizaci Exekutoru / grafu
+
 1. GraphQL
+
 1. Seznam exekutoru - CRUD
+
 1. Docker
 
 ## Endpoints
@@ -32,3 +41,5 @@
 
 - SQLlite - entity framework
 - REACT bootstrap
+
+# DEADLINE
