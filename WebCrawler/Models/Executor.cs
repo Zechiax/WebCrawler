@@ -1,5 +1,6 @@
 ﻿using WebCrawler.Interfaces;
-namespace WebCrawler.Model;
+
+namespace WebCrawler.Models;
 
 public class Executor : ExecutorModel, IExecutor
 {

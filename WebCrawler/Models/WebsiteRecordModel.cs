@@ -1,4 +1,4 @@
-﻿namespace WebCrawler.Model;
+﻿namespace WebCrawler.Models;
 
 public record class WebsiteRecordModel
 {

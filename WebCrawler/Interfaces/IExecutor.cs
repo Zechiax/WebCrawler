@@ -1,4 +1,4 @@
-﻿using WebCrawler.Model;
+﻿using WebCrawler.Models;
 
 namespace WebCrawler.Interfaces;
 
