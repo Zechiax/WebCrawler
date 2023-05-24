@@ -42,6 +42,6 @@
 - SQLlite - entity framework
 - REACT bootstrap
 
-# DEADLINE
+# Another meeting
 
 - 31.05.2023
