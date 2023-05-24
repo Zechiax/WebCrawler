@@ -2,7 +2,7 @@
 
 namespace WebCrawler.Models;
 
-public class ExecutorImplementationNameShouldBeChangedImNotSureWhatTheNameShouldBeRightNow : Executor, IExecutor
+public class Executor : Execution, IExecutor
 {
     // root of the tree
     private Website entryWebsite;
