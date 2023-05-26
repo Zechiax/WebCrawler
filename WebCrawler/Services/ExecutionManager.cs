@@ -2,7 +2,7 @@
 
 public class ExecutionManager
 {
-    public void Run(List<Executor> executors)
+    public void Run(List<Execution> executors)
     {
 
     }
