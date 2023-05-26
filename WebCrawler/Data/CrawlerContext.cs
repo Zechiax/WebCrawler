@@ -6,7 +6,6 @@ namespace WebCrawler.Data;
 public class CrawlerContext : DbContext
 {
     public DbSet<WebsiteRecord> WebsiteRecords { get; set; } = null!;
-    public DbSet<Website> Websites { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
     public DbSet<Execution> Executions { get; set; } = null!;
     
