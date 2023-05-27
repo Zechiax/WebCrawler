@@ -77,7 +77,7 @@ public class ExecutionManagerTests
 
         for(int i = 0; i < executorsCount; ++i)
         {
-            string actual = executors[i].WebsiteExecution.WebsiteGraph.GetNeighboursListGraphRepresentation().GetStringRepresentation();
+            string actual = executors[i].WebsiteExecution.WebsiteGraph.GetAdjacencyListGraphRepresentation().GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{i}/{executorsCount}");
         }
     }

@@ -2,25 +2,33 @@
 
 namespace WebCrawler.Models;
 
-public readonly struct NeighboursList
+/// <summary>
+/// https://en.wikipedia.org/wiki/Adjacency_list
+/// </summary>
+public readonly struct AdjacencyList
 {
-    private readonly Dictionary<Website, List<Website>> neighboursListData;
+    private readonly Dictionary<Website, List<Website>> adjacencyListData;
 
-    public NeighboursList(Dictionary<Website, List<Website>> neighboursListData)
+    public AdjacencyList(Dictionary<Website, List<Website>> adjacencyListData)
     {
-        this.neighboursListData = neighboursListData;
+        this.adjacencyListData = adjacencyListData;
     }
 
+    /// <summary>
+    /// String representation of the underlying adjacency list.
+    /// Websites sorted by Url.
+    /// </summary>
+    /// <returns></returns>
     public string GetStringRepresentation()
     {
         StringBuilder strRepresentation = new("");
 
-        List<Website> vertices = neighboursListData.Keys.ToList();
+        List<Website> vertices = adjacencyListData.Keys.ToList();
         vertices.Sort((w1, w2) => w1.Url.CompareTo(w2.Url));
         foreach(Website website in vertices)
         {
             strRepresentation.Append($"({website.ToString()}) -> ");
-            List<Website> neighbours = neighboursListData[website];
+            List<Website> neighbours = adjacencyListData[website];
 
             if(neighbours.Count != 0)
             {

@@ -70,7 +70,7 @@ namespace WebCrawler.Test.ExecutorTests
 
 
             WebsiteGraph resultingGraph = executor.WebsiteExecution.WebsiteGraph;
-            NeighboursList neighboursList = resultingGraph.GetNeighboursListGraphRepresentation();
+            AdjacencyList neighboursList = resultingGraph.GetAdjacencyListGraphRepresentation();
 
             Assert.That(neighboursList.GetStringRepresentation(), Is.EqualTo(expected));
         }
@@ -135,7 +135,7 @@ namespace WebCrawler.Test.ExecutorTests
 
 
             WebsiteGraph resultingGraph = executor.WebsiteExecution.WebsiteGraph;
-            NeighboursList neighboursList = resultingGraph.GetNeighboursListGraphRepresentation();
+            AdjacencyList neighboursList = resultingGraph.GetAdjacencyListGraphRepresentation();
 
             Assert.That(neighboursList.GetStringRepresentation(), Is.EqualTo(expected));
         }

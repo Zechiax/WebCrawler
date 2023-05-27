@@ -1,7 +1,13 @@
 ﻿namespace WebCrawler.Models;
 
+/// <summary>
+/// Represents the crawled website graph.
+/// </summary>
 public class WebsiteGraph
 {
+    /// <summary>
+    /// Website where the crawling starts.
+    /// </summary>
     public Website EntryWebsite { get; init; }
 
     public WebsiteGraph(Website entryWebsite)
@@ -9,26 +15,30 @@ public class WebsiteGraph
         EntryWebsite = entryWebsite;
     }
 
-    public NeighboursList GetNeighboursListGraphRepresentation()
+    /// <summary>
+    /// Returns adjacency list of this graph.
+    /// </summary>
+    /// <returns></returns>
+    public AdjacencyList GetAdjacencyListGraphRepresentation()
     {
-        Dictionary<Website, List<Website>> neighboursListData = new();
-        NeighboursListTraversal(EntryWebsite, neighboursListData);
-        return new NeighboursList(neighboursListData);
+        Dictionary<Website, List<Website>> adjacencyListData = new();
+        AdjacencyListTraversal(EntryWebsite, adjacencyListData);
+        return new AdjacencyList(adjacencyListData);
     }
 
-    private void NeighboursListTraversal(Website website, Dictionary<Website, List<Website>> neighboursListData)
+    private void AdjacencyListTraversal(Website website, Dictionary<Website, List<Website>> adjacencyListData)
     {
-        if (neighboursListData.ContainsKey(website))
+        if (adjacencyListData.ContainsKey(website))
         {
             return;
         }
 
-        neighboursListData[website] = new List<Website>();
+        adjacencyListData[website] = new List<Website>();
 
         foreach(Website outgoingWebsite in website.OutgoingWebsites)
         {
-            neighboursListData[website].Add(outgoingWebsite);
-            NeighboursListTraversal(outgoingWebsite, neighboursListData);
+            adjacencyListData[website].Add(outgoingWebsite);
+            AdjacencyListTraversal(outgoingWebsite, adjacencyListData);
         }
     }
 }

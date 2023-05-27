@@ -12,12 +12,19 @@ public readonly struct ExecutionManagerConfiguration
     public ExecutionManagerConfiguration() { }
 }
 
+/// <summary>
+/// Manages executors as producent consumer problem (https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem).
+/// Producent is <see cref="AddToQueue(IExecutor)"/> API.
+/// Consumers are threads that will do the crawling.
+/// </summary>
 public class ExecutionManager
 {
     public ExecutionManagerConfiguration Config { get; }
 
     private Queue<IExecutor?> executorsToRun = new();
     private List<Task> crawlConsumers = new();
+
+    private bool redpilled;
 
     public ExecutionManager(ExecutionManagerConfiguration? config = null)
     {
@@ -32,8 +39,17 @@ public class ExecutionManager
         }
     }
 
+    /// <summary>
+    /// Adds <paramref name="executor"/> to queue for being crawled as soon as possible.
+    /// </summary>
+    /// <param name="executor"></param>
     public void AddToQueue(IExecutor executor)
     {
+        if (redpilled)
+        {
+            throw new InvalidOperationException("All consumers are redpilled, can't use this instance anymore.");
+        }
+
         lock (executorsToRun)
         {
 #if DEBUG_PRINT
@@ -44,6 +60,10 @@ public class ExecutionManager
         }
     }
 
+    /// <summary>
+    /// Redpills all consumers and waits until they all finish.
+    /// Beware that after calling this method, this instance becomes unusable.
+    /// </summary>
     public void WaitForAllConsumersToFinish()
     {
         RedpillAllCrawlConsumers();
@@ -52,6 +72,8 @@ public class ExecutionManager
 
     private void RedpillAllCrawlConsumers()
     {
+        redpilled = true;
+
         lock (executorsToRun)
         {
             for(int i = 0; i < Config.CrawlConsumersCount; i++)

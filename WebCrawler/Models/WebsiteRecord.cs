@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebCrawler.Models;
 
+/// <summary>
+/// User provided data to describe crawling.
+/// </summary>
 [Table("WebsiteRecord")]
 public class WebsiteRecord
 {

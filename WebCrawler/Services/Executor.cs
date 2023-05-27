@@ -1,11 +1,13 @@
 ﻿using HtmlAgilityPack;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
 
+/// <summary>
+/// Crawls all websites.
+/// </summary>
 public class Executor : IExecutor, IDisposable
 {
     public string EntryUrl { get; init; }

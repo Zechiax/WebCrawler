@@ -2,6 +2,9 @@
 
 namespace WebCrawler.Models;
 
+/// <summary>
+/// Represents one execution of the executor.
+/// </summary>
 public class WebsiteExecution
 {
     [Key]
