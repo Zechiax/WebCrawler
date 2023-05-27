@@ -1,8 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace WebCrawler.Models;
-
+﻿namespace WebCrawler.Models;
 
 public class Website
 {
@@ -10,4 +6,9 @@ public class Website
     public TimeSpan CrawlTime { get; set; } = TimeSpan.Zero;
     public string Title { get; set; } = string.Empty;
     public List<Website> OutgoingWebsites { get; set; } = new();
+
+    public override string ToString()
+    {
+        return $"{Title}:{Url}"; 
+    }
 }

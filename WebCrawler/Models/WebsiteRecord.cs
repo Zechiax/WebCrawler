@@ -14,8 +14,8 @@ public class WebsiteRecord
     public TimeSpan Periodicity { get; set; } = TimeSpan.Zero;
     public string Label { get; set; } = string.Empty;
     public bool IsActive { get; set; } = false;
-    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
-    
+    public List<Tag> Tags { get; set; } = new();
+
     public DateTime Created { get; set; } = DateTime.MinValue;
-    public ExecutorData? LastExecution { get; set; }
+    public WebsiteExecution? LastExecution { get; set; }
 }
