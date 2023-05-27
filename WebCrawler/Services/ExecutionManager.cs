@@ -1,4 +1,5 @@
-﻿using WebCrawler.Interfaces;
+﻿using System.Diagnostics;
+using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
 
@@ -9,69 +10,50 @@ public readonly struct ExecutionManagerConfiguration
     public ExecutionManagerConfiguration() { }
 }
 
-public static class ExecutionManager
+public class ExecutionManager : IDisposable
 {
-    public static ExecutionManagerConfiguration Config { get; set; } = new()
-    {
-        CrawlConsumersCount = 50
-    };
+    public ExecutionManagerConfiguration Config { get; }
 
-    private static Queue<IExecutor?> executorsToRun = new();
-    private static List<Task> consumers = new();
+    private Queue<IExecutor?> executorsToRun = new();
+    private List<Task> crawlConsumers = new();
 
-    static ExecutionManager()
+    public ExecutionManager(ExecutionManagerConfiguration? config = null)
     {
-        StartAllConsumers();
+        Config = config ?? new ExecutionManagerConfiguration()
+        {
+            CrawlConsumersCount = 50
+        };
+
+        for (int i = 0; i < Config.CrawlConsumersCount; i++)
+        {
+            crawlConsumers.Add(Task.Run(CrawlConsumer));
+        }
     }
 
-    public static void AddToQueue(IEnumerable<IExecutor> executors)
+    public void AddToQueue(IExecutor executor)
     {
         lock (executorsToRun)
         {
-            foreach(IExecutor executor in executors)
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: enquing executor");
+            executorsToRun.Enqueue(executor);
+            Monitor.Pulse(executorsToRun);
+        }
+    }
+
+    public void Dispose()
+    {
+        lock (executorsToRun)
+        {
+            for(int i = 0; i < Config.CrawlConsumersCount; i++)
             {
-                AddAndPulse(executor);
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: enquing death");
+                executorsToRun.Enqueue(null);
+                Monitor.Pulse(executorsToRun);
             }
         }
     }
 
-    public static void AddToQueue(IExecutor executor)
-    {
-        lock (executorsToRun)
-        {
-            AddAndPulse(executor);
-        }
-    }
-
-    public static void StartAllConsumers()
-    {
-        // already started
-        if(consumers.Count > 0)
-        {
-            return;
-        }
-
-        for (int i = 0; i < Config.CrawlConsumersCount; i++)
-        {
-            consumers.Add(Task.Run(CrawlConsumer));
-        }
-    }
-
-    public static void RedpillAllConsumers()
-    {
-        for(int i = 0; i < Config.CrawlConsumersCount; i++)
-        {
-            executorsToRun.Enqueue(null);
-        }
-    }
-
-    private static void AddAndPulse(IExecutor executor)
-    {
-        executorsToRun.Enqueue(executor);
-        Monitor.Pulse(executorsToRun);
-    }
-
-    private static void CrawlConsumer()
+    private void CrawlConsumer()
     {
         while (true)
         {
@@ -79,18 +61,23 @@ public static class ExecutionManager
             {
                 while (executorsToRun.Count == 0)
                 {
+                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: waiting");
                     Monitor.Wait(executorsToRun);
                 }
 
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: dequing");
                 IExecutor? executor = executorsToRun.Dequeue();
 
                 // redpill
                 if(executor is null)
                 {
+                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: died");
                     return;
                 }
 
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: crawling");
                 executor.StartCrawlAsync().Wait();
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: finished crawling");
             }
         }
     }
