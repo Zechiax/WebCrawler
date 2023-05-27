@@ -9,7 +9,10 @@ public class ExecutionManagerTests
     public void MockRun()
     {
         MockWebsiteProvider mockWebsiteProvider = new();
-        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)\r\n(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)\r\n(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)\r\n(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)\r\n";
+        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
+            "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
+            "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
+            "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
 
         #region htmls
         mockWebsiteProvider.brouciHtml =
