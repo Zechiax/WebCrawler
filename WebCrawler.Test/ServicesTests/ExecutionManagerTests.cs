@@ -71,6 +71,8 @@ public class ExecutionManagerTests
             }
         }
 
+        Thread.Sleep(TimeSpan.FromSeconds(2));
+
         for(int i = 0; i < executorsCount; ++i)
         {
             string actual = executors[i].WebsiteExecution.WebsiteGraph.GetNeighboursListGraphRepresentation().GetStringRepresentation();
