@@ -39,13 +39,13 @@ public class ExecutionModelTests
         
         for (var i = 1; i < Urls.Length; i++)
         {
-            website.OutgoingLinks.Add(new Website
+            website.OutgoingWebsites.Add(new Website
             {
                 Url = Urls[i],
                 Title = Titles[i],
             });
             
-            website = website.OutgoingLinks.First();
+            website = website.OutgoingWebsites.First();
         }
         
         WebTree = website;
@@ -54,7 +54,7 @@ public class ExecutionModelTests
     [Test]
     public void Execution_WithoutWebTree_ReturnsNull()
     {
-        var execution = new Execution();
+        var execution = new ExecutorData();
 
         var tree = execution.GetWebTree();
         
@@ -64,7 +64,7 @@ public class ExecutionModelTests
     [Test]
     public void Execution_Serialize_DeserializeWebTree()
     {
-        var execution = new Execution();
+        var execution = new ExecutorData();
         
         execution.SetWebTree(WebTree);
 
@@ -79,11 +79,11 @@ public class ExecutionModelTests
                 Assert.That(WebTree, Is.Not.Null);
                 Assert.That(tree.Url, Is.EqualTo(WebTree.Url));
                 Assert.That(tree.Title, Is.EqualTo(WebTree.Title));
-                Assert.That(tree.OutgoingLinks, Is.EquivalentTo(WebTree.OutgoingLinks));
+                Assert.That(tree.OutgoingWebsites, Is.EquivalentTo(WebTree.OutgoingWebsites));
             });
             
-            tree = tree.OutgoingLinks.FirstOrDefault();
-            currentCheckTree = currentCheckTree!.OutgoingLinks.FirstOrDefault();
+            tree = tree.OutgoingWebsites.FirstOrDefault();
+            currentCheckTree = currentCheckTree!.OutgoingWebsites.FirstOrDefault();
         }
     }
 
