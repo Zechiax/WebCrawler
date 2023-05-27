@@ -16,11 +16,11 @@ public interface IDataService
     
     public ICollection<Tag> GetTags();
     
-    public Execution GetExecution(int id);
+    public ExecutorData GetExecution(int id);
     
-    public void AddExecution(Execution execution);
+    public void AddExecution(ExecutorData execution);
     
-    public void UpdateExecution(Execution execution);
+    public void UpdateExecution(ExecutorData execution);
     
     public void DeleteExecution(int id);
 }
