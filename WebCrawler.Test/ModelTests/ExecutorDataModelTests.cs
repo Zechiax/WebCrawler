@@ -3,7 +3,7 @@
 namespace WebCrawler.Test.ModelTests;
 
 [TestFixture]
-public class ExecutionModelTests
+public class ExecutorDataModelTests
 {
     private Website WebTree { get; set; } = null!;
     
