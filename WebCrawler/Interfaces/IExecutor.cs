@@ -1,9 +1,13 @@
-﻿using WebCrawler.Models;
+﻿using System.Text.RegularExpressions;
+using WebCrawler.Models;
 
 namespace WebCrawler.Interfaces;
 
 public interface IExecutor
 {
-    void StartCrawl();
-    Website GetAllCrawledWebsites();
+    string EntryUrl { get; }
+    Regex Regex { get; }
+    TimeSpan Periodicity { get; }
+
+    Task StartCrawlAsync();
 }
