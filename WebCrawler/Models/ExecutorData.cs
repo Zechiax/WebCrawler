@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace WebCrawler.Models;
 
 [Table("Execution")]
-public class Execution
+public class ExecutorData
 {
     [Key]
     public int Id { get; set; }
