@@ -8,6 +8,8 @@
 
    - plus managment - paralelne
    - tomas
+   TODO:
+		* podpora pro peridicke spousteni jedne instance exekutoru
 
 1. Model layer
 

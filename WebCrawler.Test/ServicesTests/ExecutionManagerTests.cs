@@ -81,4 +81,37 @@ public class ExecutionManagerTests
             Assert.That(actual, Is.EqualTo(expected), $"{i}/{executorsCount}");
         }
     }
+
+    [Test]
+    public void CheckThatManagerIsUnusableAfterWait()
+    {
+        const int executorsCount = 10;
+
+        List<Executor> executors = new();
+        ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
+
+        for(int i = 0; i < executorsCount; ++i)
+        {
+            executors.Add(new Executor("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, new MockWebsiteProvider()));
+        }
+
+        for(int i = 0; i < executorsCount; ++i )
+        {
+            manager.AddToQueue(executors[i]);
+        }
+
+        manager.WaitForAllConsumersToFinish();
+
+        try
+        {
+            manager.AddToQueue(executors[0]);
+        }
+        catch(Exception ex)
+        {
+            Assert.That(ex.GetType(), Is.EqualTo(typeof(InvalidOperationException)));
+            return;
+        }
+
+        Assert.Fail("No exception thrown");
+    }
 }
