@@ -61,20 +61,19 @@ public class ExecutionManagerTests
         const int executorsCount = 10;
 
         List<Executor> executors = new();
-        using (ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 }))
-        {
-            for(int i = 0; i < executorsCount; ++i)
-            {
-                executors.Add(new Executor("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, mockWebsiteProvider));
-            }
+        ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
 
-            for(int i = 0; i < executorsCount; ++i )
-            {
-                manager.AddToQueue(executors[i]);
-            }
+        for(int i = 0; i < executorsCount; ++i)
+        {
+            executors.Add(new Executor("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, mockWebsiteProvider));
         }
 
-        Thread.Sleep(TimeSpan.FromSeconds(2));
+        for(int i = 0; i < executorsCount; ++i )
+        {
+            manager.AddToQueue(executors[i]);
+        }
+
+        manager.WaitForAllConsumersToFinish();
 
         for(int i = 0; i < executorsCount; ++i)
         {
