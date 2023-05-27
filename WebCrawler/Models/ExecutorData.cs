@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace WebCrawler.Models;
 
 [Table("Execution")]
-public class Execution
+public class ExecutorData
 {
     [Key]
     public int Id { get; set; }
