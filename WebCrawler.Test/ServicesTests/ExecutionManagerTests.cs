@@ -102,16 +102,7 @@ public class ExecutionManagerTests
 
         manager.WaitForAllConsumersToFinish();
 
-        try
-        {
-            manager.AddToQueue(executors[0]);
-        }
-        catch(Exception ex)
-        {
-            Assert.That(ex.GetType(), Is.EqualTo(typeof(InvalidOperationException)));
-            return;
-        }
 
-        Assert.Fail("No exception thrown");
+        Assert.Throws<InvalidOperationException>(() => manager.AddToQueue(executors[0]));
     }
 }
