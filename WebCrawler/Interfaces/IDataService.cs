@@ -4,15 +4,15 @@ namespace WebCrawler.Interfaces;
 
 public interface IDataService
 {
-    public ICollection<WebsiteRecord> GetWebsiteRecords();
+    public Task<IEnumerable<WebsiteRecord>> GetWebsiteRecords();
     
-    public WebsiteRecord GetWebsiteRecord(int id);
+    public Task<WebsiteRecord> GetWebsiteRecord(int id);
     
-    public void AddWebsiteRecord(WebsiteRecord websiteRecord);
+    public Task AddWebsiteRecord(WebsiteRecord websiteRecord);
     
-    public void UpdateWebsiteRecord(WebsiteRecord websiteRecord);
+    public Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord);
     
-    public void DeleteWebsiteRecord(int id);
+    public Task DeleteWebsiteRecord(int id);
     
     public ICollection<Tag> GetTags();
     

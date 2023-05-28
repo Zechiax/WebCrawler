@@ -35,7 +35,13 @@
 
    - update existing
 
-1. `/record/{id}/run` - POST
+1. `/record/{id}/run` - POST  <<<--- TODO, not sure how to implement
+
+   - run existing
+
+1. `/record/{id}` - DELETE
+	 
+	- delete existing
 
 # POZNAMKY
 
