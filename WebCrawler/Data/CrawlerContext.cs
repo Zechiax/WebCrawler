@@ -7,7 +7,7 @@ public class CrawlerContext : DbContext
 {
     public DbSet<WebsiteRecord> WebsiteRecords { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
-    public DbSet<ExecutorData> Executions { get; set; } = null!;
+    public DbSet<WebsiteExecution> Executions { get; set; } = null!;
     
     public CrawlerContext(DbContextOptions<CrawlerContext> options) : base(options)
     {
