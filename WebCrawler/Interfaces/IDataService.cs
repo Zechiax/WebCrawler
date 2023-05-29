@@ -13,14 +13,4 @@ public interface IDataService
     public Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord);
     
     public Task DeleteWebsiteRecord(int id);
-    
-    public ICollection<Tag> GetTags();
-    
-    public WebsiteExecution GetExecution(int id);
-    
-    public void AddExecution(WebsiteExecution execution);
-    
-    public void UpdateExecution(WebsiteExecution execution);
-    
-    public void DeleteExecution(int id);
 }
