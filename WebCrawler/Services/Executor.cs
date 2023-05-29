@@ -15,6 +15,7 @@ public class Executor : IExecutor, IDisposable
     public TimeSpan Periodicity { get; init; }
     public WebsiteExecution WebsiteExecution { get; }
 
+    private WebsiteGraph _websiteGraph;
 
     private readonly IWebsiteProvider websiteProvider;
 
@@ -28,7 +29,10 @@ public class Executor : IExecutor, IDisposable
         Regex = new Regex(regex); 
         Periodicity = periodicity;
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
-        WebsiteExecution = new WebsiteExecution(new WebsiteGraph(new Website(entryUrl)));
+        
+        _websiteGraph = new WebsiteGraph(new Website(entryUrl));
+        
+        WebsiteExecution = new WebsiteExecution(_websiteGraph);
     }
 
     ~Executor()
@@ -42,7 +46,8 @@ public class Executor : IExecutor, IDisposable
     public async Task StartCrawlAsync()
     {
         WebsiteExecution.Started = DateTime.Now;
-        await CrawlAsync(WebsiteExecution.GetAdjacencyList().EntryWebsite).ContinueWith(_ => WebsiteExecution.Finished = DateTime.Now);
+        await CrawlAsync(_websiteGraph.EntryWebsite).ContinueWith(_ => WebsiteExecution.Finished = DateTime.Now);
+        WebsiteExecution.SetWebsiteGraph(_websiteGraph);
     }
 
     private async Task CrawlAsync(Website website)
@@ -71,9 +76,9 @@ public class Executor : IExecutor, IDisposable
                     continue;
                 }
 
-                if (VisitedUrlToWebsite.ContainsKey(link))
+                if (VisitedUrlToWebsite.TryGetValue(link, out Website? value))
                 {
-                    website.OutgoingWebsites.Add(VisitedUrlToWebsite[link]);
+                    website.OutgoingWebsites.Add(value);
                 }
                 else
                 {
