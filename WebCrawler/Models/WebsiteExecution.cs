@@ -13,6 +13,10 @@ public class WebsiteExecution
     public DateTime? Started { get; set; } = null;
     public DateTime? Finished { get; set; } = null;
 
+    public WebsiteExecution()
+    {
+    }
+    
     public WebsiteExecution(WebsiteGraph websiteGraph)
     {
         SetWebsiteGraph(websiteGraph);
