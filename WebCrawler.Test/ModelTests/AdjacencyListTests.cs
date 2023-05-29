@@ -35,14 +35,14 @@ namespace WebCrawler.Test.ModelTests
                 { web7, new List<Website> { } },
             }, web1);
 
-            json = "{\"Item1\":{\"Url\":\"www.web1.com\",\"CrawlTime\":\"00:00:00\",\"Title\":\"\",\"OutgoingWebsites\":[]},\"Item2\":[{\"Url\":\"www.web1.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web2.com\",\"www.web3.com\"]},{\"Url\":\"www.web2.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web3.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web5.com\",\"www.web6.com\"]},{\"Url\":\"www.web4.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web5.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web3.com\"]},{\"Url\":\"www.web6.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web2.com\",\"www.web3.com\",\"www.web4.com\",\"www.web5.com\"]},{\"Url\":\"www.web7.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[]}]}";
+            json = "{\"Item1\":\"www.web1.com\",\"Item2\":[{\"Url\":\"www.web1.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web2.com\",\"www.web3.com\"]},{\"Url\":\"www.web2.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web3.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web5.com\",\"www.web6.com\"]},{\"Url\":\"www.web4.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web5.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web3.com\"]},{\"Url\":\"www.web6.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web2.com\",\"www.web3.com\",\"www.web4.com\",\"www.web5.com\"]},{\"Url\":\"www.web7.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[]}]}";
         }
 
         [Test]
         public void SerializationTest()
         {
             string actual = AdjacencyList.JsonConverter.Serialize(adjacencyList);
-
+            
             Assert.That(actual, Is.EqualTo(json));
         }
 

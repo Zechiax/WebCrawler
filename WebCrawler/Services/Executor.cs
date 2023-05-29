@@ -46,8 +46,12 @@ public class Executor : IExecutor, IDisposable
     public async Task StartCrawlAsync()
     {
         WebsiteExecution.Started = DateTime.Now;
-        await CrawlAsync(_websiteGraph.EntryWebsite).ContinueWith(_ => WebsiteExecution.Finished = DateTime.Now);
-        WebsiteExecution.SetWebsiteGraph(_websiteGraph);
+        await CrawlAsync(_websiteGraph.EntryWebsite).ContinueWith(_ =>
+        {
+            WebsiteExecution.Finished = DateTime.Now;
+            WebsiteExecution.SetWebsiteGraph(_websiteGraph);
+        });
+        
     }
 
     private async Task CrawlAsync(Website website)

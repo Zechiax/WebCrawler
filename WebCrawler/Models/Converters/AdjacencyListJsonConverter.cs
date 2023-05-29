@@ -27,14 +27,14 @@ public readonly partial struct AdjacencyList
             );
             
             // We add the entry website to the graph, so that we can easily deserialize it later.
-            Tuple<Website, IEnumerable<Model>> adjacencyList = new(graph.EntryWebsite, websiteVertices);
+            Tuple<string, IEnumerable<Model>> adjacencyList = new(graph.EntryWebsite.Url, websiteVertices);
 
             return JsonConvert.SerializeObject(adjacencyList);
         }
 
         public static AdjacencyList Deserialize(string json)
         {
-            Tuple<Website, IEnumerable<Model>>? models = JsonConvert.DeserializeObject<Tuple<Website, IEnumerable<Model>>>(json);
+            Tuple<string, IEnumerable<Model>>? models = JsonConvert.DeserializeObject<Tuple<string, IEnumerable<Model>>>(json);
 
             if(models is null)
             {
@@ -56,7 +56,7 @@ public readonly partial struct AdjacencyList
                     }
                 }
                 
-                var entryWebsite = urlToWebsiteLookup[models.Item1.Url];
+                var entryWebsite = urlToWebsiteLookup[models.Item1];
 
                 return new AdjacencyList(data, entryWebsite);
             }
