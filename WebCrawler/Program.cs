@@ -1,6 +1,8 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using WebCrawler.Data;
+using WebCrawler.Interfaces;
+using WebCrawler.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,7 @@ builder.Services.AddDbContext<CrawlerContext>(options =>
 {
     options.UseSqlite("Data Source=WebCrawler.db");
 });
+builder.Services.AddScoped<IDataService, DataService>();
 
 var app = builder.Build();
 
