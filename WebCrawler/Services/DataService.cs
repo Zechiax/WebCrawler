@@ -26,7 +26,7 @@ public class DataService : IDataService
 
     public async Task<WebsiteRecord> GetWebsiteRecord(int id)
     {
-        var record = await _context.WebsiteRecords
+        WebsiteRecord? record = await _context.WebsiteRecords
             .AsNoTracking()
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
@@ -49,7 +49,7 @@ public class DataService : IDataService
 
     public async Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord)
     {
-        var record = await _context.WebsiteRecords
+        WebsiteRecord? record = await _context.WebsiteRecords
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
@@ -67,7 +67,7 @@ public class DataService : IDataService
 
     public async Task DeleteWebsiteRecord(int id)
     { 
-        var record = await _context.WebsiteRecords
+        WebsiteRecord? record = await _context.WebsiteRecords
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
