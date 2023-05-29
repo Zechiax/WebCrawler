@@ -28,7 +28,7 @@ public class Executor : IExecutor, IDisposable
         Regex = new Regex(regex); 
         Periodicity = periodicity;
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
-        WebsiteExecution = new WebsiteExecution(new WebsiteGraph(new Website { Url = entryUrl }));
+        WebsiteExecution = new WebsiteExecution(new WebsiteGraph(new Website(entryUrl)));
     }
 
     ~Executor()
@@ -77,10 +77,7 @@ public class Executor : IExecutor, IDisposable
                 }
                 else
                 {
-                    website.OutgoingWebsites.Add(new Website
-                    {
-                        Url = link
-                    });
+                    website.OutgoingWebsites.Add(new Website(link));
                 }
             }
         }
