@@ -33,20 +33,15 @@ namespace WebCrawler.Test.ModelTests
                 { web5, new List<Website> { web1, web3 } },
                 { web6, new List<Website> { web1, web2, web3, web4, web5 } },
                 { web7, new List<Website> { } },
-            });
+            }, web1);
 
-            json = "[{\"Url\":\"www.web1.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web2.com\",\"www.web3.com\"]},{\"Url\":\"www.web2.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web3.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web5.com\",\"www.web6.com\"]},{\"Url\":\"www.web4.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web5.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web3.com\"]},{\"Url\":\"www.web6.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web2.com\",\"www.web3.com\",\"www.web4.com\",\"www.web5.com\"]},{\"Url\":\"www.web7.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[]}]";
+            json = "{\"Item1\":{\"Url\":\"www.web1.com\",\"CrawlTime\":\"00:00:00\",\"Title\":\"\",\"OutgoingWebsites\":[]},\"Item2\":[{\"Url\":\"www.web1.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web2.com\",\"www.web3.com\"]},{\"Url\":\"www.web2.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web3.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web5.com\",\"www.web6.com\"]},{\"Url\":\"www.web4.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web5.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web3.com\"]},{\"Url\":\"www.web6.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web2.com\",\"www.web3.com\",\"www.web4.com\",\"www.web5.com\"]},{\"Url\":\"www.web7.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[]}]}";
         }
 
         [Test]
         public void SerializationTest()
         {
-
-            AdjacencyList.JsonConverter converter = new();
-
-
-            string actual = converter.Serialize(adjacencyList);
-
+            string actual = AdjacencyList.JsonConverter.Serialize(adjacencyList);
 
             Assert.That(actual, Is.EqualTo(json));
         }
@@ -63,6 +58,8 @@ namespace WebCrawler.Test.ModelTests
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.Url), actualAllWebsites.Select(website => website.Url));
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.Title), actualAllWebsites.Select(website => website.Title));
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.CrawlTime), actualAllWebsites.Select(website => website.CrawlTime));
+            
+            Assert.That(this.adjacencyList.EntryWebsite.Url, Is.EqualTo(adjacencyList.EntryWebsite.Url));
 
             for(int i = 0; i < actualAllWebsites.Count; ++i)
             {

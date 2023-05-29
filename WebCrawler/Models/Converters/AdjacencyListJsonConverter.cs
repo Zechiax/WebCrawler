@@ -14,7 +14,7 @@ public readonly partial struct AdjacencyList
             public IEnumerable<string> Neighbours { get; set; } = null!;
         }
 
-        public string Serialize(AdjacencyList graph)
+        public static string Serialize(AdjacencyList graph)
         {
             var websiteVertices = graph.Data.Select(
                 websiteNeighbours => new Model
@@ -25,13 +25,16 @@ public readonly partial struct AdjacencyList
                     Neighbours = websiteNeighbours.Value.Select(neighbour => neighbour.Url)
                 }
             );
+            
+            // We add the entry website to the graph, so that we can easily deserialize it later.
+            Tuple<Website, IEnumerable<Model>> adjacencyList = new(graph.EntryWebsite, websiteVertices);
 
-            return JsonConvert.SerializeObject(websiteVertices);
+            return JsonConvert.SerializeObject(adjacencyList);
         }
 
         public static AdjacencyList Deserialize(string json)
         {
-            IEnumerable<Model>? models = JsonConvert.DeserializeObject<IEnumerable<Model>>(json);
+            Tuple<Website, IEnumerable<Model>>? models = JsonConvert.DeserializeObject<Tuple<Website, IEnumerable<Model>>>(json);
 
             if(models is null)
             {
@@ -40,20 +43,22 @@ public readonly partial struct AdjacencyList
 
             try
             {
-                Dictionary<string, Website> urlToWebsiteLookup = models
+                Dictionary<string, Website> urlToWebsiteLookup = models.Item2
                     .ToDictionary(model => model.Url, model => new Website(model.Url) { Title = model.Title, CrawlTime = model.CrawlTime });
 
                 Dictionary<Website, List<Website>> data = urlToWebsiteLookup.Values.ToDictionary(website => website, _ => new List<Website>()); 
 
-                foreach(Model model in models)
+                foreach(Model model in models.Item2)
                 {
                     foreach(string neighbour in model.Neighbours)
                     {
                         data[urlToWebsiteLookup[model.Url]].Add(urlToWebsiteLookup[neighbour]);
                     }
                 }
+                
+                var entryWebsite = urlToWebsiteLookup[models.Item1.Url];
 
-                return new AdjacencyList(data);
+                return new AdjacencyList(data, entryWebsite);
             }
             catch
             {
