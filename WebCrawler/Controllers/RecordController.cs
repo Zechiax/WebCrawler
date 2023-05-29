@@ -22,7 +22,7 @@ namespace WebCrawler.Controllers
             try
             {
                 return Ok(_dataService.GetWebsiteRecord(id).Result);
-            }
+        }
             catch (Exception)
             {
                 return StatusCode(500);
@@ -35,7 +35,7 @@ namespace WebCrawler.Controllers
             {
                 _dataService.AddWebsiteRecord(record).Wait();
                 return Ok();
-            }
+        }
             catch (Exception)
             {
                 return StatusCode(500);
@@ -51,7 +51,7 @@ namespace WebCrawler.Controllers
                 return Ok();
             }
             catch (Exception)
-            {
+        {
                 return StatusCode(500);
             }
         }
