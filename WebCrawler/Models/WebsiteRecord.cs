@@ -21,4 +21,5 @@ public class WebsiteRecord
 
     public DateTime Created { get; set; } = DateTime.MinValue;
     public WebsiteExecution? LastExecution { get; set; }
+
 }

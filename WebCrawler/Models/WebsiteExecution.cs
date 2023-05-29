@@ -12,6 +12,8 @@ public class WebsiteExecution
     public string AdjacencyListJson { get; set; }
     public DateTime? Started { get; set; } = null;
     public DateTime? Finished { get; set; } = null;
+    public WebsiteRecord WebsiteRecord { get; set; }
+    public int WebsiteRecordId { get; set; }
 
     public WebsiteExecution()
     {
