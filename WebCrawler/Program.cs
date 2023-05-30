@@ -1,6 +1,9 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using WebCrawler.Data;
+using WebCrawler.Interfaces;
+using WebCrawler.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +17,22 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(xmlPath);
 });
 
+// We add Serilog to the builder.
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .WriteTo.Console()
+    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(Log.Logger);
+builder.Host.UseSerilog();
+
 builder.Services.AddDbContext<CrawlerContext>(options =>
 {
     options.UseSqlite("Data Source=WebCrawler.db");
 });
+builder.Services.AddScoped<IDataService, DataService>();
 
 var app = builder.Build();
 
@@ -30,6 +45,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -58,4 +75,16 @@ using (var scope = app.Services.CreateScope())
     logger.LogInformation("Migrations applied");
 }
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+

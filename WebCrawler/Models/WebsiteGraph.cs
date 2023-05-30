@@ -23,7 +23,7 @@ public class WebsiteGraph
     {
         Dictionary<Website, List<Website>> adjacencyListData = new();
         AdjacencyListTraversal(EntryWebsite, adjacencyListData);
-        return new AdjacencyList(adjacencyListData);
+        return new AdjacencyList(adjacencyListData, EntryWebsite);
     }
 
     private void AdjacencyListTraversal(Website website, Dictionary<Website, List<Website>> adjacencyListData)

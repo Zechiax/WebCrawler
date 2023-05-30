@@ -8,11 +8,13 @@ namespace WebCrawler.Models;
 /// </summary>
 public readonly partial struct AdjacencyList
 {
-    public Dictionary<Website, List<Website>> Data { get; }
+    public IDictionary<Website, List<Website>> Data { get; }
+    public Website EntryWebsite { get; }
 
-    public AdjacencyList(Dictionary<Website, List<Website>> adjacencyListData)
+    public AdjacencyList(IDictionary<Website, List<Website>> adjacencyListData, Website entryWebsite)
     {
         Data = adjacencyListData;
+        EntryWebsite = entryWebsite;
     }
 
     /// <summary>

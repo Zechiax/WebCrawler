@@ -69,10 +69,9 @@ namespace WebCrawler.Test.ExecutorTests
             executor.StartCrawlAsync().Wait();
 
 
-            WebsiteGraph resultingGraph = executor.WebsiteExecution.WebsiteGraph;
-            AdjacencyList neighboursList = resultingGraph.GetAdjacencyListGraphRepresentation();
+            string resultingGraph = executor.WebsiteExecution.GetAdjacencyList().GetStringRepresentation();
 
-            Assert.That(neighboursList.GetStringRepresentation(), Is.EqualTo(expected));
+            Assert.That(resultingGraph, Is.EqualTo(expected));
         }
 
         [Test]
@@ -132,10 +131,8 @@ namespace WebCrawler.Test.ExecutorTests
 
 
             executor.StartCrawlAsync().Wait();
-
-
-            WebsiteGraph resultingGraph = executor.WebsiteExecution.WebsiteGraph;
-            AdjacencyList neighboursList = resultingGraph.GetAdjacencyListGraphRepresentation();
+            
+            AdjacencyList neighboursList = executor.WebsiteExecution.GetAdjacencyList();
 
             Assert.That(neighboursList.GetStringRepresentation(), Is.EqualTo(expected));
         }
