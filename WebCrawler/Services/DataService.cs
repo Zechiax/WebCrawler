@@ -7,10 +7,19 @@ namespace WebCrawler.Models;
 public class DataService : IDataService
 {
     private readonly CrawlerContext _context;
+    private readonly ILogger<DataService> _logger;
     
-    public DataService(CrawlerContext context)
+    public DataService(CrawlerContext context, ILogger<DataService> logger)
     {
         _context = context;
+        _logger = logger;
+    }
+    
+    public async Task MigrateAsync()
+    {
+        _logger.LogInformation("Migrating database...");
+        await _context.Database.MigrateAsync();
+        _logger.LogInformation("Migration complete");
     }
 
     public async Task<IEnumerable<WebsiteRecord>> GetWebsiteRecords()
