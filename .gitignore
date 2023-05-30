@@ -2,6 +2,8 @@
 
 # We remove SQLite database from git
 *.db
+*.db-shm
+*.db-wal
 
 # Created by https://www.toptal.com/developers/gitignore/api/aspnetcore,rider,react,node,visualstudio,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=aspnetcore,rider,react,node,visualstudio,visualstudiocode
