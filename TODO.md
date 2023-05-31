@@ -1,5 +1,9 @@
 # TODO
 
+## Exekutor
+- Koukni do fronty pri zabijeni az pak na tasky
+- prohledavani do sirky 
+
 1. Controllery layer
 
    - pepa
@@ -44,6 +48,12 @@
 1. `/record/{id}` - DELETE
 	 
 	- delete existing
+
+## IDataService
+* Vrati ID co vytvori databaze
+	* Aby se to pak pripadne mohlo poslat na klienta, ktery si pak s databaze pomoci toho IDcka vytahne ten record a neco s nim udela ...
+
+
 
 # POZNAMKY
 
