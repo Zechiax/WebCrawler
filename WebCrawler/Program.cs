@@ -68,11 +68,8 @@ if (args.Length > 0 && args[0].Equals("migration", StringComparison.InvariantCul
 // We apply migrations on startup
 using (var scope = app.Services.CreateScope())
 {
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("Applying migrations...");
-    var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-    context.Database.Migrate();
-    logger.LogInformation("Migrations applied");
+    var data = scope.ServiceProvider.GetRequiredService<IDataService>();
+    await data.MigrateAsync();
 }
 
 try
