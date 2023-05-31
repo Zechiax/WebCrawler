@@ -1,9 +1,5 @@
 # TODO
 
-## Exekutor
-- Koukni do fronty pri zabijeni az pak na tasky
-- prohledavani do sirky 
-
 1. Controllery layer
 
    - pepa
@@ -49,17 +45,31 @@
 	 
 	- delete existing
 
-## IDataService
-* Vrati ID co vytvori databaze
-	* Aby se to pak pripadne mohlo poslat na klienta, ktery si pak s databaze pomoci toho IDcka vytahne ten record a neco s nim udela ...
-
-
-
 # POZNAMKY
 
 - SQLlite - entity framework
 - REACT bootstrap
 
+# UI
+
+- Renderovani grafu
+
+- Seznam crawleru
+	- strankovani
+	- updatovani po update / delete - responsivni proste
+	- CRUD
+
+- Dialog na vytvoreni noveho websiteRecord
+
+
+# Backend
+
+- GraphQL
+
+# Deployment
+
+- Docker
+
 # Another meeting
 
-- 31.05.2023
+- zitra
