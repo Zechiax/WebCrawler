@@ -10,8 +10,8 @@ public class WebsiteExecution
     [Key]
     public int Id { get; set; }
     public string AdjacencyListJson { get; set; } = string.Empty;
-    public DateTime? Started { get; set; } = null;
-    public DateTime? Finished { get; set; } = null;
+    public DateTime? Started { get; set; }
+    public DateTime? Finished { get; set; }
 
     public WebsiteExecution()
     {
