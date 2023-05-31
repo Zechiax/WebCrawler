@@ -50,6 +50,26 @@
 - SQLlite - entity framework
 - REACT bootstrap
 
+# UI
+
+- Renderovani grafu
+
+- Seznam crawleru
+	- strankovani
+	- updatovani po update / delete - responsivni proste
+	- CRUD
+
+- Dialog na vytvoreni noveho websiteRecord
+
+
+# Backend
+
+- GraphQL
+
+# Deployment
+
+- Docker
+
 # Another meeting
 
-- 31.05.2023
+- zitra

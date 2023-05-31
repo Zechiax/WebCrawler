@@ -17,7 +17,7 @@ public readonly struct ExecutionManagerConfiguration
 /// Producent is <see cref="AddToQueue(IExecutor)"/> API.
 /// Consumers are threads that will do the crawling.
 /// </summary>
-public class ExecutionManager
+public class ExecutionManager : IExecutionManager
 {
     public ExecutionManagerConfiguration Config { get; }
 
@@ -76,7 +76,7 @@ public class ExecutionManager
 
         lock (executorsToRun)
         {
-            for(int i = 0; i < Config.CrawlConsumersCount; i++)
+            for (int i = 0; i < Config.CrawlConsumersCount; i++)
             {
 #if DEBUG_PRINT
                 Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: enquing death");
@@ -108,7 +108,7 @@ public class ExecutionManager
                 IExecutor? executor = executorsToRun.Dequeue();
 
                 // redpill
-                if(executor is null)
+                if (executor is null)
                 {
 #if DEBUG_PRINT
                     Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: died");
