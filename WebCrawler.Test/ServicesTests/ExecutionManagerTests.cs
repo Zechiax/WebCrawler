@@ -1,4 +1,4 @@
-﻿using Serilog.Core;
+﻿using Serilog;
 using WebCrawler.Models;
 using WebCrawler.Test.ExecutorTests;
 
@@ -62,7 +62,7 @@ public class ExecutionManagerTests
         const int executorsCount = 10;
 
         List<CrawlInfo> toCrawl = new();
-        ExecutionManager manager = new(Logger.None, new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
+        ExecutionManager manager = new(Log.Logger, new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
 
         for(int i = 0; i < executorsCount; ++i)
         {
@@ -74,7 +74,7 @@ public class ExecutionManagerTests
             manager.AddToQueueForCrawling(toCrawl[i]);
         }
 
-        manager.WaitForAllConsumersToFinish();
+        manager.RedpillAllCrawlersAndWaitForAllToFinish();
 
         for(int i = 0; i < executorsCount; ++i)
         {

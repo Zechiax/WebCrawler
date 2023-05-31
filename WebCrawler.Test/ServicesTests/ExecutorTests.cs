@@ -63,7 +63,7 @@ namespace WebCrawler.Test.ExecutorTests
             mockWebsiteProvider.Init();
             #endregion
 
-            Executor executor = new("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, mockWebsiteProvider);
+            Executor executor = new(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), mockWebsiteProvider);
 
 
             executor.StartCrawlAsync().Wait();
@@ -127,7 +127,7 @@ namespace WebCrawler.Test.ExecutorTests
             mockWebsiteProvider.Init();
             #endregion
 
-            Executor executor = new("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, mockWebsiteProvider);
+            Executor executor = new(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), mockWebsiteProvider);
 
 
             executor.StartCrawlAsync().Wait();

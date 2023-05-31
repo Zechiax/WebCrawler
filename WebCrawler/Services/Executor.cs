@@ -13,8 +13,6 @@ public class Executor : IExecutor, IDisposable
     public CrawlInfo CrawlInfo { get; }
     public WebsiteExecution WebsiteExecution { get; }
 
-    private WebsiteGraph _websiteGraph;
-
     private readonly IWebsiteProvider websiteProvider;
 
     private Dictionary<string, Website> VisitedUrlToWebsite = new();
@@ -26,9 +24,7 @@ public class Executor : IExecutor, IDisposable
         CrawlInfo = crawlInfo;
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
         
-        _websiteGraph = new WebsiteGraph(new Website(CrawlInfo.EntryUrl));
-        
-        WebsiteExecution = new WebsiteExecution(_websiteGraph);
+        WebsiteExecution = new WebsiteExecution(new WebsiteGraph(new Website(CrawlInfo.EntryUrl)));
     }
 
     ~Executor()
@@ -47,17 +43,21 @@ public class Executor : IExecutor, IDisposable
     public async Task StartCrawlAsync(CancellationToken ct)
     {
         WebsiteExecution.Started = DateTime.Now;
-        await CrawlAsync(_websiteGraph.EntryWebsite, ct)
+        await CrawlAsync(WebsiteExecution.WebsiteGraph.EntryWebsite, ct)
         .ContinueWith(_ =>
         {
             WebsiteExecution.Finished = DateTime.Now;
-            WebsiteExecution.SetWebsiteGraph(_websiteGraph);
+            WebsiteExecution.SetWebsiteGraph(WebsiteExecution.WebsiteGraph);
         });
     }
 
     private async Task CrawlAsync(Website website, CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
+        if(ct.IsCancellationRequested)
+        {
+            // TODO: persistenci do databaze toho grafu
+            ct.ThrowIfCancellationRequested();
+        }
 
         Stopwatch sw = Stopwatch.StartNew();
         string htmlPlain;
