@@ -1,6 +1,4 @@
-﻿//#define DEBUG_PRINT
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
@@ -19,110 +17,132 @@ public readonly struct ExecutionManagerConfiguration
 /// </summary>
 public class ExecutionManager
 {
+    #region CrawlConsumerInfo
+    private class CrawlConsumerInfo
+    {
+        public Task Task { get; set; }
+        public CancellationTokenSource CancellationTokenSource { get; set; }
+        public CrawlInfo? CrawlInfo { get; set; } = null;
+
+        public CrawlConsumerInfo(Task task, CancellationTokenSource cancellationTokenSource)
+        {
+            Task = task;
+            CancellationTokenSource = cancellationTokenSource;
+        }
+    }
+    #endregion
+
     public ExecutionManagerConfiguration Config { get; }
 
-    private Queue<IExecutor?> executorsToRun = new();
-    private List<Task> crawlConsumers = new();
+    private Queue<CrawlInfo> toCrawlQueue = new();
+    private CrawlConsumerInfo[] crawlConsumers;
 
-    private bool redpilled;
+    private Serilog.ILogger logger;
 
-    public ExecutionManager(ExecutionManagerConfiguration? config = null)
+    public ExecutionManager(Serilog.ILogger logger, ExecutionManagerConfiguration? config = null)
     {
+        this.logger = logger;
+
         Config = config ?? new ExecutionManagerConfiguration()
         {
-            CrawlConsumersCount = 50
+            CrawlConsumersCount = Environment.ProcessorCount * 5 
         };
 
+        crawlConsumers = new CrawlConsumerInfo[Config.CrawlConsumersCount];
         for (int i = 0; i < Config.CrawlConsumersCount; i++)
         {
-            crawlConsumers.Add(Task.Run(CrawlConsumer));
+            CancellationTokenSource source = new();
+            crawlConsumers[i] = new CrawlConsumerInfo(
+                Task.Run(() => CrawlConsumer(i, source.Token), source.Token),
+                source);
         }
     }
 
-    /// <summary>
-    /// Adds <paramref name="executor"/> to queue for being crawled as soon as possible.
-    /// </summary>
-    /// <param name="executor"></param>
-    public void AddToQueue(IExecutor executor)
+    public void AddToQueueForCrawling(CrawlInfo crawlInfo)
     {
-        if (redpilled)
+        lock (toCrawlQueue)
         {
-            throw new InvalidOperationException("All consumers are redpilled, can't use this instance anymore.");
-        }
-
-        lock (executorsToRun)
-        {
-#if DEBUG_PRINT
-            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: enquing executor");
-#endif
-            executorsToRun.Enqueue(executor);
-            Monitor.Pulse(executorsToRun);
+            logger.Information($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: Enquing crawlInfo: {crawlInfo}.");
+            toCrawlQueue.Enqueue(crawlInfo);
+            Monitor.Pulse(toCrawlQueue);
         }
     }
 
-    /// <summary>
-    /// Redpills all consumers and waits until they all finish.
-    /// Beware that after calling this method, this instance becomes unusable.
-    /// </summary>
-    public void WaitForAllConsumersToFinish()
+    public async Task<int> StopCrawlingForAll()
     {
-        RedpillAllCrawlConsumers();
-        Task.WaitAll(crawlConsumers.ToArray());
+        return await StopCrawlingFor(Enumerable.Range(0, crawlConsumers.Length));
     }
 
-    private void RedpillAllCrawlConsumers()
+    public async Task<int> StopCrawlingForAllHaving(string thisUrl)
     {
-        redpilled = true;
-
-        lock (executorsToRun)
+        List<int> toStopCrawlingIndeces = new();
+        for (int index = 0; index < crawlConsumers.Length; ++index)
         {
-            for(int i = 0; i < Config.CrawlConsumersCount; i++)
+            if (crawlConsumers[index].CrawlInfo!.Value.EntryUrl == thisUrl)
             {
-#if DEBUG_PRINT
-                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: enquing death");
-#endif
-                executorsToRun.Enqueue(null);
-                Monitor.Pulse(executorsToRun);
+                toStopCrawlingIndeces.Add(index);
             }
         }
+
+        return await StopCrawlingFor(toStopCrawlingIndeces);
     }
 
-    private void CrawlConsumer()
+    private async Task<int> StopCrawlingFor(IEnumerable<int> toStopCrawlingIndeces)
+    {
+        return await Task.Run(() =>
+        {
+            int stopped = 0;
+
+            foreach(int index in toStopCrawlingIndeces)
+            {
+                CrawlConsumerInfo consumer = crawlConsumers[index];
+
+                try
+                {
+                    consumer.CancellationTokenSource.Cancel();
+                    consumer.Task.Wait();
+                }
+                catch
+                {
+                    stopped++;
+
+                    consumer.CancellationTokenSource.Dispose();
+
+                    consumer.CancellationTokenSource = new CancellationTokenSource();
+                    consumer.Task = Task.Run(() => CrawlConsumer(index, consumer.CancellationTokenSource.Token));
+
+                    lock (toCrawlQueue)
+                    {
+                        Monitor.Pulse(toCrawlQueue);
+                    }
+                }
+            }
+
+            return stopped;
+        });
+    }
+
+    private void CrawlConsumer(int index, CancellationToken ct)
     {
         while (true)
         {
-            lock (executorsToRun)
+            lock (toCrawlQueue)
             {
-                while (executorsToRun.Count == 0)
+                while (toCrawlQueue.Count == 0)
                 {
 
-#if DEBUG_PRINT
-                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: waiting");
-#endif
-                    Monitor.Wait(executorsToRun);
+                    logger.Information($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: waiting");
+                    Monitor.Wait(toCrawlQueue);
                 }
 
-#if DEBUG_PRINT
-                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: dequing");
-#endif
-                IExecutor? executor = executorsToRun.Dequeue();
+                logger.Information($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: dequing");
+                CrawlInfo? crawlInfo = toCrawlQueue.Dequeue();
 
-                // redpill
-                if(executor is null)
-                {
-#if DEBUG_PRINT
-                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: died");
-#endif
-                    return;
-                }
+                Executor executor = new(crawlInfo.Value);
 
-#if DEBUG_PRINT
-                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: crawling");
-#endif
-                executor.StartCrawlAsync().Wait();
-#if DEBUG_PRINT
-                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: finished crawling");
-#endif
+                logger.Information($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: crawling");
+                executor.StartCrawlAsync(ct).Wait();
+                logger.Information($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: finished crawling");
             }
         }
     }

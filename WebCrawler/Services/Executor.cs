@@ -10,9 +10,7 @@ namespace WebCrawler.Models;
 /// </summary>
 public class Executor : IExecutor, IDisposable
 {
-    public string EntryUrl { get; init; }
-    public Regex Regex { get; init; }
-    public TimeSpan Periodicity { get; init; }
+    public CrawlInfo CrawlInfo { get; }
     public WebsiteExecution WebsiteExecution { get; }
 
     private WebsiteGraph _websiteGraph;
@@ -23,14 +21,12 @@ public class Executor : IExecutor, IDisposable
 
     private bool disposed = false;
 
-    public Executor(string entryUrl, string regex, TimeSpan periodicity, IWebsiteProvider? websiteProvider = null)
+    public Executor(CrawlInfo crawlInfo, IWebsiteProvider? websiteProvider = null)
     {
-        EntryUrl = entryUrl;
-        Regex = new Regex(regex); 
-        Periodicity = periodicity;
+        CrawlInfo = crawlInfo;
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
         
-        _websiteGraph = new WebsiteGraph(new Website(entryUrl));
+        _websiteGraph = new WebsiteGraph(new Website(CrawlInfo.EntryUrl));
         
         WebsiteExecution = new WebsiteExecution(_websiteGraph);
     }
@@ -45,17 +41,24 @@ public class Executor : IExecutor, IDisposable
 
     public async Task StartCrawlAsync()
     {
+        await StartCrawlAsync(default(CancellationToken));
+    }
+
+    public async Task StartCrawlAsync(CancellationToken ct)
+    {
         WebsiteExecution.Started = DateTime.Now;
-        await CrawlAsync(_websiteGraph.EntryWebsite).ContinueWith(_ =>
+        await CrawlAsync(_websiteGraph.EntryWebsite, ct)
+        .ContinueWith(_ =>
         {
             WebsiteExecution.Finished = DateTime.Now;
             WebsiteExecution.SetWebsiteGraph(_websiteGraph);
         });
-        
     }
 
-    private async Task CrawlAsync(Website website)
+    private async Task CrawlAsync(Website website, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
+
         Stopwatch sw = Stopwatch.StartNew();
         string htmlPlain;
 
@@ -75,7 +78,7 @@ public class Executor : IExecutor, IDisposable
             {
                 string link = linkNode.Attributes["href"].Value;
 
-                if (!Regex.IsMatch(link))
+                if (!CrawlInfo.Regex.IsMatch(link))
                 {
                     continue;
                 }
@@ -98,16 +101,20 @@ public class Executor : IExecutor, IDisposable
         {
             if (!VisitedUrlToWebsite.ContainsKey(outgoingWebsite.Url))
             {
-                // mark as visited
                 VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite;
 
-                await CrawlAsync(outgoingWebsite);
+                await CrawlAsync(outgoingWebsite, ct);
             }
         }
     }
 
     public void Dispose()
     {
+        if (disposed)
+        {
+            throw new ObjectDisposedException(nameof(Executor));
+        }
+
         websiteProvider.Dispose();
         disposed = true; 
     }

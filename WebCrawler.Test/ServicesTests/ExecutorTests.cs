@@ -132,7 +132,7 @@ namespace WebCrawler.Test.ExecutorTests
 
             executor.StartCrawlAsync().Wait();
             
-            AdjacencyList neighboursList = executor.WebsiteExecution.GetAdjacencyList();
+            WebsiteGraphSnapshot neighboursList = executor.WebsiteExecution.GetAdjacencyList();
 
             Assert.That(neighboursList.GetStringRepresentation(), Is.EqualTo(expected));
         }

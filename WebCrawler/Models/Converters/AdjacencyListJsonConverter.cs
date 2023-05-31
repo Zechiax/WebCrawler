@@ -2,9 +2,9 @@
 
 namespace WebCrawler.Models;
 
-public readonly partial struct AdjacencyList
+public readonly partial struct WebsiteGraphSnapshot
 {
-    public class JsonConverter
+    public static class JsonConverter
     {
         private class Model
         {
@@ -14,7 +14,7 @@ public readonly partial struct AdjacencyList
             public IEnumerable<string> Neighbours { get; set; } = null!;
         }
 
-        public static string Serialize(AdjacencyList graph)
+        public static string Serialize(WebsiteGraphSnapshot graph)
         {
             var websiteVertices = graph.Data.Select(
                 websiteNeighbours => new Model
@@ -32,7 +32,7 @@ public readonly partial struct AdjacencyList
             return JsonConvert.SerializeObject(adjacencyList);
         }
 
-        public static AdjacencyList Deserialize(string json)
+        public static WebsiteGraphSnapshot Deserialize(string json)
         {
             Tuple<string, IEnumerable<Model>>? models = JsonConvert.DeserializeObject<Tuple<string, IEnumerable<Model>>>(json);
 
@@ -58,11 +58,11 @@ public readonly partial struct AdjacencyList
                 
                 var entryWebsite = urlToWebsiteLookup[models.Item1];
 
-                return new AdjacencyList(data, entryWebsite);
+                return new WebsiteGraphSnapshot(data, entryWebsite);
             }
             catch
             {
-                throw new ArgumentException($"The Json representation of {nameof(AdjacencyList)} is invalid. Check that for example each vertex (url) is present only once.");
+                throw new ArgumentException($"The Json representation of {nameof(WebsiteGraphSnapshot)} is invalid. Check that for example each vertex (url) is present only once.");
             }
         }
     }

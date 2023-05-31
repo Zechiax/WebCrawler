@@ -26,12 +26,12 @@ public class WebsiteExecution
     
     public void SetWebsiteGraph(WebsiteGraph websiteGraph)
     {
-        AdjacencyListJson = AdjacencyList.JsonConverter.Serialize(websiteGraph.GetAdjacencyListGraphRepresentation());
+        AdjacencyListJson = WebsiteGraphSnapshot.JsonConverter.Serialize(websiteGraph.GetSnapshot());
     }
 
-    public AdjacencyList GetAdjacencyList()
+    public WebsiteGraphSnapshot GetAdjacencyList()
     {
-        return AdjacencyList.JsonConverter.Deserialize(AdjacencyListJson);
+        return WebsiteGraphSnapshot.JsonConverter.Deserialize(AdjacencyListJson);
     }
 }
 

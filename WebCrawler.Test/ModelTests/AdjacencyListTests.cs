@@ -11,7 +11,7 @@ namespace WebCrawler.Test.ModelTests
     public class AdjacencyListTests
     {
         private string json;
-        private AdjacencyList adjacencyList;
+        private WebsiteGraphSnapshot adjacencyList;
 
         [SetUp]
         public void Setup()
@@ -41,7 +41,7 @@ namespace WebCrawler.Test.ModelTests
         [Test]
         public void SerializationTest()
         {
-            string actual = AdjacencyList.JsonConverter.Serialize(adjacencyList);
+            string actual = WebsiteGraphSnapshot.JsonConverter.Serialize(adjacencyList);
             
             Assert.That(actual, Is.EqualTo(json));
         }
@@ -49,7 +49,7 @@ namespace WebCrawler.Test.ModelTests
         [Test]
         public void DeserializationTest()
         {
-            AdjacencyList adjacencyList = AdjacencyList.JsonConverter.Deserialize(json);
+            WebsiteGraphSnapshot adjacencyList = WebsiteGraphSnapshot.JsonConverter.Deserialize(json);
 
 
             List<Website> actualAllWebsites = adjacencyList.Data.Select(pair => pair.Key).ToList();

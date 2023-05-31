@@ -19,14 +19,14 @@ public class WebsiteGraph
     /// Returns adjacency list of this graph.
     /// </summary>
     /// <returns></returns>
-    public AdjacencyList GetAdjacencyListGraphRepresentation()
+    public WebsiteGraphSnapshot GetSnapshot()
     {
         Dictionary<Website, List<Website>> adjacencyListData = new();
-        AdjacencyListTraversal(EntryWebsite, adjacencyListData);
-        return new AdjacencyList(adjacencyListData, EntryWebsite);
+        GraphTraversal(EntryWebsite, adjacencyListData);
+        return new WebsiteGraphSnapshot(adjacencyListData, EntryWebsite);
     }
 
-    private void AdjacencyListTraversal(Website website, Dictionary<Website, List<Website>> adjacencyListData)
+    private void GraphTraversal(Website website, Dictionary<Website, List<Website>> adjacencyListData)
     {
         if (adjacencyListData.ContainsKey(website))
         {
@@ -38,7 +38,7 @@ public class WebsiteGraph
         foreach(Website outgoingWebsite in website.OutgoingWebsites)
         {
             adjacencyListData[website].Add(outgoingWebsite);
-            AdjacencyListTraversal(outgoingWebsite, adjacencyListData);
+            GraphTraversal(outgoingWebsite, adjacencyListData);
         }
     }
 }

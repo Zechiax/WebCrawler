@@ -5,9 +5,6 @@ namespace WebCrawler.Interfaces;
 
 public interface IExecutor
 {
-    string EntryUrl { get; }
-    Regex Regex { get; }
-    TimeSpan Periodicity { get; }
-
+    CrawlInfo CrawlInfo { get; }
     Task StartCrawlAsync();
 }

@@ -1,4 +1,5 @@
-﻿using WebCrawler.Models;
+﻿using Serilog.Core;
+using WebCrawler.Models;
 using WebCrawler.Test.ExecutorTests;
 
 namespace WebCrawler.Test.ServicesTests;
@@ -60,24 +61,24 @@ public class ExecutionManagerTests
         mockWebsiteProvider.GetStringDelay = TimeSpan.FromMilliseconds(200);
         const int executorsCount = 10;
 
-        List<Executor> executors = new();
-        ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
+        List<CrawlInfo> toCrawl = new();
+        ExecutionManager manager = new(Logger.None, new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
 
         for(int i = 0; i < executorsCount; ++i)
         {
-            executors.Add(new Executor("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, mockWebsiteProvider));
+            toCrawl.Add(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero));
         }
 
         for(int i = 0; i < executorsCount; ++i )
         {
-            manager.AddToQueue(executors[i]);
+            manager.AddToQueueForCrawling(toCrawl[i]);
         }
 
         manager.WaitForAllConsumersToFinish();
 
         for(int i = 0; i < executorsCount; ++i)
         {
-            string actual = executors[i].WebsiteExecution.GetAdjacencyList().GetStringRepresentation();
+            string actual = toCrawl[i].WebsiteExecution.GetAdjacencyList().GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{i}/{executorsCount}");
         }
     }
