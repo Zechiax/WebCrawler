@@ -50,6 +50,12 @@
 - SQLlite - entity framework
 - REACT bootstrap
 
+# UI
+- Renderovani grafu
+- Seznam crawleru
+	- CRUD
+	- strankovani
+
 # Another meeting
 
 - 31.05.2023

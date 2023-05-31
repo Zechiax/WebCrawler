@@ -8,7 +8,15 @@ namespace WebCrawler.Interfaces
         int AddToQueueForCrawling(CrawlInfo crawlInfo);
         Task<WebsiteGraph> WaitFor(int id);
         Task<List<WebsiteGraph>> StopCrawlingForAll();
-        Task<List<WebsiteGraph>> StopCrawlingForAllHaving(string thisUrl);
+        /// thread unsafe
+        WebsiteGraph GetGraph(int jobId);
+        Task<WebsiteGraph> GetFullGraphAsync(int jobId);
+        Task<bool> StopCrawlingAsync(int jobId);
         void RedpillAllCrawlersAndWaitForAllToFinish();
+    }
+
+    public interface IPeriodicManager : IExecutionManager
+    {
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using WebCrawler.Interfaces;
@@ -15,7 +16,7 @@ public class Executor : IExecutor, IDisposable
 
     private readonly IWebsiteProvider websiteProvider;
 
-    private Dictionary<string, Website> VisitedUrlToWebsite = new();
+    private ConcurrentDictionary<string, Website> VisitedUrlToWebsite = new();
 
     private bool disposed = false;
 
@@ -99,10 +100,8 @@ public class Executor : IExecutor, IDisposable
 
         foreach(Website outgoingWebsite in website.OutgoingWebsites)
         {
-            if (!VisitedUrlToWebsite.ContainsKey(outgoingWebsite.Url))
+            if(VisitedUrlToWebsite.TryAdd(outgoingWebsite.Url, outgoingWebsite))
             {
-                VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite;
-
                 await CrawlAsync(outgoingWebsite, ct);
             }
         }

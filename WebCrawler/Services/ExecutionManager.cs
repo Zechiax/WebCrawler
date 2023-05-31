@@ -157,6 +157,23 @@ public class ExecutionManager : IExecutionManager
         });
     }
 
+    public WebsiteGraphSnapshot GetGraph(int jobId)
+    {
+        CrawlConsumerInfo crawler = GetCrawler(jobId);
+
+        WebsiteGraphSnapshot graph;
+        graph = crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
+        return graph;
+    }
+
+    public async Task<WebsiteGraphSnapshot> GetFullGraph(int jobId)
+    {
+        CrawlConsumerInfo crawler = GetCrawler(jobId);
+
+        await crawler.Task;
+        return crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
+    }
+
     private void CrawlConsumer(int index, CancellationToken ct)
     {
         CrawlInfo? crawlInfo;
