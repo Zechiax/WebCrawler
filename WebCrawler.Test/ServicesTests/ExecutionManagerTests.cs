@@ -1,4 +1,6 @@
-﻿using WebCrawler.Models;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
+using WebCrawler.Models;
 using WebCrawler.Test.ExecutorTests;
 
 namespace WebCrawler.Test.ServicesTests;
@@ -59,6 +61,12 @@ public class ExecutionManagerTests
 
         mockWebsiteProvider.GetStringDelay = TimeSpan.FromMilliseconds(200);
         const int executorsCount = 10;
+        
+        // We mock the logger - this is not the object, you need to access the Object property
+        var logger = new Mock<ILogger<ExecutionManager>>();
+        
+        // Use this in tests
+        ILogger<ExecutionManager> loggerObject = logger.Object;
 
         List<Executor> executors = new();
         ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
