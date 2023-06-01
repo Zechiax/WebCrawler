@@ -50,17 +50,59 @@
 - SQLlite - entity framework
 - REACT bootstrap
 
-# UI
+## Navigace
+Asi zatim prazdno.
+1. Home
+1. About us
 
-- Renderovani grafu
+## Paginated View - seznam 
+### Active selection
 
-- Seznam crawleru
-	- strankovani
-	- updatovani po update / delete - responsivni proste
-	- CRUD
+### Cudliky doleva - doprava
+na posun stranek
 
-- Dialog na vytvoreni noveho websiteRecord
+### Search
+podle:
+* Label
 
+### Filter
+podle:
+* URL
+* Label
+Tags
+
+### Sort
+podle:
+* URL
+* Last execution time
+
+### Item
+ma:
+* Label
+* Periodicity
+* Tags
+* Last execution
+* status of last execution - puntiky na levo
+	* ceka na zpracovani
+	* aktualne bezi
+	* dobehal uspense
+	* dobehla zrusenim
+* RUD
+	* tri tecky napravo
+
+## ShowGraph cudlik
+
+## Create cudlik
+Otevre modalni okno. 
+
+Uzivatel musi zadat:
+1. Label
+1. Url
+1. Periodicity
+1. Regex
+
+# Visualizace grafu
+Nekdy pak.
 
 # Backend
 
@@ -70,6 +112,17 @@
 
 - Docker
 
+# JOBS
+## Milan a Pepa:
+1. Paginated view
+	* hlavni kostra
+	* jak to pujde
+
+## Tomas
+1. Create WebsiteRecord modal window
+1. Dodelat executionera
+
+
 # Another meeting
 
-- zitra
+- pristi tyden nekdy - streda?
