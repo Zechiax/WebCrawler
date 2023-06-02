@@ -23,6 +23,7 @@ public class ExecutionManager : IExecutionManager
         public Task Task { get; set; }
         public CancellationTokenSource CancellationTokenSource { get; set; }
         public IExecutor? Executor { get; set; } = null;
+        public CrawlJob? Job { get; set; } = null;
 
         public CrawlConsumerInfo(Task task, CancellationTokenSource cancellationTokenSource)
         {
@@ -32,13 +33,31 @@ public class ExecutionManager : IExecutionManager
     }
     #endregion
 
+    #region CrawlJob
+
+    private record class CrawlJob
+    {
+        public CrawlInfo Info { get; init; }
+        public ulong JobId { get; init; }
+        public bool IsCancelled { get; set; } = false;
+
+        public CrawlJob(CrawlInfo info, ulong jobId)
+        {
+            Info = info;
+            JobId = jobId;
+        }
+    }
+
+    #endregion
+
     public ExecutionManagerConfiguration Config { get; }
 
-    private Queue<CrawlInfo?> toCrawlQueue = new();
+    private Queue<CrawlJob?> toCrawlQueue = new();
     private CrawlConsumerInfo[] crawlConsumers;
 
     private ILogger<ExecutionManager> logger;
 
+    private ulong lastJobId = 0;
     private bool redpilled = false;
 
     public ExecutionManager(ILogger<ExecutionManager> logger, ExecutionManagerConfiguration? config = null)
@@ -60,15 +79,101 @@ public class ExecutionManager : IExecutionManager
         }
     }
 
-    public void AddToQueueForCrawling(CrawlInfo crawlInfo)
+    public ulong AddToQueueForCrawling(CrawlInfo crawlInfo)
+    {
+        ThrowIfRedpilled();
+
+        logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: Enquing crawlInfo: {crawlInfo}.");
+        lock (toCrawlQueue)
+        {
+            toCrawlQueue.Enqueue(new CrawlJob(crawlInfo, ++lastJobId));
+            Monitor.Pulse(toCrawlQueue);
+        }
+
+        return lastJobId;
+    }
+
+    public async Task<bool> StopCrawlingAsync(ulong jobId)
     {
         ThrowIfRedpilled();
 
         lock (toCrawlQueue)
         {
-            logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: Enquing crawlInfo: {crawlInfo}.");
-            toCrawlQueue.Enqueue(crawlInfo);
-            Monitor.Pulse(toCrawlQueue);
+            foreach (CrawlJob? job in toCrawlQueue)
+            {
+                if (job is null)
+                {
+                    // redpill, at the end of queue
+                    return false;
+                }
+
+                if (job.JobId == jobId)
+                {
+                    job.IsCancelled = true;
+                    return true;
+                }
+            }
+        }
+
+        CrawlConsumerInfo? crawler = GetCrawler(jobId);
+        if (crawler is null)
+        {
+            return false;
+        }
+
+        int index = Array.IndexOf(crawlConsumers, crawler);
+
+        crawler.CancellationTokenSource.Cancel();
+        try
+        {
+            await crawler.Task;
+        }
+        catch (TaskCanceledException)
+        {
+            crawler.CancellationTokenSource.Dispose();
+
+            crawler.CancellationTokenSource = new CancellationTokenSource();
+            crawler.Task = Task.Run(() => CrawlConsumer(index, crawler.CancellationTokenSource.Token), crawler.CancellationTokenSource.Token);
+
+            lock (toCrawlQueue)
+            {
+                Monitor.Pulse(toCrawlQueue);
+            }
+        }
+
+        return true;
+    }
+
+    public WebsiteGraphSnapshot? GetGraph(ulong jobId)
+    {
+        ThrowIfRedpilled();
+
+        CrawlConsumerInfo? crawler = GetCrawler(jobId);
+        if (crawler is null)
+        {
+            return null;
+        }
+
+        lock(crawler)
+        {
+            return crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
+        }
+    }
+
+    public async Task<WebsiteGraphSnapshot?> GetFullGraphAsync(ulong jobId)
+    {
+        ThrowIfRedpilled();
+
+        CrawlConsumerInfo? crawler = GetCrawler(jobId);
+        if(crawler is null)
+        {
+            return null;
+        }
+
+        await crawler.Task;
+        lock(crawler)
+        {
+            return crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
         }
     }
 
@@ -89,94 +194,22 @@ public class ExecutionManager : IExecutionManager
         Task.WaitAll(crawlConsumers.Select(crawlConsumer => crawlConsumer.Task).ToArray());
     }
 
-    public async Task<WebsiteGraph> WaitFor(CrawlInfo crawlInfo)
+    private CrawlConsumerInfo? GetCrawler(ulong jobId)
     {
-        ThrowIfRedpilled();
-
-        int index = Array.IndexOf(crawlConsumers, crawlConsumers.First(crawlConsumer => crawlConsumer.Executor!.CrawlInfo == crawlInfo));
-
-        crawlConsumers[index].Task.Wait();
-    }
-
-    public async Task<List<WebsiteGraph>> StopCrawlingForAll()
-    {
-        ThrowIfRedpilled();
-
-        return await StopCrawlingFor(Enumerable.Range(0, crawlConsumers.Length));
-    }
-
-    public async Task<List<WebsiteGraph>> StopCrawlingForAllHaving(string thisUrl)
-    {
-        ThrowIfRedpilled();
-
-        List<int> toStopCrawlingIndeces = new();
-        for (int index = 0; index < crawlConsumers.Length; ++index)
+        return crawlConsumers
+        .FirstOrDefault(crawler =>
         {
-            if (crawlConsumers[index].Executor!.CrawlInfo.EntryUrl == thisUrl)
+            lock (crawler)
             {
-                toStopCrawlingIndeces.Add(index);
+                return crawler.Job is not null && crawler.Job.JobId == jobId;
             }
-        }
-
-        return await StopCrawlingFor(toStopCrawlingIndeces);
-    }
-
-    private async Task<List<WebsiteGraph>> StopCrawlingFor(IEnumerable<int> toStopCrawlingIndeces)
-    {
-        return await Task.Run(() =>
-        {
-            List<WebsiteGraph> graphs = new();
-
-            foreach (int index in toStopCrawlingIndeces)
-            {
-                CrawlConsumerInfo consumer = crawlConsumers[index];
-
-                consumer.CancellationTokenSource.Cancel();
-
-                try
-                {
-                    consumer.Task.Wait();
-                }
-                catch (TaskCanceledException)
-                {
-                    graphs.Add(consumer.Executor!.WebsiteExecution.WebsiteGraph);
-
-                    consumer.CancellationTokenSource.Dispose();
-
-                    consumer.CancellationTokenSource = new CancellationTokenSource();
-                    consumer.Task = Task.Run(() => CrawlConsumer(index, consumer.CancellationTokenSource.Token), consumer.CancellationTokenSource.Token);
-
-                    lock (toCrawlQueue)
-                    {
-                        Monitor.Pulse(toCrawlQueue);
-                    }
-                }
-            }
-
-            return graphs;
         });
-    }
-
-    public WebsiteGraphSnapshot GetGraph(int jobId)
-    {
-        CrawlConsumerInfo crawler = GetCrawler(jobId);
-
-        WebsiteGraphSnapshot graph;
-        graph = crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
-        return graph;
-    }
-
-    public async Task<WebsiteGraphSnapshot> GetFullGraph(int jobId)
-    {
-        CrawlConsumerInfo crawler = GetCrawler(jobId);
-
-        await crawler.Task;
-        return crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
     }
 
     private void CrawlConsumer(int index, CancellationToken ct)
     {
-        CrawlInfo? crawlInfo;
+        CrawlJob? crawlJob;
+        CrawlConsumerInfo crawler;
         lock (toCrawlQueue)
         {
             while (toCrawlQueue.Count == 0)
@@ -187,19 +220,24 @@ public class ExecutionManager : IExecutionManager
             }
 
             logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: dequing");
-            crawlInfo = toCrawlQueue.Dequeue();
-        }
+            crawlJob = toCrawlQueue.Dequeue();
 
-        // redpilled
-        if (crawlInfo is null)
-        {
-            return;
-        }
+            // redpilled
+            if (crawlJob is null)
+            {
+                return;
+            }
 
-        Executor executor = new(crawlInfo.Value);
+            crawler = crawlConsumers[index];
+            lock (crawler)
+            {
+                crawler.Job = crawlJob;
+                crawler.Executor = new Executor(crawlJob.Info);
+            }
+        }
 
         logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: crawling");
-        executor.StartCrawlAsync(ct).Wait();
+        crawler.Executor.StartCrawlAsync(ct).Wait();
         logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: finished crawling");
     }
 

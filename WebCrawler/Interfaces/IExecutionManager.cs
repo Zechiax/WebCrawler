@@ -6,21 +6,10 @@ namespace WebCrawler.Interfaces
     {
         ExecutionManagerConfiguration Config { get; }
 
-        int AddToQueueForCrawling(CrawlInfo crawlInfo);
-
-        /// thread unsafe
-        WebsiteGraph GetGraph(int jobId);
-
-        /// full graph - thread safe
-        Task<WebsiteGraph> GetFullGraphAsync(int jobId);
-
-        Task<bool> TryStopCrawlingAsync(int jobId);
-
+        ulong AddToQueueForCrawling(CrawlInfo crawlInfo);
+        Task<WebsiteGraphSnapshot?> GetFullGraphAsync(ulong jobId);
+        WebsiteGraphSnapshot? GetGraph(ulong jobId);
+        Task<bool> StopCrawlingAsync(ulong jobId);
         void RedpillAllCrawlersAndWaitForAllToFinish();
-    }
-
-    public interface IPeriodicManager : IExecutionManager
-    {
-
     }
 }

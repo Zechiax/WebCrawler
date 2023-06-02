@@ -7,5 +7,5 @@ public interface IExecutor
 {
     CrawlInfo CrawlInfo { get; }
     WebsiteExecution WebsiteExecution { get; }
-    Task StartCrawlAsync();
+    Task StartCrawlAsync(CancellationToken ct);
 }

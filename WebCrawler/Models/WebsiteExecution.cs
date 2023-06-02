@@ -10,9 +10,16 @@ public class WebsiteExecution
     [Key]
     public int Id { get; set; }
     public string AdjacencyListJson { get; set; } = string.Empty;
+
+    /// <summary>
+    /// TODO: Before storing to database, convert to adjacency list 
+    /// </summary>
+    public WebsiteGraph WebsiteGraph { get; set; }
+
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
 
+    // REMARK: Don't use. Needs SQLlite.
     public WebsiteExecution()
     {
     }
