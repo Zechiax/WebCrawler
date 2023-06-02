@@ -16,7 +16,7 @@ public class Executor : IExecutor, IDisposable
 
     private readonly IWebsiteProvider websiteProvider;
 
-    private ConcurrentDictionary<string, Website> VisitedUrlToWebsite = new();
+    private Dictionary<string, Website> VisitedUrlToWebsite = new();
 
     private bool disposed = false;
 
@@ -48,62 +48,66 @@ public class Executor : IExecutor, IDisposable
         .ContinueWith(_ =>
         {
             WebsiteExecution.Finished = DateTime.Now;
-            WebsiteExecution.SetWebsiteGraph(WebsiteExecution.WebsiteGraph);
         });
     }
 
-    private async Task CrawlAsync(Website website, CancellationToken ct)
+    private async Task CrawlAsync(Website entryWebsite, CancellationToken ct)
     {
-        if(ct.IsCancellationRequested)
+        Queue<Website> toCrawl = new();
+        toCrawl.Enqueue(entryWebsite);
+
+        while(toCrawl.Count > 0)
         {
-            // TODO: persistenci do databaze toho grafu
-            ct.ThrowIfCancellationRequested();
-        }
-
-        Stopwatch sw = Stopwatch.StartNew();
-        string htmlPlain;
-
-        try
-        {
-            htmlPlain = await websiteProvider.GetStringAsync(website.Url);
-        }
-        catch { return; }
-
-        HtmlDocument htmlDom = new HtmlDocument();
-        htmlDom.LoadHtml(htmlPlain);
-
-        HtmlNodeCollection linkNodes = htmlDom.DocumentNode.SelectNodes("//a[@href]");
-        if(linkNodes is not null)
-        {
-            foreach (HtmlNode linkNode in linkNodes)
+            if(ct.IsCancellationRequested)
             {
-                string link = linkNode.Attributes["href"].Value;
+                // TODO: persistenci do databaze toho grafu
+                ct.ThrowIfCancellationRequested();
+            }
 
-                if (!CrawlInfo.Regex.IsMatch(link))
-                {
-                    continue;
-                }
+            Website website = toCrawl.Dequeue();
 
-                if (VisitedUrlToWebsite.TryGetValue(link, out Website? value))
+            Stopwatch sw = Stopwatch.StartNew();
+            string htmlPlain;
+
+            try
+            {
+                htmlPlain = await websiteProvider.GetStringAsync(website.Url);
+            }
+            catch { return; }
+
+            HtmlDocument htmlDom = new HtmlDocument();
+            htmlDom.LoadHtml(htmlPlain);
+
+            HtmlNodeCollection linkNodes = htmlDom.DocumentNode.SelectNodes("//a[@href]");
+            if(linkNodes is not null)
+            {
+                foreach (HtmlNode linkNode in linkNodes)
                 {
-                    website.OutgoingWebsites.Add(value);
-                }
-                else
-                {
-                    website.OutgoingWebsites.Add(new Website(link));
+                    string link = linkNode.Attributes["href"].Value;
+
+                    if (VisitedUrlToWebsite.TryGetValue(link, out Website? value))
+                    {
+                        website.OutgoingWebsites.Add(value);
+                    }
+                    else
+                    {
+                        Website outgoingWebsite = new(link);
+
+                        VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite;
+
+                        website.OutgoingWebsites.Add(outgoingWebsite);
+
+                        // crawl iff not visited yet and regex matches
+                        if (CrawlInfo.Regex.IsMatch(link))
+                        {
+                            toCrawl.Enqueue(outgoingWebsite);
+                        }
+                    }
                 }
             }
-        }
 
-        website.Title = htmlDom.DocumentNode.SelectSingleNode("//title").InnerText;
-        website.CrawlTime = sw.Elapsed;
-
-        foreach(Website outgoingWebsite in website.OutgoingWebsites)
-        {
-            if(VisitedUrlToWebsite.TryAdd(outgoingWebsite.Url, outgoingWebsite))
-            {
-                await CrawlAsync(outgoingWebsite, ct);
-            }
+            website.Title = htmlDom.DocumentNode.SelectSingleNode("//title").InnerText;
+            website.CrawlTime = sw.Elapsed;
         }
     }
 

@@ -8,7 +8,7 @@ namespace WebCrawler.Models;
 /// </summary>
 public readonly partial struct WebsiteGraphSnapshot
 {
-    public IDictionary<Website, List<Website>> Data { get; }
+    public IDictionary<Website, List<Website>> Data { get; } = new Dictionary<Website, List<Website>>();
     public Website EntryWebsite { get; }
 
     public WebsiteGraphSnapshot(IDictionary<Website, List<Website>> adjacencyListData, Website entryWebsite)
@@ -16,6 +16,8 @@ public readonly partial struct WebsiteGraphSnapshot
         Data = adjacencyListData;
         EntryWebsite = entryWebsite;
     }
+
+    public static WebsiteGraphSnapshot Empty  => new WebsiteGraphSnapshot();
 
     /// <summary>
     /// String representation of the underlying adjacency list.

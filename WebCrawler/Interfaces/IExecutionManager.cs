@@ -7,8 +7,8 @@ namespace WebCrawler.Interfaces
         ExecutionManagerConfiguration Config { get; }
 
         ulong AddToQueueForCrawling(CrawlInfo crawlInfo);
-        Task<WebsiteGraphSnapshot?> GetFullGraphAsync(ulong jobId);
-        WebsiteGraphSnapshot? GetGraph(ulong jobId);
+        WebsiteGraphSnapshot WaitForFullGraph(ulong jobId);
+        WebsiteGraphSnapshot GetGraph(ulong jobId);
         Task<bool> StopCrawlingAsync(ulong jobId);
         void RedpillAllCrawlersAndWaitForAllToFinish();
     }

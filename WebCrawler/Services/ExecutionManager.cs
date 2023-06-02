@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
@@ -15,22 +16,33 @@ public readonly struct ExecutionManagerConfiguration
 /// Producent is <see cref="AddToQueueForCrawling(CrawlInfo)"/> API.
 /// Consumers are threads that will do the crawling.
 /// </summary>
-public class ExecutionManager : IExecutionManager
+public class ExecutionManager<TWebsiteProvider> : IExecutionManager where TWebsiteProvider : IWebsiteProvider, new()
 {
     #region CrawlConsumerInfo
-    private class CrawlConsumerInfo
+
+    private class Crawler
     {
+        public enum StateEnum
+        {
+            Active,
+            Finished,
+            Sleeping,
+        }
+
         public Task Task { get; set; }
         public CancellationTokenSource CancellationTokenSource { get; set; }
         public IExecutor? Executor { get; set; } = null;
         public CrawlJob? Job { get; set; } = null;
+        public StateEnum State { get; set; }
 
-        public CrawlConsumerInfo(Task task, CancellationTokenSource cancellationTokenSource)
+        public Crawler(Task task, CancellationTokenSource cancellationTokenSource, StateEnum state)
         {
             Task = task;
             CancellationTokenSource = cancellationTokenSource;
+            State = state;
         }
     }
+
     #endregion
 
     #region CrawlJob
@@ -40,6 +52,7 @@ public class ExecutionManager : IExecutionManager
         public CrawlInfo Info { get; init; }
         public ulong JobId { get; init; }
         public bool IsCancelled { get; set; } = false;
+        public int? CrawlerIndex { get; set; }
 
         public CrawlJob(CrawlInfo info, ulong jobId)
         {
@@ -53,29 +66,33 @@ public class ExecutionManager : IExecutionManager
     public ExecutionManagerConfiguration Config { get; }
 
     private Queue<CrawlJob?> toCrawlQueue = new();
-    private CrawlConsumerInfo[] crawlConsumers;
+    private Crawler[] crawlers;
 
-    private ILogger<ExecutionManager> logger;
+    private ILogger<ExecutionManager<TWebsiteProvider>> logger;
+
+    private readonly ConcurrentDictionary<ulong, WebsiteGraphSnapshot> finishedJobs = new();
 
     private ulong lastJobId = 0;
     private bool redpilled = false;
 
-    public ExecutionManager(ILogger<ExecutionManager> logger, ExecutionManagerConfiguration? config = null)
+    public ExecutionManager(ILogger<ExecutionManager<TWebsiteProvider>> logger, ExecutionManagerConfiguration? config = null)
     {
         this.logger = logger;
 
         Config = config ?? new ExecutionManagerConfiguration()
         {
-            CrawlConsumersCount = Environment.ProcessorCount * 5
+            CrawlConsumersCount = 100
         };
 
-        crawlConsumers = new CrawlConsumerInfo[Config.CrawlConsumersCount];
-        for (int i = 0; i < Config.CrawlConsumersCount; i++)
+        crawlers = new Crawler[Config.CrawlConsumersCount];
+        foreach (int index in Enumerable.Range(0, Config.CrawlConsumersCount))
         {
             CancellationTokenSource source = new();
-            crawlConsumers[i] = new CrawlConsumerInfo(
-                Task.Run(() => CrawlConsumer(i, source.Token), source.Token),
-                source);
+
+            crawlers[index] = new Crawler(
+                Task.Run(() => CrawlConsumer(index, source.Token), source.Token),
+                source,
+                Crawler.StateEnum.Sleeping);
         }
     }
 
@@ -83,7 +100,7 @@ public class ExecutionManager : IExecutionManager
     {
         ThrowIfRedpilled();
 
-        logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: Enquing crawlInfo: {crawlInfo}.");
+        Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: Enquing crawlInfo: {crawlInfo}.");
         lock (toCrawlQueue)
         {
             toCrawlQueue.Enqueue(new CrawlJob(crawlInfo, ++lastJobId));
@@ -96,32 +113,23 @@ public class ExecutionManager : IExecutionManager
     public async Task<bool> StopCrawlingAsync(ulong jobId)
     {
         ThrowIfRedpilled();
+        ThrowIfInvalid(jobId);
 
-        lock (toCrawlQueue)
+        if (TryStopInQueue(jobId))
         {
-            foreach (CrawlJob? job in toCrawlQueue)
-            {
-                if (job is null)
-                {
-                    // redpill, at the end of queue
-                    return false;
-                }
-
-                if (job.JobId == jobId)
-                {
-                    job.IsCancelled = true;
-                    return true;
-                }
-            }
+            // not planned on crawler yet
+            return true;
         }
 
-        CrawlConsumerInfo? crawler = GetCrawler(jobId);
-        if (crawler is null)
+        int? index = GetCrawler(jobId);
+        if (index is null)
         {
+            // finished or never used jobId
             return false;
         }
 
-        int index = Array.IndexOf(crawlConsumers, crawler);
+        // active on this crawler
+        Crawler crawler = crawlers[index.Value];
 
         crawler.CancellationTokenSource.Cancel();
         try
@@ -130,13 +138,18 @@ public class ExecutionManager : IExecutionManager
         }
         catch (TaskCanceledException)
         {
+            // no need to lock crawler, since the other task thread was just cancelled
+
             crawler.CancellationTokenSource.Dispose();
 
             crawler.CancellationTokenSource = new CancellationTokenSource();
-            crawler.Task = Task.Run(() => CrawlConsumer(index, crawler.CancellationTokenSource.Token), crawler.CancellationTokenSource.Token);
+
+            // since the crawl task was just cancelled, create a new crawler
+            crawler.Task = Task.Run(() => CrawlConsumer(index.Value, crawler.CancellationTokenSource.Token), crawler.CancellationTokenSource.Token);
 
             lock (toCrawlQueue)
             {
+                // at least this one new crawler ready to crawl
                 Monitor.Pulse(toCrawlQueue);
             }
         }
@@ -144,15 +157,24 @@ public class ExecutionManager : IExecutionManager
         return true;
     }
 
-    public WebsiteGraphSnapshot? GetGraph(ulong jobId)
+    public WebsiteGraphSnapshot GetGraph(ulong jobId)
     {
         ThrowIfRedpilled();
+        ThrowIfInvalid(jobId);
 
-        CrawlConsumerInfo? crawler = GetCrawler(jobId);
-        if (crawler is null)
+        if (finishedJobs.TryGetValue(jobId, out WebsiteGraphSnapshot graph))
         {
-            return null;
+            return graph;
         }
+
+        int? index = GetCrawler(jobId);
+        if (index is null)
+        {
+            // in queue
+            return WebsiteGraphSnapshot.Empty;
+        }
+
+        Crawler crawler = crawlers[index.Value];
 
         lock(crawler)
         {
@@ -160,19 +182,43 @@ public class ExecutionManager : IExecutionManager
         }
     }
 
-    public async Task<WebsiteGraphSnapshot?> GetFullGraphAsync(ulong jobId)
+    public WebsiteGraphSnapshot WaitForFullGraph(ulong jobId)
     {
         ThrowIfRedpilled();
+        ThrowIfInvalid(jobId);
 
-        CrawlConsumerInfo? crawler = GetCrawler(jobId);
-        if(crawler is null)
+        if(finishedJobs.TryGetValue(jobId, out WebsiteGraphSnapshot graph))
         {
-            return null;
+            return graph;
         }
 
-        await crawler.Task;
+        int? index = GetCrawler(jobId);
+        if(index is null)
+        {
+            CrawlJob job = toCrawlQueue.FirstOrDefault(job => job?.JobId == jobId)!;
+
+            // wait until some crawler starts processing
+            lock(job)
+            {
+                while(job.CrawlerIndex is null)
+                {
+                    Monitor.Wait(job);
+                }
+
+                index = job.CrawlerIndex;
+            }
+        }
+
+        Crawler crawler = crawlers[index.Value];
+
+        // wait until crawler finishes processing
         lock(crawler)
         {
+            while(crawler.State == Crawler.StateEnum.Active)
+            {
+                Monitor.Wait(crawler);
+            }
+
             return crawler.Executor!.WebsiteExecution.WebsiteGraph.GetSnapshot();
         }
     }
@@ -191,61 +237,133 @@ public class ExecutionManager : IExecutionManager
             redpilled = true;
         }
 
-        Task.WaitAll(crawlConsumers.Select(crawlConsumer => crawlConsumer.Task).ToArray());
+        Task.WaitAll(crawlers.Select(crawlConsumer => crawlConsumer.Task).ToArray());
     }
 
-    private CrawlConsumerInfo? GetCrawler(ulong jobId)
+    private bool TryStopInQueue(ulong jobId)
     {
-        return crawlConsumers
-        .FirstOrDefault(crawler =>
-        {
-            lock (crawler)
-            {
-                return crawler.Job is not null && crawler.Job.JobId == jobId;
-            }
-        });
-    }
-
-    private void CrawlConsumer(int index, CancellationToken ct)
-    {
-        CrawlJob? crawlJob;
-        CrawlConsumerInfo crawler;
         lock (toCrawlQueue)
         {
-            while (toCrawlQueue.Count == 0)
+            foreach (CrawlJob? job in toCrawlQueue)
             {
+                if (job is null)
+                {
+                    // redpill, at the end of queue
+                    return false;
+                }
 
-                logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: waiting");
-                Monitor.Wait(toCrawlQueue);
-            }
-
-            logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: dequing");
-            crawlJob = toCrawlQueue.Dequeue();
-
-            // redpilled
-            if (crawlJob is null)
-            {
-                return;
-            }
-
-            crawler = crawlConsumers[index];
-            lock (crawler)
-            {
-                crawler.Job = crawlJob;
-                crawler.Executor = new Executor(crawlJob.Info);
+                if (job.JobId == jobId)
+                {
+                    job.IsCancelled = true;
+                    return true;
+                }
             }
         }
 
-        logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: crawling");
-        crawler.Executor.StartCrawlAsync(ct).Wait();
-        logger.LogTrace($"{nameof(ExecutionManager)}: {Thread.CurrentThread.ManagedThreadId}: finished crawling");
+        return false;
+    }
+
+    private int? GetCrawler(ulong jobId)
+    {
+        for(int index = 0; index < crawlers.Length; ++index)
+        {
+            Crawler crawler = crawlers[index];
+            lock (crawler)
+            {
+                if (crawler.Job is not null && crawler.Job.JobId == jobId)
+                {
+                    return index;
+                }
+            }
+        }
+
+        return null; 
+    }
+
+    private void CrawlConsumer(int thisCrawlerIndex, CancellationToken ct)
+    {
+        Debug.WriteLine(thisCrawlerIndex);
+
+        CrawlJob? crawlJob;
+        Crawler thisCrawler = crawlers[thisCrawlerIndex];
+
+        lock (toCrawlQueue)
+        {
+            do
+            {
+                while (toCrawlQueue.Count == 0)
+                {
+
+                    Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: waiting for jobs to come in");
+
+                    lock(thisCrawler)
+                    {
+                        thisCrawler.State = Crawler.StateEnum.Sleeping;
+                    }
+
+                    Monitor.Wait(toCrawlQueue);
+                }
+
+                Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: dequing job");
+
+                crawlJob = toCrawlQueue.Dequeue();
+
+                // redpilled
+                if (crawlJob is null)
+                {
+                    Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: job is a redpill");
+                    return;
+                }
+
+                if (crawlJob.IsCancelled)
+                {
+                    Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: job cancelled");
+                }
+
+            } while (crawlJob.IsCancelled);
+
+            lock(crawlJob)
+            {
+                crawlJob.CrawlerIndex = thisCrawlerIndex;
+                Monitor.PulseAll(crawlJob);
+            }
+        }
+
+        Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: assigning the job to the crawler");
+        lock (thisCrawler)
+        {
+            thisCrawler.State = Crawler.StateEnum.Active;
+            thisCrawler.Job = crawlJob;
+            thisCrawler.Executor = new Executor(crawlJob.Info, new TWebsiteProvider());
+        }
+
+        Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: start crawling");
+        thisCrawler.Executor.StartCrawlAsync(ct).Wait();
+        Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: finished crawling");
+
+        Debug.WriteLine($"{nameof(ExecutionManager<TWebsiteProvider>)}: {Thread.CurrentThread.ManagedThreadId}: adding job {thisCrawler.Job.JobId} as finished");
+        finishedJobs.TryAdd(thisCrawler.Job.JobId, thisCrawler.Executor.WebsiteExecution.WebsiteGraph.GetSnapshot());
+
+        lock(thisCrawler)
+        {
+            thisCrawler.State = Crawler.StateEnum.Finished;
+            Monitor.PulseAll(thisCrawler);
+        }
     }
 
     private void ThrowIfRedpilled()
     {
         if (redpilled)
         {
-            throw new InvalidOperationException($"This {nameof(ExecutionManager)} instance is redpilled.");
+            throw new InvalidOperationException($"This {nameof(ExecutionManager<TWebsiteProvider>)} instance is redpilled.");
+        }
+    }
+
+    private void ThrowIfInvalid(ulong jobId)
+    {
+        if(jobId > lastJobId)
+        {
+            throw new ArgumentException($"Invalid jobId: {jobId}");
         }
     }
 }

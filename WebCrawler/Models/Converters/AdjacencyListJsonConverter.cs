@@ -6,7 +6,7 @@ public readonly partial struct WebsiteGraphSnapshot
 {
     public static class JsonConverter
     {
-        private class Model
+        private class WebsiteNodeWithNeighbours
         {
             public string Url { get; set; } = null!;
             public string Title { get; set; } = null!;
@@ -16,8 +16,8 @@ public readonly partial struct WebsiteGraphSnapshot
 
         public static string Serialize(WebsiteGraphSnapshot graph)
         {
-            var websiteVertices = graph.Data.Select(
-                websiteNeighbours => new Model
+            IEnumerable<WebsiteNodeWithNeighbours> websiteVertices = graph.Data.Select(
+                websiteNeighbours => new WebsiteNodeWithNeighbours
                 {
                     Url = websiteNeighbours.Key.Url,
                     Title = websiteNeighbours.Key.Title,
@@ -27,28 +27,26 @@ public readonly partial struct WebsiteGraphSnapshot
             );
             
             // We add the entry website to the graph, so that we can easily deserialize it later.
-            Tuple<string, IEnumerable<Model>> adjacencyList = new(graph.EntryWebsite.Url, websiteVertices);
-
-            return JsonConvert.SerializeObject(adjacencyList);
+            return JsonConvert.SerializeObject(new { EntryUrl = graph.EntryWebsite.Url, Graph = websiteVertices});
         }
 
         public static WebsiteGraphSnapshot Deserialize(string json)
         {
-            Tuple<string, IEnumerable<Model>>? models = JsonConvert.DeserializeObject<Tuple<string, IEnumerable<Model>>>(json);
+            var snapshot = JsonConvert.DeserializeAnonymousType(json, new { EntryUrl = string.Empty, Graph = Enumerable.Empty<WebsiteNodeWithNeighbours>() });
 
-            if(models is null)
+            if(snapshot is null)
             {
                 throw new ArgumentException("Can't deserialize from given json.");
             }
 
             try
             {
-                Dictionary<string, Website> urlToWebsiteLookup = models.Item2
+                Dictionary<string, Website> urlToWebsiteLookup = snapshot.Graph
                     .ToDictionary(model => model.Url, model => new Website(model.Url) { Title = model.Title, CrawlTime = model.CrawlTime });
 
                 Dictionary<Website, List<Website>> data = urlToWebsiteLookup.Values.ToDictionary(website => website, _ => new List<Website>()); 
 
-                foreach(Model model in models.Item2)
+                foreach(WebsiteNodeWithNeighbours model in snapshot.Graph)
                 {
                     foreach(string neighbour in model.Neighbours)
                     {
@@ -56,7 +54,7 @@ public readonly partial struct WebsiteGraphSnapshot
                     }
                 }
                 
-                var entryWebsite = urlToWebsiteLookup[models.Item1];
+                var entryWebsite = urlToWebsiteLookup[snapshot.EntryUrl];
 
                 return new WebsiteGraphSnapshot(data, entryWebsite);
             }

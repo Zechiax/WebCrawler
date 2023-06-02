@@ -11,12 +11,18 @@ namespace WebCrawler.Test.ExecutorTests
 {
     public class ExecutorTests
     {
+        private readonly string n = Environment.NewLine;
+
         [Test]
         public void BoundingRegexTest()
         {
-            string expected = "(Auta:www.wiki.com/auta) -> " + Environment.NewLine +
-                "(Brouci:www.wiki.com/brouci) -> (Psi:www.wiki.com/psi)" + Environment.NewLine +
-                "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine;
+
+            string expected =
+                $"(:www.fiki.com/lidi) -> " +
+                $"{n}(Auta:www.wiki.com/auta) -> (:www.fiki.com/lidi)" +
+                $"{n}(Brouci:www.wiki.com/brouci) -> (:www.fiki.com/lidi), (Psi:www.wiki.com/psi)" +
+                $"{n}(Psi:www.wiki.com/psi) -> (:www.fiki.com/lidi), (Auta:www.wiki.com/auta)" +
+                $"{n}";
 
             MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
 
@@ -69,7 +75,7 @@ namespace WebCrawler.Test.ExecutorTests
             executor.StartCrawlAsync().Wait();
 
 
-            string resultingGraph = executor.WebsiteExecution.GetAdjacencyList().GetStringRepresentation();
+            string resultingGraph = executor.WebsiteExecution.WebsiteGraph.GetSnapshot().GetStringRepresentation();
 
             Assert.That(resultingGraph, Is.EqualTo(expected));
         }
@@ -131,10 +137,10 @@ namespace WebCrawler.Test.ExecutorTests
 
 
             executor.StartCrawlAsync().Wait();
-            
-            WebsiteGraphSnapshot neighboursList = executor.WebsiteExecution.GetAdjacencyList();
 
-            Assert.That(neighboursList.GetStringRepresentation(), Is.EqualTo(expected));
+            string resultingGraph = executor.WebsiteExecution.WebsiteGraph.GetSnapshot().GetStringRepresentation();
+
+            Assert.That(resultingGraph, Is.EqualTo(expected));
         }
     }
 }

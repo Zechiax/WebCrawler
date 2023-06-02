@@ -19,7 +19,9 @@ public class WebsiteExecution
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
 
-    // REMARK: Don't use. Needs SQLlite.
+    /// <summary>
+    /// Don't use! Needs SQLlite.
+    /// </summary>
     public WebsiteExecution()
     {
     }
@@ -27,17 +29,6 @@ public class WebsiteExecution
     public WebsiteExecution(WebsiteGraph websiteGraph)
     {
         WebsiteGraph = websiteGraph;
-        SetWebsiteGraph(websiteGraph);
-    }
-    
-    public void SetWebsiteGraph(WebsiteGraph websiteGraph)
-    {
-        AdjacencyListJson = WebsiteGraphSnapshot.JsonConverter.Serialize(websiteGraph.GetSnapshot());
-    }
-
-    public WebsiteGraphSnapshot GetAdjacencyList()
-    {
-        return WebsiteGraphSnapshot.JsonConverter.Deserialize(AdjacencyListJson);
     }
 }
 
