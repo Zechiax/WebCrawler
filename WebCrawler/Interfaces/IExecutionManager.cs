@@ -5,13 +5,17 @@ namespace WebCrawler.Interfaces
     public interface IExecutionManager
     {
         ExecutionManagerConfiguration Config { get; }
+
         int AddToQueueForCrawling(CrawlInfo crawlInfo);
-        Task<WebsiteGraph> WaitFor(int id);
-        Task<List<WebsiteGraph>> StopCrawlingForAll();
+
         /// thread unsafe
         WebsiteGraph GetGraph(int jobId);
+
+        /// full graph - thread safe
         Task<WebsiteGraph> GetFullGraphAsync(int jobId);
-        Task<bool> StopCrawlingAsync(int jobId);
+
+        Task<bool> TryStopCrawlingAsync(int jobId);
+
         void RedpillAllCrawlersAndWaitForAllToFinish();
     }
 

@@ -18,8 +18,9 @@ public class CrawlerContext : DbContext
         // We define the one-to-one relationship between WebsiteRecord and WebsiteExecution.
         modelBuilder.Entity<WebsiteRecord>()
             .HasOne(e => e.LastExecution)
-            .WithOne(e => e.WebsiteRecord)
-            .HasForeignKey<WebsiteExecution>(e => e.WebsiteRecordId);
+            .WithOne()
+            .HasForeignKey<WebsiteExecution>("WebsiteRecordId")
+            .IsRequired();
         
         // We define the tags and website records as a many-to-many relationship.
         modelBuilder.Entity<WebsiteRecord>()

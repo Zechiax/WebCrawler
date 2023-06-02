@@ -8,10 +8,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{67B45A6E-6510-4271-84B6-F9A735871C2A}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Scenare\DeleteRecordScenar.jpg = Scenare\DeleteRecordScenar.jpg
+		Scenare\NovyRecordScenar.jpg = Scenare\NovyRecordScenar.jpg
 		TODO.md = TODO.md
+		Scenare\UIdesign.jpg = Scenare\UIdesign.jpg
+		Scenare\UpdateRecordScenar.jpg = Scenare\UpdateRecordScenar.jpg
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebCrawler.Test", "WebCrawler.Test\WebCrawler.Test.csproj", "{53BA3BDE-4D92-4D10-861F-0F42451B67D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebCrawler.Test", "WebCrawler.Test\WebCrawler.Test.csproj", "{53BA3BDE-4D92-4D10-861F-0F42451B67D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
