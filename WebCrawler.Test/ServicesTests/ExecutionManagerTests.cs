@@ -18,11 +18,15 @@ public class ExecutionManagerTests
             "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
 
         const int jobsCount = 5;
-        ILogger<ExecutionManagerService<InitializedMockWebsiteProvider>> logger = new Mock<ILogger<ExecutionManagerService<InitializedMockWebsiteProvider>>>().Object;
+        ILogger<ExecutionManagerService> logger = new Mock<ILogger<ExecutionManagerService>>().Object;
 
 
         List<CrawlInfo> toCrawl = new();
-        ExecutionManagerService<InitializedMockWebsiteProvider> manager = new(logger, new ExecutionManagerConfig() { CrawlersCount = 2 });
+        ExecutionManagerService manager = new(logger, new ExecutionManagerConfig()
+        {
+            CrawlersCount = 2,
+            TWebsiteProvider = typeof(InitializedMockWebsiteProvider)
+        });
 
         for(int i = 0; i < jobsCount; ++i)
         {

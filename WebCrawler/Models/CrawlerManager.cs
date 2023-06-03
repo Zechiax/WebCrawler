@@ -2,23 +2,23 @@
 
 namespace WebCrawler.Models;
 
-class CrawlerManager<TWebsiteProvider> where TWebsiteProvider : IWebsiteProvider, new()
+class CrawlerManager
 {
-    private Crawler<TWebsiteProvider>[] crawlers;
+    private Crawler[] crawlers;
 
-    public CrawlerManager(int crawlersCount, Queue<Execution<TWebsiteProvider>> toCrawlQueue)
+    public CrawlerManager(ExecutionManagerConfig config, Queue<Execution> toCrawlQueue)
     {
-        crawlers = new Crawler<TWebsiteProvider>[crawlersCount];
+        crawlers = new Crawler[config.CrawlersCount];
 
-        for (int index = 0; index < crawlersCount; index++)
+        for (int index = 0; index < config.CrawlersCount; index++)
         {
-            crawlers[index] = new Crawler<TWebsiteProvider>(toCrawlQueue);
+            crawlers[index] = new Crawler(toCrawlQueue, (IWebsiteProvider)Activator.CreateInstance(config.TWebsiteProvider)!);
         }
     }
 
     public void StartCrawlers()
     {
-        foreach (Crawler<TWebsiteProvider> crawler in crawlers)
+        foreach (Crawler crawler in crawlers)
         {
             crawler.Start();
         }

@@ -3,19 +3,22 @@ using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
 
-class Crawler<TWebsiteProvider> where TWebsiteProvider : IWebsiteProvider, new()
+class Crawler
 {
-    private Queue<Execution<TWebsiteProvider>> toCrawlQueue;
+    private Queue<Execution> toCrawlQueue;
 
     private IExecutor? executor;
-    private Execution<TWebsiteProvider> currentJob = null!;
+    private Execution currentJob = null!;
+
+    private readonly IWebsiteProvider websiteProvider;
 
     private Task task;
     private CancellationTokenSource cancellationTokenSource;
 
-    public Crawler(Queue<Execution<TWebsiteProvider>> toCrawlQueue)
+    public Crawler(Queue<Execution> toCrawlQueue, IWebsiteProvider websiteProvider)
     {
         this.toCrawlQueue = toCrawlQueue;
+        this.websiteProvider = websiteProvider; 
 
         cancellationTokenSource = new CancellationTokenSource();
         task = new Task(() => CrawlConsumer(cancellationTokenSource.Token), cancellationTokenSource.Token);
@@ -81,7 +84,7 @@ class Crawler<TWebsiteProvider> where TWebsiteProvider : IWebsiteProvider, new()
                 } while (wasJobStopped);
             }
 
-            executor = new Executor(currentJob.Info, new TWebsiteProvider());
+            executor = new Executor(currentJob.Info, websiteProvider);
 
             Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: pulsing that job is active ({currentJob.JobId})");
 
@@ -89,6 +92,7 @@ class Crawler<TWebsiteProvider> where TWebsiteProvider : IWebsiteProvider, new()
             {
                 currentJob.WebsiteGraph = executor.WebsiteExecution.WebsiteGraph;
                 currentJob.JobStatus = JobStatus.Active;
+                currentJob.Crawler = this;
                 Monitor.PulseAll(currentJob);
             }
 

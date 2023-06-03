@@ -3,29 +3,29 @@ using WebCrawler.Models;
 
 namespace WebCrawler.Services;
 
-public class ExecutionManagerService<TWebsiteProvider> : IExecutionManagerService where TWebsiteProvider : IWebsiteProvider, new()
+public class ExecutionManagerService : IExecutionManagerService
 {
     public ExecutionManagerConfig Config { get; } 
 
-    private CrawlerManager<TWebsiteProvider> crawlerManager;
+    private CrawlerManager crawlerManager;
 
-    private Queue<Execution<TWebsiteProvider>> toCrawlQueue = new();
-    private Dictionary<ulong, Execution<TWebsiteProvider>> jobs = new();
+    private Queue<Execution> toCrawlQueue = new();
+    private Dictionary<ulong, Execution> jobs = new();
 
     private ulong lastJobId = 0;
-    private ILogger<ExecutionManagerService<TWebsiteProvider>> logger;
+    private ILogger<ExecutionManagerService> logger;
 
-    public ExecutionManagerService(ILogger<ExecutionManagerService<TWebsiteProvider>> logger, ExecutionManagerConfig config)
+    public ExecutionManagerService(ILogger<ExecutionManagerService> logger, ExecutionManagerConfig config)
     {
         this.logger = logger;
         Config = config;
-        crawlerManager = new CrawlerManager<TWebsiteProvider>(config.CrawlersCount, toCrawlQueue);
+        crawlerManager = new CrawlerManager(config, toCrawlQueue);
         crawlerManager.StartCrawlers();
     }
 
     public ulong EnqueueForCrawl(CrawlInfo crawlInfo)
     {
-        Execution<TWebsiteProvider> job = new(crawlInfo, ++lastJobId);
+        Execution job = new(crawlInfo, ++lastJobId);
         jobs[lastJobId] = job;
 
         lock (toCrawlQueue)
@@ -44,7 +44,7 @@ public class ExecutionManagerService<TWebsiteProvider> : IExecutionManagerServic
             throw JobIdNotPresentException(jobId);
         }
 
-        Execution<TWebsiteProvider> job = jobs[jobId];
+        Execution job = jobs[jobId];
 
         lock (job)
         {
@@ -62,7 +62,7 @@ public class ExecutionManagerService<TWebsiteProvider> : IExecutionManagerServic
             throw JobIdNotPresentException(jobId);
         }
 
-        Execution<TWebsiteProvider> job = jobs[jobId];
+        Execution job = jobs[jobId];
 
         if (job.JobStatus == JobStatus.WaitingInQueue)
         {
@@ -72,6 +72,12 @@ public class ExecutionManagerService<TWebsiteProvider> : IExecutionManagerServic
         return job.WebsiteGraph!.GetSnapshot();
     }
 
+    public WebsiteGraphSnapshot WaitForGraph(ulong jobId)
+    {
+        WaitForExecutorToFinish(jobId);
+        return GetGraph(jobId);
+    }
+
     public async Task<bool> StopCrawlingAsync(ulong jobId)
     {
         if (!IsValid(jobId))
@@ -79,7 +85,7 @@ public class ExecutionManagerService<TWebsiteProvider> : IExecutionManagerServic
             throw JobIdNotPresentException(jobId);
         }
 
-        Execution<TWebsiteProvider> job = jobs[jobId];
+        Execution job = jobs[jobId];
         lock (job)
         {
             if (job.JobStatus == JobStatus.WaitingInQueue)
