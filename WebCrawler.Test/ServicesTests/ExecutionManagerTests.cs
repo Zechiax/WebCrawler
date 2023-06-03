@@ -3,7 +3,7 @@ using Moq;
 using Serilog;
 using WebCrawler.Models;
 using WebCrawler.Services;
-using WebCrawler.Test.ExecutorTests;
+using WebCrawler.Test.ServicesTests.Helpers;
 
 namespace WebCrawler.Test.ServicesTests;
 

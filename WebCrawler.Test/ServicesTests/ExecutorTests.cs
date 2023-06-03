@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebCrawler.Models;
+using WebCrawler.Test.ServicesTests.Helpers;
 
 namespace WebCrawler.Test.ExecutorTests
 {
