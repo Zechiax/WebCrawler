@@ -1,16 +1,17 @@
-﻿using WebCrawler.Interfaces;
+﻿using System.Runtime.CompilerServices;
+using WebCrawler.Interfaces;
 using WebCrawler.Models;
 
 namespace WebCrawler.Services;
 
 public class ExecutionManagerService : IExecutionManagerService
 {
-    public ExecutionManagerConfig Config { get; } 
+    public ExecutionManagerConfig Config { get; }
 
     private CrawlerManager crawlerManager;
 
-    private Queue<Execution> toCrawlQueue = new();
-    private Dictionary<ulong, Execution> jobs = new();
+    private Queue<WebsiteExecutionJob> toCrawlQueue = new();
+    private Dictionary<ulong, WebsiteExecutionJob> jobs = new();
 
     private ulong lastJobId = 0;
     private ILogger<ExecutionManagerService> logger;
@@ -25,7 +26,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public ulong EnqueueForCrawl(CrawlInfo crawlInfo)
     {
-        Execution job = new(crawlInfo, ++lastJobId);
+        WebsiteExecutionJob job = new(crawlInfo, ++lastJobId);
         jobs[lastJobId] = job;
 
         lock (toCrawlQueue)
@@ -37,14 +38,14 @@ public class ExecutionManagerService : IExecutionManagerService
         return lastJobId;
     }
 
-    public void WaitForExecutorToFinish(ulong jobId)
+    public void WaitForExecutionToFinish(ulong jobId)
     {
         if (!IsValid(jobId))
         {
-            throw JobIdNotPresentException(jobId);
+            throw JobIdInvalidException(jobId);
         }
 
-        Execution job = jobs[jobId];
+        WebsiteExecutionJob job = jobs[jobId];
 
         lock (job)
         {
@@ -59,56 +60,51 @@ public class ExecutionManagerService : IExecutionManagerService
     {
         if (!IsValid(jobId))
         {
-            throw JobIdNotPresentException(jobId);
+            throw JobIdInvalidException(jobId);
         }
 
-        Execution job = jobs[jobId];
+        WebsiteExecutionJob job = jobs[jobId];
 
         if (job.JobStatus == JobStatus.WaitingInQueue)
         {
             return WebsiteGraphSnapshot.Empty;
         }
 
-        return job.WebsiteGraph!.GetSnapshot();
+        return job.WebsiteGraph?.GetSnapshot() ?? WebsiteGraphSnapshot.Empty;
     }
 
-    public WebsiteGraphSnapshot WaitForGraph(ulong jobId)
+    public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
     {
-        WaitForExecutorToFinish(jobId);
+        await Task.CompletedTask;
+        WaitForExecutionToFinish(jobId);
         return GetGraph(jobId);
     }
 
-    public async Task<bool> StopCrawlingAsync(ulong jobId)
+    public async Task<bool> StopExecutionAsync(ulong jobId)
     {
         if (!IsValid(jobId))
         {
-            throw JobIdNotPresentException(jobId);
+            throw JobIdInvalidException(jobId);
         }
 
-        Execution job = jobs[jobId];
-        lock (job)
+        WebsiteExecutionJob job = jobs[jobId];
+        lock(job)
         {
-            if (job.JobStatus == JobStatus.WaitingInQueue)
+            if(job.JobStatus == JobStatus.WaitingInQueue)
             {
-                job.JobStatus = JobStatus.Stopped;
+                Monitor.Wait(job);
                 return true;
             }
-
-            if (job.JobStatus == JobStatus.Finished || job.JobStatus == JobStatus.Stopped)
-            {
-                return false;
-            }
         }
 
-        await job.Crawler!.StopCurrentJob();
-        return true;
+        return await job.Crawler!.StopCurrentJob();
     }
 
     public JobStatus GetJobStatus(ulong jobId)
     {
         if (!IsValid(jobId))
         {
-            throw JobIdNotPresentException(jobId);
+            throw JobIdInvalidException(jobId);
         }
 
         return jobs[jobId].JobStatus;
@@ -119,8 +115,8 @@ public class ExecutionManagerService : IExecutionManagerService
         return jobs.ContainsKey(jobId);
     }
 
-    private ArgumentException JobIdNotPresentException(ulong jobId)
+    private ArgumentException JobIdInvalidException(ulong jobId)
     {
-        return new ArgumentException($"Job with {jobId} already finished and cleaned from job history.");
+        return new ArgumentException($"Job with {jobId} is invalid.");
     }
 }

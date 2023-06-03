@@ -1,20 +1,16 @@
-﻿using WebCrawler.Interfaces;
+﻿namespace WebCrawler.Models;
 
-namespace WebCrawler.Models;
-
-record class Execution
+record class WebsiteExecutionJob
 {
-    public CrawlInfo Info { get; init; }
+    public WebsiteExecution WebsiteExecution { get; }
     public ulong JobId { get; init; }
-
     public JobStatus JobStatus { get; set; } = JobStatus.WaitingInQueue;
     public Crawler? Crawler { get; set; }
     public WebsiteGraph? WebsiteGraph { get; set; }
 
-    public Execution(CrawlInfo info, ulong jobId)
+    public WebsiteExecutionJob(CrawlInfo info, ulong jobId)
     {
-        Info = info;
+        WebsiteExecution = new WebsiteExecution(info);
         JobId = jobId;
     }
 }
-

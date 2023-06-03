@@ -1,27 +1,25 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
 
 class Crawler
 {
-    private Queue<Execution> toCrawlQueue;
+    private Queue<WebsiteExecutionJob> toCrawlQueue;
 
-    private IExecutor? executor;
-    private Execution currentJob = null!;
+    private WebsiteExecutionJob currentJob = null!;
 
     private readonly IWebsiteProvider websiteProvider;
 
     private Task task;
-    private CancellationTokenSource cancellationTokenSource;
 
-    public Crawler(Queue<Execution> toCrawlQueue, IWebsiteProvider websiteProvider)
+    public Crawler(Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
     {
         this.toCrawlQueue = toCrawlQueue;
         this.websiteProvider = websiteProvider; 
 
-        cancellationTokenSource = new CancellationTokenSource();
-        task = new Task(() => CrawlConsumer(cancellationTokenSource.Token), cancellationTokenSource.Token);
+        task = new Task(CrawlConsumer);
     }
 
     public void Start()
@@ -29,85 +27,89 @@ class Crawler
         task.Start();
     }
 
-    public async Task StopCurrentJob()
+    public async Task<bool> StopCurrentJob()
     {
-        cancellationTokenSource.Cancel();
+        await Task.CompletedTask;
 
-        try
+        lock(currentJob)
         {
-            await task;
-        }
-        catch (OperationCanceledException)
-        {
+            if (currentJob.JobStatus == JobStatus.Finished || currentJob.JobStatus == JobStatus.Stopped)
+            {
+                return false; 
+            }
+
+            // -> is active, can't be waiting in queue since this crawler already picked it up
             currentJob.JobStatus = JobStatus.Stopped;
-
-            cancellationTokenSource.Dispose();
-            cancellationTokenSource = new CancellationTokenSource();
-            task = new Task(() => CrawlConsumer(cancellationTokenSource.Token), cancellationTokenSource.Token);
+            Monitor.Wait(currentJob);
+            return true;
         }
     }
 
-    private void CrawlConsumer(CancellationToken ct)
+    private void CrawlConsumer()
     {
+        tryDequingAgain:
         while (true)
         {
-            bool wasJobStopped;
-
             lock (toCrawlQueue)
             {
-                do
+                while (toCrawlQueue.Count == 0)
                 {
-                    while (toCrawlQueue.Count == 0)
-                    {
 
-                        Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: waiting for jobs to come in");
-                        Monitor.Wait(toCrawlQueue);
-                    }
+                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: waiting for jobs to come in");
+                    Monitor.Wait(toCrawlQueue);
+                }
 
-                    currentJob = toCrawlQueue.Dequeue();
-                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: dequing job: {currentJob?.JobId}");
+                currentJob = toCrawlQueue.Dequeue();
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: dequing job: {currentJob?.JobId}");
 
-                    // redpilled
-                    if (currentJob is null)
-                    {
-                        Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: job is a redpill");
-                        return;
-                    }
-
-                    wasJobStopped = currentJob.JobStatus == JobStatus.Stopped;
-
-                    if (wasJobStopped)
-                    {
-                        Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: job stopped ({currentJob.JobId})");
-                    }
-
-                } while (wasJobStopped);
+                // redpilled
+                if (currentJob is null)
+                {
+                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: job is a redpill");
+                    return;
+                }
             }
 
-            executor = new Executor(currentJob.Info, websiteProvider);
-
-            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: pulsing that job is active ({currentJob.JobId})");
+            IExecutor executor;
 
             lock (currentJob)
             {
-                currentJob.WebsiteGraph = executor.WebsiteExecution.WebsiteGraph;
+                if(currentJob.JobStatus == JobStatus.Stopped)
+                {
+                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: job stopped in queue - skipping and pulsing ({currentJob.JobId})");
+
+                    // Pulses all threads waiting for the job to be stopped, when the job was still in queue.
+                    Monitor.PulseAll(currentJob);
+                    goto tryDequingAgain;
+                }
+
                 currentJob.JobStatus = JobStatus.Active;
                 currentJob.Crawler = this;
-                Monitor.PulseAll(currentJob);
+                executor = new Executor(currentJob, websiteProvider);
             }
 
             Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId} : start crawling ({currentJob.JobId})");
 
-            executor.StartCrawlAsync(ct).Wait();
+            executor.StartCrawlAsync().Wait();
 
             Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId} : finished crawling ({currentJob.JobId})");
 
             Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId} : pulsing that job is finished ({currentJob.JobId})");
             lock (currentJob)
             {
-                currentJob.JobStatus = JobStatus.Finished;
+                // If job was not stopped during crawling, it finished successfuly on it's own.
+                if(currentJob.JobStatus != JobStatus.Stopped)
+                {
+                    currentJob.JobStatus = JobStatus.Finished;
+                }
+
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: pulsing that job is over (stopped or finished) ({currentJob.JobId})");
+
+                // Pulses all threads waiting for the job to be stopped, when the job was active.
                 Monitor.PulseAll(currentJob);
             }
+
+            executor?.Dispose();
         }
     }
 }

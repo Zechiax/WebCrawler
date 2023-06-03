@@ -3,9 +3,8 @@ using WebCrawler.Models;
 
 namespace WebCrawler.Interfaces;
 
-public interface IExecutor
+interface IExecutor : IDisposable
 {
-    CrawlInfo CrawlInfo { get; }
-    WebsiteExecution WebsiteExecution { get; }
-    Task StartCrawlAsync(CancellationToken ct);
+    WebsiteExecutionJob ExecutionJob { get; }
+    Task StartCrawlAsync();
 }

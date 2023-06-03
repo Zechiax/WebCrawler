@@ -9,23 +9,20 @@ namespace WebCrawler.Models;
 /// <summary>
 /// Crawls all websites.
 /// </summary>
-public class Executor : IExecutor, IDisposable
+class Executor : IExecutor
 {
-    public CrawlInfo CrawlInfo { get; }
-    public WebsiteExecution WebsiteExecution { get; }
+    public WebsiteExecutionJob ExecutionJob { get; }
 
     private readonly IWebsiteProvider websiteProvider;
-
     private Dictionary<string, Website> VisitedUrlToWebsite = new();
-
     private bool disposed = false;
 
-    public Executor(CrawlInfo crawlInfo, IWebsiteProvider? websiteProvider = null)
+    public Executor(WebsiteExecutionJob execution, IWebsiteProvider? websiteProvider = null)
     {
-        CrawlInfo = crawlInfo;
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
-        
-        WebsiteExecution = new WebsiteExecution(new WebsiteGraph(new Website(CrawlInfo.EntryUrl)));
+
+        ExecutionJob = execution;
+        ExecutionJob.WebsiteGraph = new WebsiteGraph(new Website(ExecutionJob.WebsiteExecution.Info.EntryUrl));
     }
 
     ~Executor()
@@ -38,30 +35,28 @@ public class Executor : IExecutor, IDisposable
 
     public async Task StartCrawlAsync()
     {
-        await StartCrawlAsync(default(CancellationToken));
-    }
+        ExecutionJob.WebsiteExecution.Started = DateTime.Now;
 
-    public async Task StartCrawlAsync(CancellationToken ct)
-    {
-        WebsiteExecution.Started = DateTime.Now;
-        await CrawlAsync(WebsiteExecution.WebsiteGraph.EntryWebsite, ct)
+        await CrawlAsync(ExecutionJob.WebsiteGraph!.EntryWebsite)
         .ContinueWith(_ =>
         {
-            WebsiteExecution.Finished = DateTime.Now;
+            ExecutionJob.WebsiteExecution.Finished = DateTime.Now;
         });
     }
 
-    private async Task CrawlAsync(Website entryWebsite, CancellationToken ct)
+    private async Task CrawlAsync(Website entryWebsite)
     {
         Queue<Website> toCrawl = new();
         toCrawl.Enqueue(entryWebsite);
 
         while(toCrawl.Count > 0)
         {
-            if(ct.IsCancellationRequested)
+            lock (ExecutionJob)
             {
-                // TODO: persistenci do databaze toho grafu
-                ct.ThrowIfCancellationRequested();
+                if(ExecutionJob.JobStatus == JobStatus.Stopped)
+                {
+                    return;
+                }
             }
 
             Website website = toCrawl.Dequeue();
@@ -104,7 +99,7 @@ public class Executor : IExecutor, IDisposable
                         }
 
                         // crawl iff not visited yet and regex matches
-                        if (CrawlInfo.Regex.IsMatch(link))
+                        if (ExecutionJob.WebsiteExecution.Info.Regex.IsMatch(link))
                         {
                             toCrawl.Enqueue(outgoingWebsite);
                         }

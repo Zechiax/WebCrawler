@@ -8,8 +8,13 @@ namespace WebCrawler.Models;
 /// </summary>
 public readonly partial struct WebsiteGraphSnapshot
 {
-    public IDictionary<Website, List<Website>> Data { get; } = new Dictionary<Website, List<Website>>();
-    public Website EntryWebsite { get; }
+    public IDictionary<Website, List<Website>> Data { get; init; }
+    public Website? EntryWebsite { get; init; }
+
+    public WebsiteGraphSnapshot()
+    {
+        Data = new Dictionary<Website, List<Website>>();
+    }
 
     public WebsiteGraphSnapshot(IDictionary<Website, List<Website>> adjacencyListData, Website entryWebsite)
     {

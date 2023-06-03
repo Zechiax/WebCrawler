@@ -8,28 +8,28 @@ using System.Threading.Tasks;
 using WebCrawler.Models;
 using WebCrawler.Test.ServicesTests.Helpers;
 
-namespace WebCrawler.Test.ExecutorTests
+namespace WebCrawler.Test.ExecutorTests;
+
+public class ExecutorTests
 {
-    public class ExecutorTests
+    private readonly string n = Environment.NewLine;
+
+    [Test]
+    public void BoundingRegexTest()
     {
-        private readonly string n = Environment.NewLine;
 
-        [Test]
-        public void BoundingRegexTest()
-        {
+        string expected =
+            $"(:www.fiki.com/lidi) -> " +
+            $"{n}(Auta:www.wiki.com/auta) -> (:www.fiki.com/lidi)" +
+            $"{n}(Brouci:www.wiki.com/brouci) -> (:www.fiki.com/lidi), (Psi:www.wiki.com/psi)" +
+            $"{n}(Psi:www.wiki.com/psi) -> (:www.fiki.com/lidi), (Auta:www.wiki.com/auta)" +
+            $"{n}";
 
-            string expected =
-                $"(:www.fiki.com/lidi) -> " +
-                $"{n}(Auta:www.wiki.com/auta) -> (:www.fiki.com/lidi)" +
-                $"{n}(Brouci:www.wiki.com/brouci) -> (:www.fiki.com/lidi), (Psi:www.wiki.com/psi)" +
-                $"{n}(Psi:www.wiki.com/psi) -> (:www.fiki.com/lidi), (Auta:www.wiki.com/auta)" +
-                $"{n}";
+        MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
 
-            MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
-
-            #region htmls
-            mockWebsiteProvider.brouciHtml =
-            @"
+        #region htmls
+        mockWebsiteProvider.brouciHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Brouci</title>
@@ -38,8 +38,8 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            mockWebsiteProvider.psiHtml =
-            @"
+        mockWebsiteProvider.psiHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Psi</title>
@@ -48,8 +48,8 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            mockWebsiteProvider.lidiHtml =
-            @"
+        mockWebsiteProvider.lidiHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Lidi</title>
@@ -58,8 +58,8 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            mockWebsiteProvider.autaHtml =
-            @"
+        mockWebsiteProvider.autaHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Auta</title>
@@ -67,33 +67,33 @@ namespace WebCrawler.Test.ExecutorTests
                     <p></p>
                 </html>
             ";
-            mockWebsiteProvider.Init();
-            #endregion
+        mockWebsiteProvider.Init();
+        #endregion
 
-            Executor executor = new(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), mockWebsiteProvider);
-
-
-            executor.StartCrawlAsync().Wait();
+        Executor executor = new(new WebsiteExecutionJob(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), 0), mockWebsiteProvider);
 
 
-            string resultingGraph = executor.WebsiteExecution.WebsiteGraph.GetSnapshot().GetStringRepresentation();
+        executor.StartCrawlAsync().Wait();
 
-            Assert.That(resultingGraph, Is.EqualTo(expected));
-        }
 
-        [Test]
-        public void GeneralGraphTest()
-        {
-            string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
-                "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
-                "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
-                "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
+        string resultingGraph = executor.ExecutionJob.WebsiteGraph!.GetSnapshot().GetStringRepresentation();
 
-            MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
+        Assert.That(resultingGraph, Is.EqualTo(expected));
+    }
 
-            #region htmls
-            mockWebsiteProvider.brouciHtml =
-            @"
+    [Test]
+    public void GeneralGraphTest()
+    {
+        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
+            "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
+            "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
+            "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
+
+        MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
+
+        #region htmls
+        mockWebsiteProvider.brouciHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Brouci</title>
@@ -102,8 +102,8 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            mockWebsiteProvider.psiHtml =
-            @"
+        mockWebsiteProvider.psiHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Psi</title>
@@ -112,8 +112,8 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            mockWebsiteProvider.lidiHtml =
-            @"
+        mockWebsiteProvider.lidiHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Lidi</title>
@@ -122,8 +122,8 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            mockWebsiteProvider.autaHtml =
-            @"
+        mockWebsiteProvider.autaHtml =
+        @"
                 <!DOCTYPE html>
                 <html>
                     <title>Auta</title>
@@ -131,17 +131,16 @@ namespace WebCrawler.Test.ExecutorTests
                     <p></p>
                 </html>
             ";
-            mockWebsiteProvider.Init();
-            #endregion
+        mockWebsiteProvider.Init();
+        #endregion
 
-            Executor executor = new(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), mockWebsiteProvider);
+        Executor executor = new(new WebsiteExecutionJob(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), 0), mockWebsiteProvider);
 
 
-            executor.StartCrawlAsync().Wait();
+        executor.StartCrawlAsync().Wait();
 
-            string resultingGraph = executor.WebsiteExecution.WebsiteGraph.GetSnapshot().GetStringRepresentation();
+        string resultingGraph = executor.ExecutionJob.WebsiteGraph!.GetSnapshot().GetStringRepresentation();
 
-            Assert.That(resultingGraph, Is.EqualTo(expected));
-        }
+        Assert.That(resultingGraph, Is.EqualTo(expected));
     }
 }

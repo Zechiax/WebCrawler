@@ -6,7 +6,7 @@ class CrawlerManager
 {
     private Crawler[] crawlers;
 
-    public CrawlerManager(ExecutionManagerConfig config, Queue<Execution> toCrawlQueue)
+    public CrawlerManager(ExecutionManagerConfig config, Queue<WebsiteExecutionJob> toCrawlQueue)
     {
         crawlers = new Crawler[config.CrawlersCount];
 
