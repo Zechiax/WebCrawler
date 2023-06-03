@@ -1,6 +1,6 @@
 ﻿namespace WebCrawler.Interfaces
 {
-    public interface IPeriodicManager : IExecutionManager
+    public interface IPeriodicManager : IExecutionManagerService
     {
 
     }

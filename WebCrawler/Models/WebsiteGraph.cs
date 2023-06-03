@@ -35,10 +35,13 @@ public class WebsiteGraph
 
         adjacencyListData[website] = new List<Website>();
 
-        foreach(Website outgoingWebsite in website.OutgoingWebsites)
+        lock(website)
         {
-            adjacencyListData[website].Add(outgoingWebsite);
-            GraphTraversal(outgoingWebsite, adjacencyListData);
+            foreach(Website outgoingWebsite in website.OutgoingWebsites)
+            {
+                adjacencyListData[website].Add(outgoingWebsite);
+                GraphTraversal(outgoingWebsite, adjacencyListData);
+            }
         }
     }
 }

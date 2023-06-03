@@ -77,7 +77,7 @@ namespace WebCrawler.Test.ExecutorTests
                 </html>
             ";
 
-            GetStringDelay = TimeSpan.FromMilliseconds(600);
+            GetStringDelay = TimeSpan.FromMilliseconds(100);
 
             Init();
         }

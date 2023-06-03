@@ -87,7 +87,10 @@ public class Executor : IExecutor, IDisposable
 
                     if (VisitedUrlToWebsite.TryGetValue(link, out Website? value))
                     {
-                        website.OutgoingWebsites.Add(value);
+                        lock(website)
+                        {
+                            website.OutgoingWebsites.Add(value);
+                        }
                     }
                     else
                     {
@@ -95,7 +98,10 @@ public class Executor : IExecutor, IDisposable
 
                         VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite;
 
-                        website.OutgoingWebsites.Add(outgoingWebsite);
+                        lock(website)
+                        {
+                            website.OutgoingWebsites.Add(outgoingWebsite);
+                        }
 
                         // crawl iff not visited yet and regex matches
                         if (CrawlInfo.Regex.IsMatch(link))
