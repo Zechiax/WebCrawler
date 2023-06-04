@@ -57,19 +57,19 @@ public class Crawler
             {
                 while (toCrawlQueue.Count == 0)
                 {
-                    _logger.LogInformation("{CurrentThreadManagedThreadId}: waiting for jobs to come in",
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: waiting for jobs to come in",
                         Thread.CurrentThread.ManagedThreadId);
                     Monitor.Wait(toCrawlQueue);
                 }
 
                 currentJob = toCrawlQueue.Dequeue();
-                _logger.LogInformation("{CurrentThreadManagedThreadId}: dequeuing job: {JobId}",
+                _logger.LogDebug("{CurrentThreadManagedThreadId}: dequeuing job: {JobId}",
                     Thread.CurrentThread.ManagedThreadId, currentJob?.JobId);
 
                 // redpilled
                 if (currentJob is null)
                 {
-                    _logger.LogInformation("{CurrentThreadManagedThreadId}: job is a redpill",
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: job is a redpill",
                         Thread.CurrentThread.ManagedThreadId);
                     return;
                 }
@@ -81,7 +81,7 @@ public class Crawler
             {
                 if(currentJob.JobStatus == JobStatus.Stopped)
                 {
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         "{CurrentThreadManagedThreadId}: job stopped in queue - skipping and pulsing ({JobId})",
                         Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
 
@@ -95,15 +95,15 @@ public class Crawler
                 executor = new Executor(currentJob, websiteProvider);
             }
             
-            _logger.LogInformation("{CurrentThreadManagedThreadId}: start crawling ({JobId})",
+            _logger.LogDebug("{CurrentThreadManagedThreadId}: start crawling ({JobId})",
                 Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
 
             executor.StartCrawlAsync().Wait();
             
-            _logger.LogInformation("{CurrentThreadManagedThreadId}: finished crawling ({JobId})",
+            _logger.LogDebug("{CurrentThreadManagedThreadId}: finished crawling ({JobId})",
                 Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
             
-            _logger.LogInformation("{CurrentThreadManagedThreadId}: pulsing that job is finished ({JobId})",
+            _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is finished ({JobId})",
                 Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
             lock (currentJob)
             {
@@ -113,7 +113,7 @@ public class Crawler
                     currentJob.JobStatus = JobStatus.Finished;
                 }
                 
-                _logger.LogInformation("{CurrentThreadManagedThreadId}: pulsing that job is over (stopped or finished) ({JobId})",
+                _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over (stopped or finished) ({JobId})",
                     Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
 
                 // Pulses all threads waiting for the job to be stopped, when the job was active.
