@@ -117,9 +117,18 @@ public class Crawler
                     // Add the job to the database
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: adding job to database ({JobId})",
                         Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
-                    
-                    _data.AddWebsiteExecution(currentJob.JobId, currentJob.WebsiteExecution);
-                    
+
+                    // Because of unit tests, as somehow it's possible for the data service to be null
+                    // In production this should never happen
+                    if (_data is not null)
+                    {
+                        _data.AddWebsiteExecution(currentJob.JobId, currentJob.WebsiteExecution);   
+                    }
+                    else
+                    {
+                        _logger.LogCritical("Data service is null, crawler can't add job to database");
+                    }
+
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: job added to database ({JobId})",
                         Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
                 }
