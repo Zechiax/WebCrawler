@@ -25,7 +25,7 @@ public class ExecutionManagerTests
 
         serviceCollection.AddSingleton(moqLoggerExecutionManager.Object);
         serviceCollection.AddSingleton(moqLoggerCrawler.Object);
-        serviceCollection.AddSingleton(moqIDataService.Object);
+        serviceCollection.AddSingleton<IDataService>(moqIDataService.Object);
         
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
@@ -39,7 +39,6 @@ public class ExecutionManagerTests
             "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
 
         const int jobsCount = 100;
-        ILogger<ExecutionManagerService> logger = new Mock<ILogger<ExecutionManagerService>>().Object;
 
         List<CrawlInfo> toCrawl = new();
 
@@ -79,8 +78,6 @@ public class ExecutionManagerTests
 
         // jobsCount should be big enough to be able to stop the last job while the crawlers still not dequeid it
         const int jobsCount = 4;
-
-        ILogger<ExecutionManagerService> logger = new Mock<ILogger<ExecutionManagerService>>().Object;
 
         List<CrawlInfo> toCrawl = new();
 
