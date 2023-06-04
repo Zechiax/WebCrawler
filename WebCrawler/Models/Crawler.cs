@@ -52,7 +52,6 @@ public class Crawler
 
     private void CrawlConsumer()
     {
-        tryDequingAgain:
         while (true)
         {
             lock (toCrawlQueue)
@@ -89,7 +88,7 @@ public class Crawler
 
                     // Pulses all threads waiting for the job to be stopped, when the job was still in queue.
                     Monitor.PulseAll(currentJob);
-                    goto tryDequingAgain;
+                    continue;
                 }
 
                 currentJob.JobStatus = JobStatus.Active;
