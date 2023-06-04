@@ -27,7 +27,7 @@ public readonly partial struct WebsiteGraphSnapshot
             );
             
             // We add the entry website to the graph, so that we can easily deserialize it later.
-            return JsonConvert.SerializeObject(new { EntryUrl = graph.EntryWebsite.Url, Graph = websiteVertices});
+            return JsonConvert.SerializeObject(new { EntryUrl = graph.EntryWebsite?.Url, Graph = websiteVertices});
         }
 
         public static WebsiteGraphSnapshot Deserialize(string json)

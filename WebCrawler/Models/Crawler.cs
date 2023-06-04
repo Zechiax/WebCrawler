@@ -1,51 +1,46 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using WebCrawler.Interfaces;
+﻿using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
 
 public class Crawler
 {
-    private Queue<WebsiteExecutionJob> toCrawlQueue;
-
-    private WebsiteExecutionJob currentJob = null!;
-
-    private readonly IWebsiteProvider websiteProvider;
-
-    private Task task;
+    private readonly Queue<WebsiteExecutionJob> _toCrawlQueue;
+    private WebsiteExecutionJob _currentJob = null!;
+    private readonly IWebsiteProvider _websiteProvider;
+    private readonly Task _task;
 
     private ILogger<Crawler> _logger;
     private readonly IDataService _data;
 
     public Crawler(ILogger<Crawler> logger, IDataService data, Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
     {
-        data = data;
+        _data = data;
         _logger = logger;
-        this.toCrawlQueue = toCrawlQueue;
-        this.websiteProvider = websiteProvider; 
+        this._toCrawlQueue = toCrawlQueue;
+        this._websiteProvider = websiteProvider; 
 
-        task = new Task(CrawlConsumer);
+        _task = new Task(CrawlConsumer);
     }
 
     public void Start()
     {
-        task.Start();
+        _task.Start();
     }
 
     public async Task<bool> StopCurrentJob()
     {
         await Task.CompletedTask;
 
-        lock(currentJob)
+        lock(_currentJob)
         {
-            if (currentJob.JobStatus == JobStatus.Finished || currentJob.JobStatus == JobStatus.Stopped)
+            if (_currentJob.JobStatus == JobStatus.Finished || _currentJob.JobStatus == JobStatus.Stopped)
             {
                 return false; 
             }
 
             // -> is active, can't be waiting in queue since this crawler already picked it up
-            currentJob.JobStatus = JobStatus.Stopped;
-            Monitor.Wait(currentJob);
+            _currentJob.JobStatus = JobStatus.Stopped;
+            Monitor.Wait(_currentJob);
             return true;
         }
     }
@@ -54,21 +49,21 @@ public class Crawler
     {
         while (true)
         {
-            lock (toCrawlQueue)
+            lock (_toCrawlQueue)
             {
-                while (toCrawlQueue.Count == 0)
+                while (_toCrawlQueue.Count == 0)
                 {
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: waiting for jobs to come in",
                         Thread.CurrentThread.ManagedThreadId);
-                    Monitor.Wait(toCrawlQueue);
+                    Monitor.Wait(_toCrawlQueue);
                 }
 
-                currentJob = toCrawlQueue.Dequeue();
+                _currentJob = _toCrawlQueue.Dequeue();
                 _logger.LogDebug("{CurrentThreadManagedThreadId}: dequeuing job: {JobId}",
-                    Thread.CurrentThread.ManagedThreadId, currentJob?.JobId);
+                    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
                 // redpilled
-                if (currentJob is null)
+                if (_currentJob is null)
                 {
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: job is a redpill",
                         Thread.CurrentThread.ManagedThreadId);
@@ -78,69 +73,60 @@ public class Crawler
 
             IExecutor executor;
 
-            lock (currentJob)
+            lock (_currentJob)
             {
-                if(currentJob.JobStatus == JobStatus.Stopped)
+                if(_currentJob.JobStatus == JobStatus.Stopped)
                 {
                     _logger.LogDebug(
                         "{CurrentThreadManagedThreadId}: job stopped in queue - skipping and pulsing ({JobId})",
-                        Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
+                        Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
                     // Pulses all threads waiting for the job to be stopped, when the job was still in queue.
-                    Monitor.PulseAll(currentJob);
+                    Monitor.PulseAll(_currentJob);
                     continue;
                 }
 
-                currentJob.JobStatus = JobStatus.Active;
-                currentJob.Crawler = this;
-                executor = new Executor(currentJob, websiteProvider);
+                _currentJob.JobStatus = JobStatus.Active;
+                _currentJob.Crawler = this;
+                executor = new Executor(_currentJob, _websiteProvider);
             }
             
             _logger.LogDebug("{CurrentThreadManagedThreadId}: start crawling ({JobId})",
-                Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
+                Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
             executor.StartCrawlAsync().Wait();
             
             _logger.LogDebug("{CurrentThreadManagedThreadId}: finished crawling ({JobId})",
-                Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
+                Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
             
             _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is finished ({JobId})",
-                Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
-            lock (currentJob)
+                Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+            lock (_currentJob)
             {
                 // If job was not stopped during crawling, it finished successfuly on it's own.
-                if(currentJob.JobStatus != JobStatus.Stopped)
+                if(_currentJob.JobStatus != JobStatus.Stopped)
                 {
-                    currentJob.JobStatus = JobStatus.Finished;
+                    _currentJob.JobStatus = JobStatus.Finished;
                     
                     // Add the job to the database
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: adding job to database ({JobId})",
-                        Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
-
-                    // Because of unit tests, as somehow it's possible for the data service to be null
-                    // In production this should never happen
-                    if (_data is not null)
-                    {
-                        _data.AddWebsiteExecution(currentJob.JobId, currentJob.WebsiteExecution);   
-                    }
-                    else
-                    {
-                        _logger.LogCritical("Data service is null, crawler can't add job to database");
-                    }
-
+                        Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+                    
+                    _data.AddWebsiteExecution(_currentJob.JobId, _currentJob.WebsiteExecution);
+                        
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: job added to database ({JobId})",
-                        Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
+                        Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
                 }
                 
                 _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over ({JobStatus}) ({JobId})",
-                    Thread.CurrentThread.ManagedThreadId, currentJob.JobStatus
-                    ,currentJob.JobId);
+                    Thread.CurrentThread.ManagedThreadId, _currentJob.JobStatus
+                    ,_currentJob.JobId);
 
                 // Pulses all threads waiting for the job to be stopped, when the job was active.
-                Monitor.PulseAll(currentJob);
+                Monitor.PulseAll(_currentJob);
             }
 
-            executor?.Dispose();
+            executor.Dispose();
         }
     }
 }

@@ -59,7 +59,7 @@ namespace WebCrawler.Test.ModelTests
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.Title), actualAllWebsites.Select(website => website.Title));
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.CrawlTime), actualAllWebsites.Select(website => website.CrawlTime));
             
-            Assert.That(this.adjacencyList.EntryWebsite.Url, Is.EqualTo(adjacencyList.EntryWebsite.Url));
+            Assert.That(this.adjacencyList.EntryWebsite?.Url, Is.EqualTo(adjacencyList.EntryWebsite?.Url));
 
             for(int i = 0; i < actualAllWebsites.Count; ++i)
             {
