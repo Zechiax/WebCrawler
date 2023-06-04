@@ -76,7 +76,7 @@ public class ExecutorTests
         executor.StartCrawlAsync().Wait();
 
 
-        string resultingGraph = executor.ExecutionJob.WebsiteGraph!.GetSnapshot().GetStringRepresentation();
+        string resultingGraph = executor.ExecutionJob.WebsiteExecution.WebsiteGraph!.GetSnapshot().GetStringRepresentation();
 
         Assert.That(resultingGraph, Is.EqualTo(expected));
     }
@@ -139,7 +139,7 @@ public class ExecutorTests
 
         executor.StartCrawlAsync().Wait();
 
-        string resultingGraph = executor.ExecutionJob.WebsiteGraph!.GetSnapshot().GetStringRepresentation();
+        string resultingGraph = executor.ExecutionJob.WebsiteExecution.WebsiteGraph!.GetSnapshot().GetStringRepresentation();
 
         Assert.That(resultingGraph, Is.EqualTo(expected));
     }

@@ -9,12 +9,12 @@ public class WebsiteExecution
     public CrawlInfo Info { get; init; } = null!;
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
+    public WebsiteGraph? WebsiteGraph { get; set; }
 
     /// <summary>
     /// Constructor for EF Core
     /// </summary>
-    public WebsiteExecution()
-    {}
+    public WebsiteExecution() { }
 
     public WebsiteExecution(CrawlInfo info)
     {

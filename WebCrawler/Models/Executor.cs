@@ -23,7 +23,7 @@ class Executor : IExecutor
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
 
         ExecutionJob = execution;
-        ExecutionJob.WebsiteGraph = new WebsiteGraph(new Website(ExecutionJob.WebsiteExecution.Info.EntryUrl));
+        ExecutionJob.WebsiteExecution.WebsiteGraph = new WebsiteGraph(new Website(ExecutionJob.WebsiteExecution.Info.EntryUrl));
         
         _regex = new Regex(ExecutionJob.WebsiteExecution.Info.RegexPattern, RegexOptions.Compiled);
     }
@@ -40,7 +40,7 @@ class Executor : IExecutor
     {
         ExecutionJob.WebsiteExecution.Started = DateTime.Now;
 
-        await CrawlAsync(ExecutionJob.WebsiteGraph!.EntryWebsite)
+        await CrawlAsync(ExecutionJob.WebsiteExecution.WebsiteGraph!.EntryWebsite)
         .ContinueWith(_ =>
         {
             ExecutionJob.WebsiteExecution.Finished = DateTime.Now;

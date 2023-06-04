@@ -67,7 +67,7 @@ public class ExecutionManagerService : IExecutionManagerService
             return WebsiteGraphSnapshot.Empty;
         }
 
-        return job.WebsiteGraph?.GetSnapshot() ?? WebsiteGraphSnapshot.Empty;
+        return job.WebsiteExecution.WebsiteGraph?.GetSnapshot() ?? WebsiteGraphSnapshot.Empty;
     }
 
     public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
@@ -99,7 +99,7 @@ public class ExecutionManagerService : IExecutionManagerService
             job.WebsiteExecution.Finished = null;
             job.Crawler = null;
             job.JobStatus = JobStatus.WaitingInQueue;
-            job.WebsiteGraph = null;
+            job.WebsiteExecution.WebsiteGraph = null;
         }
 
         EnqueueJob(job);

@@ -23,6 +23,7 @@ public class DataService : IDataService
         _logger.LogInformation("Migrating database...");
         await context.Database.MigrateAsync();
         _logger.LogInformation("Migration complete");
+
     }
 
     public async Task<IEnumerable<WebsiteRecord>> GetWebsiteRecords()
