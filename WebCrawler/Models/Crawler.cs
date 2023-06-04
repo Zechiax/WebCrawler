@@ -5,7 +5,7 @@ namespace WebCrawler.Models;
 public class Crawler
 {
     private readonly Queue<WebsiteExecutionJob> _toCrawlQueue;
-    private WebsiteExecutionJob _currentJob = null!;
+    private WebsiteExecutionJob? _currentJob;
     private readonly IWebsiteProvider _websiteProvider;
     private readonly Task _task;
 
@@ -27,21 +27,25 @@ public class Crawler
         _task.Start();
     }
 
-    public async Task<bool> StopCurrentJob()
+    public Task<bool> StopCurrentJob()
     {
-        await Task.CompletedTask;
-
+        // No job is running, we have nothing to stop
+        if (_currentJob is null)
+        {
+            return Task.FromResult(false);
+        }
+        
         lock(_currentJob)
         {
-            if (_currentJob.JobStatus == JobStatus.Finished || _currentJob.JobStatus == JobStatus.Stopped)
+            if (_currentJob.JobStatus is JobStatus.Finished or JobStatus.Stopped)
             {
-                return false; 
+                return Task.FromResult(false); 
             }
 
             // -> is active, can't be waiting in queue since this crawler already picked it up
             _currentJob.JobStatus = JobStatus.Stopped;
             Monitor.Wait(_currentJob);
-            return true;
+            return Task.FromResult(true);
         }
     }
 
