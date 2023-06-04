@@ -16,6 +16,7 @@ class Executor : IExecutor
     private readonly IWebsiteProvider websiteProvider;
     private Dictionary<string, Website> VisitedUrlToWebsite = new();
     private bool disposed = false;
+    private readonly Regex _regex;
 
     public Executor(WebsiteExecutionJob execution, IWebsiteProvider? websiteProvider = null)
     {
@@ -23,6 +24,8 @@ class Executor : IExecutor
 
         ExecutionJob = execution;
         ExecutionJob.WebsiteGraph = new WebsiteGraph(new Website(ExecutionJob.WebsiteExecution.Info.EntryUrl));
+        
+        _regex = new Regex(ExecutionJob.WebsiteExecution.Info.RegexPattern, RegexOptions.Compiled);
     }
 
     ~Executor()
@@ -99,7 +102,7 @@ class Executor : IExecutor
                         }
 
                         // crawl iff not visited yet and regex matches
-                        if (ExecutionJob.WebsiteExecution.Info.Regex.IsMatch(link))
+                        if (_regex.IsMatch(link))
                         {
                             toCrawl.Enqueue(outgoingWebsite);
                         }

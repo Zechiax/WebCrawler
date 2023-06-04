@@ -26,5 +26,16 @@ public class CrawlerContext : DbContext
         modelBuilder.Entity<WebsiteRecord>()
             .HasMany(e => e.Tags)
             .WithMany(e => e.WebsiteRecords);
+        
+        modelBuilder.Entity<WebsiteExecution>()
+            .HasOne(e => e.Info)
+            .WithOne()
+            .HasForeignKey<WebsiteExecution>("CrawlInfoId")
+            .IsRequired();
+        
+        // We set the default value for the Regex of the CrawlInfo to '.*', so that it matches everything.
+        modelBuilder.Entity<CrawlInfo>()
+            .Property(e => e.RegexPattern)
+            .HasDefaultValue(".*");
     }
 }

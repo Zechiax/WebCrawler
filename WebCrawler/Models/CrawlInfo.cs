@@ -1,17 +1,26 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace WebCrawler.Models;
 
-public readonly record struct CrawlInfo
+public record CrawlInfo
 {
-    public string EntryUrl { get; init; }
-    public Regex Regex { get; init; }
+    [Key]
+    public int Id { get; set; }
+    public string EntryUrl { get; init; } = null!;
+    public string RegexPattern { get; init; } = ".*";
     public TimeSpan Periodicity { get; init; }
 
-    public CrawlInfo(string entryUrl, string regex, TimeSpan periodicity)
+    /// <summary>
+    /// Constructor for EF Core
+    /// </summary>
+    public CrawlInfo()
+    { }
+    
+    public CrawlInfo(string entryUrl, string regexPattern, TimeSpan periodicity)
     {
         EntryUrl = entryUrl;
-        Regex = new Regex(regex);
+        RegexPattern = regexPattern;
         Periodicity = periodicity;
     }
 }

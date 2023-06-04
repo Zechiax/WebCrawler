@@ -1,10 +1,20 @@
-﻿namespace WebCrawler.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebCrawler.Models;
 
 public class WebsiteExecution
 {
-    public CrawlInfo Info { get; init; }
+    [Key]
+    public int Id { get; set; }
+    public CrawlInfo Info { get; init; } = null!;
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
+
+    /// <summary>
+    /// Constructor for EF Core
+    /// </summary>
+    public WebsiteExecution()
+    {}
 
     public WebsiteExecution(CrawlInfo info)
     {
