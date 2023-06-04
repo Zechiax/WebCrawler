@@ -21,7 +21,7 @@ public class ExecutionManagerService : IExecutionManagerService
     {
         this.logger = logger;
         Config = config;
-        crawlerManager = new CrawlerManager(config, toCrawlQueue);
+        crawlerManager = new CrawlerManager(config, logger, toCrawlQueue);
         crawlerManager.StartCrawlers();
     }
 

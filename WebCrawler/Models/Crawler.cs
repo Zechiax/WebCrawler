@@ -14,8 +14,11 @@ class Crawler
 
     private Task task;
 
-    public Crawler(Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
+    private ILogger logger;
+
+    public Crawler(ILogger logger, Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
     {
+        this.logger = logger;
         this.toCrawlQueue = toCrawlQueue;
         this.websiteProvider = websiteProvider; 
 
