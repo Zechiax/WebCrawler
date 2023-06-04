@@ -34,7 +34,7 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
             {
                 lock (executionManager)
                 {
-                    executionManager.ResetJobAsync(jobId).Wait();
+                    _ = executionManager.ResetJobAsync(jobId).Result;
                 }
             }
         );
