@@ -17,11 +17,11 @@ public class ExecutionManagerService : IExecutionManagerService
     private ulong lastJobId = 0;
     private ILogger logger;
 
-    public ExecutionManagerService(ILogger logger, ExecutionManagerConfig config)
+    public ExecutionManagerService(IServiceProvider services, ExecutionManagerConfig config)
     {
-        this.logger = logger;
+        this.logger = services.GetRequiredService<ILogger<ExecutionManagerService>>();
         Config = config;
-        crawlerManager = new CrawlerManager(config, logger, toCrawlQueue);
+        crawlerManager = new CrawlerManager(config, services, toCrawlQueue);
         crawlerManager.StartCrawlers();
     }
 

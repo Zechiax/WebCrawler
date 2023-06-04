@@ -1,6 +1,6 @@
 ﻿namespace WebCrawler.Models;
 
-record class WebsiteExecutionJob
+public record class WebsiteExecutionJob
 {
     public WebsiteExecution WebsiteExecution { get; }
     public ulong JobId { get; init; }

@@ -4,7 +4,7 @@ using WebCrawler.Interfaces;
 
 namespace WebCrawler.Models;
 
-class Crawler
+public class Crawler
 {
     private Queue<WebsiteExecutionJob> toCrawlQueue;
 
@@ -14,11 +14,11 @@ class Crawler
 
     private Task task;
 
-    private ILogger logger;
+    private ILogger<Crawler> _logger;
 
-    public Crawler(ILogger logger, Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
+    public Crawler(ILogger<Crawler> logger, Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
     {
-        this.logger = logger;
+        _logger = logger;
         this.toCrawlQueue = toCrawlQueue;
         this.websiteProvider = websiteProvider; 
 
@@ -57,18 +57,17 @@ class Crawler
             {
                 while (toCrawlQueue.Count == 0)
                 {
-
-                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: waiting for jobs to come in");
+                    _logger.LogInformation("{CurrentThreadManagedThreadId}: waiting for jobs to come in", Thread.CurrentThread.ManagedThreadId);
                     Monitor.Wait(toCrawlQueue);
                 }
 
                 currentJob = toCrawlQueue.Dequeue();
-                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: dequing job: {currentJob?.JobId}");
+                _logger.LogInformation("{CurrentThreadManagedThreadId}: dequeuing job: {JobId}", Thread.CurrentThread.ManagedThreadId, currentJob?.JobId);
 
                 // redpilled
                 if (currentJob is null)
                 {
-                    Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: job is a redpill");
+                    _logger.LogInformation("{CurrentThreadManagedThreadId}: job is a redpill", Thread.CurrentThread.ManagedThreadId);
                     return;
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Serilog;
@@ -10,6 +11,22 @@ namespace WebCrawler.Test.ServicesTests;
 
 public class ExecutionManagerTests
 {
+    private IServiceProvider _serviceProvider = null!;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        var serviceCollection = new ServiceCollection();
+        
+        var moqLoggerExecutionManager = new Mock<ILogger<ExecutionManagerService>>();
+        var moqLoggerCrawler = new Mock<ILogger<Crawler>>();
+
+        serviceCollection.AddSingleton(moqLoggerExecutionManager.Object);
+        serviceCollection.AddSingleton(moqLoggerCrawler.Object);
+        
+        _serviceProvider = serviceCollection.BuildServiceProvider();
+    }
+
     [Test]
     public void MockRunTest()
     {
@@ -22,7 +39,8 @@ public class ExecutionManagerTests
         ILogger<ExecutionManagerService> logger = new Mock<ILogger<ExecutionManagerService>>().Object;
 
         List<CrawlInfo> toCrawl = new();
-        ExecutionManagerService manager = new(logger, new ExecutionManagerConfig()
+
+        ExecutionManagerService manager = new(_serviceProvider, new ExecutionManagerConfig()
         {
             CrawlersCount = 10,
             TWebsiteProvider = typeof(InitializedMockWebsiteProvider)
@@ -62,7 +80,8 @@ public class ExecutionManagerTests
         ILogger<ExecutionManagerService> logger = new Mock<ILogger<ExecutionManagerService>>().Object;
 
         List<CrawlInfo> toCrawl = new();
-        ExecutionManagerService manager = new(logger, new ExecutionManagerConfig()
+
+        ExecutionManagerService manager = new(_serviceProvider, new ExecutionManagerConfig()
         {
             CrawlersCount = 3,
             TWebsiteProvider = typeof(InitializedMockWebsiteProvider)
