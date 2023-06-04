@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Serilog;
+using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using WebCrawler.Services;
 using WebCrawler.Test.ServicesTests.Helpers;
@@ -20,9 +21,11 @@ public class ExecutionManagerTests
         
         var moqLoggerExecutionManager = new Mock<ILogger<ExecutionManagerService>>();
         var moqLoggerCrawler = new Mock<ILogger<Crawler>>();
+        var moqIDataService = new Mock<IDataService>();
 
         serviceCollection.AddSingleton(moqLoggerExecutionManager.Object);
         serviceCollection.AddSingleton(moqLoggerCrawler.Object);
+        serviceCollection.AddSingleton(moqIDataService.Object);
         
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }

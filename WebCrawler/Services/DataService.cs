@@ -6,25 +6,30 @@ namespace WebCrawler.Models;
 
 public class DataService : IDataService
 {
-    private readonly CrawlerContext _context;
     private readonly ILogger<DataService> _logger;
-    
-    public DataService(CrawlerContext context, ILogger<DataService> logger)
+    private readonly IServiceProvider _serviceProvider;
+    public DataService(ILogger<DataService> logger, IServiceProvider serviceProvider)
     {
-        _context = context;
+        _serviceProvider = serviceProvider;
         _logger = logger;
     }
     
     public async Task MigrateAsync()
     {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
         _logger.LogInformation("Migrating database...");
-        await _context.Database.MigrateAsync();
+        await context.Database.MigrateAsync();
         _logger.LogInformation("Migration complete");
     }
 
     public async Task<IEnumerable<WebsiteRecord>> GetWebsiteRecords()
     {
-        return await _context.WebsiteRecords
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        return await context.WebsiteRecords
             .AsNoTracking()
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
@@ -35,7 +40,10 @@ public class DataService : IDataService
 
     public async Task<WebsiteRecord> GetWebsiteRecord(int id)
     {
-        WebsiteRecord? record = await _context.WebsiteRecords
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        WebsiteRecord? record = await context.WebsiteRecords
             .AsNoTracking()
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
@@ -51,14 +59,20 @@ public class DataService : IDataService
 
     public async Task AddWebsiteRecord(WebsiteRecord websiteRecord)
     {
-        _context.WebsiteRecords.Add(websiteRecord);
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        await _context.SaveChangesAsync();
+        context.WebsiteRecords.Add(websiteRecord);
+        
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord)
     {
-        WebsiteRecord? record = await _context.WebsiteRecords
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        WebsiteRecord? record = await context.WebsiteRecords
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
@@ -71,19 +85,22 @@ public class DataService : IDataService
         record.IsActive = updatedWebsiteRecord.IsActive;
         record.Tags = updatedWebsiteRecord.Tags;
         
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task DeleteWebsiteRecord(int id)
     { 
-        WebsiteRecord? record = await _context.WebsiteRecords
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        WebsiteRecord? record = await context.WebsiteRecords
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
             throw new KeyNotFoundException($"Website record with id {id} not found.");
         
-        _context.WebsiteRecords.Remove(record);
+        context.WebsiteRecords.Remove(record);
         
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 }

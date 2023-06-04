@@ -113,8 +113,9 @@ public class Crawler
                     currentJob.JobStatus = JobStatus.Finished;
                 }
                 
-                _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over (stopped or finished) ({JobId})",
-                    Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
+                _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over ({JobStatus}) ({JobId})",
+                    Thread.CurrentThread.ManagedThreadId, currentJob.JobStatus
+                    ,currentJob.JobId);
 
                 // Pulses all threads waiting for the job to be stopped, when the job was active.
                 Monitor.PulseAll(currentJob);

@@ -32,7 +32,7 @@ builder.Services.AddDbContext<CrawlerContext>(options =>
 {
     options.UseSqlite("Data Source=WebCrawler.db");
 });
-builder.Services.AddScoped<IDataService, DataService>();
+builder.Services.AddSingleton<IDataService, DataService>();
 
 var app = builder.Build();
 
