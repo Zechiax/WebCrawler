@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
+using WebCrawler.Models.Exceptions;
 
 namespace WebCrawler.Services;
 
@@ -14,9 +15,9 @@ public class ExecutionManagerService : IExecutionManagerService
     private Dictionary<ulong, WebsiteExecutionJob> jobs = new();
 
     private ulong lastJobId = 0;
-    private ILogger<ExecutionManagerService> logger;
+    private ILogger logger;
 
-    public ExecutionManagerService(ILogger<ExecutionManagerService> logger, ExecutionManagerConfig config)
+    public ExecutionManagerService(ILogger logger, ExecutionManagerConfig config)
     {
         this.logger = logger;
         Config = config;
@@ -29,11 +30,7 @@ public class ExecutionManagerService : IExecutionManagerService
         WebsiteExecutionJob job = new(crawlInfo, ++lastJobId);
         jobs[lastJobId] = job;
 
-        lock (toCrawlQueue)
-        {
-            toCrawlQueue.Enqueue(job);
-            Monitor.Pulse(toCrawlQueue);
-        }
+        EnqueueJob(job);
 
         return lastJobId;
     }
@@ -75,9 +72,39 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
     {
+        if (!IsValid(jobId))
+        {
+            throw JobIdInvalidException(jobId);
+        }
+
         await Task.CompletedTask;
         WaitForExecutionToFinish(jobId);
         return GetGraph(jobId);
+    }
+
+    public async Task<bool> ResetJobAsync(ulong jobId)
+    {
+        if (!IsValid(jobId))
+        {
+            throw JobIdInvalidException(jobId);
+        }
+
+        bool wasStopped = await StopExecutionAsync(jobId);
+
+        WebsiteExecutionJob job = jobs[jobId];
+
+        lock (job)
+        {
+            job.WebsiteExecution.Started = null;
+            job.WebsiteExecution.Finished = null;
+            job.Crawler = null;
+            job.JobStatus = JobStatus.WaitingInQueue;
+            job.WebsiteGraph = null;
+        }
+
+        EnqueueJob(job);
+
+        return wasStopped;
     }
 
     public async Task<bool> StopExecutionAsync(ulong jobId)
@@ -115,8 +142,17 @@ public class ExecutionManagerService : IExecutionManagerService
         return jobs.ContainsKey(jobId);
     }
 
-    private ArgumentException JobIdInvalidException(ulong jobId)
+    private JobIdInvalidException JobIdInvalidException(ulong jobId)
     {
-        return new ArgumentException($"Job with {jobId} is invalid.");
+        return new JobIdInvalidException($"Job with {jobId} is invalid.");
+    }
+
+    private void EnqueueJob(WebsiteExecutionJob job)
+    {
+        lock (toCrawlQueue)
+        {
+            toCrawlQueue.Enqueue(job);
+            Monitor.Pulse(toCrawlQueue);
+        }
     }
 }

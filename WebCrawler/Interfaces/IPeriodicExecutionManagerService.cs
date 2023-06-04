@@ -1,15 +1,17 @@
 ﻿using WebCrawler.Models;
 
 namespace WebCrawler.Interfaces;
-public interface IExecutionManagerService
+
+public interface IPeriodicExecutionManagerService
 {
     ExecutionManagerConfig Config { get; }
-    ulong EnqueueForCrawl(CrawlInfo crawlInfo);
+
+    ulong EnqueueForPeriodicCrawl(CrawlInfo crawlInfo);
     Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId);
     WebsiteGraphSnapshot GetGraph(ulong jobId);
-    Task<bool> StopExecutionAsync(ulong jobId);
-    void WaitForExecutionToFinish(ulong jobId);
-    Task<bool> ResetJobAsync(ulong jobId);
     JobStatus GetJobStatus(ulong jobId);
     bool IsValid(ulong jobId);
+    Task<bool> StopCurrentExecutionAsync(ulong jobId);
+    bool StopPeriodicExecutionAsync(ulong jobId);
+    void WaitForExecutionToFinish(ulong jobId);
 }
