@@ -12,7 +12,7 @@ public class WebsiteRecord
     [Key]
     public int Id { get; set; }
 
-    public int? JobId { get; set; }
+    public ulong? JobId { get; set; }
     public string Url { get; set; } = string.Empty;
     public string Regex { get; set; } = string.Empty;
     public TimeSpan Periodicity { get; set; } = TimeSpan.Zero;

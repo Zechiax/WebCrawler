@@ -15,9 +15,11 @@ public class Crawler
     private Task task;
 
     private ILogger<Crawler> _logger;
+    private readonly IDataService _data;
 
-    public Crawler(ILogger<Crawler> logger, Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
+    public Crawler(ILogger<Crawler> logger, IDataService data, Queue<WebsiteExecutionJob> toCrawlQueue, IWebsiteProvider websiteProvider)
     {
+        data = data;
         _logger = logger;
         this.toCrawlQueue = toCrawlQueue;
         this.websiteProvider = websiteProvider; 
@@ -111,6 +113,15 @@ public class Crawler
                 if(currentJob.JobStatus != JobStatus.Stopped)
                 {
                     currentJob.JobStatus = JobStatus.Finished;
+                    
+                    // Add the job to the database
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: adding job to database ({JobId})",
+                        Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
+                    
+                    _data.AddWebsiteExecution(currentJob.JobId, currentJob.WebsiteExecution);
+                    
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: job added to database ({JobId})",
+                        Thread.CurrentThread.ManagedThreadId, currentJob.JobId);
                 }
                 
                 _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over ({JobStatus}) ({JobId})",
