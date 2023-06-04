@@ -1,4 +1,4 @@
-﻿namespace WebCrawler.Services;
+﻿namespace WebCrawler.Models;
 
 record class PeriodicWebsiteExecutionJob
 {
@@ -41,7 +41,7 @@ record class PeriodicWebsiteExecutionJob
     {
         using PeriodicTimer timer = new(periodicity);
 
-        while(!ct.IsCancellationRequested && await timer.WaitForNextTickAsync(ct))
+        while (!ct.IsCancellationRequested && await timer.WaitForNextTickAsync(ct))
         {
             job.Invoke();
         }
