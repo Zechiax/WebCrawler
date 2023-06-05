@@ -11,7 +11,7 @@ namespace WebCrawler.Test.ModelTests
     public class AdjacencyListTests
     {
         private string json;
-        private AdjacencyList adjacencyList;
+        private WebsiteGraphSnapshot adjacencyList;
 
         [SetUp]
         public void Setup()
@@ -35,13 +35,13 @@ namespace WebCrawler.Test.ModelTests
                 { web7, new List<Website> { } },
             }, web1);
 
-            json = "{\"Item1\":\"www.web1.com\",\"Item2\":[{\"Url\":\"www.web1.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web2.com\",\"www.web3.com\"]},{\"Url\":\"www.web2.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web3.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web5.com\",\"www.web6.com\"]},{\"Url\":\"www.web4.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web5.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web3.com\"]},{\"Url\":\"www.web6.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web2.com\",\"www.web3.com\",\"www.web4.com\",\"www.web5.com\"]},{\"Url\":\"www.web7.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[]}]}";
+            json = "{\"EntryUrl\":\"www.web1.com\",\"Graph\":[{\"Url\":\"www.web1.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web2.com\",\"www.web3.com\"]},{\"Url\":\"www.web2.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web3.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web5.com\",\"www.web6.com\"]},{\"Url\":\"www.web4.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web4.com\"]},{\"Url\":\"www.web5.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web3.com\"]},{\"Url\":\"www.web6.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[\"www.web1.com\",\"www.web2.com\",\"www.web3.com\",\"www.web4.com\",\"www.web5.com\"]},{\"Url\":\"www.web7.com\",\"Title\":\"\",\"CrawlTime\":\"00:00:00\",\"Neighbours\":[]}]}";
         }
 
         [Test]
         public void SerializationTest()
         {
-            string actual = AdjacencyList.JsonConverter.Serialize(adjacencyList);
+            string actual = WebsiteGraphSnapshot.JsonConverter.Serialize(adjacencyList);
             
             Assert.That(actual, Is.EqualTo(json));
         }
@@ -49,7 +49,7 @@ namespace WebCrawler.Test.ModelTests
         [Test]
         public void DeserializationTest()
         {
-            AdjacencyList adjacencyList = AdjacencyList.JsonConverter.Deserialize(json);
+            WebsiteGraphSnapshot adjacencyList = WebsiteGraphSnapshot.JsonConverter.Deserialize(json);
 
 
             List<Website> actualAllWebsites = adjacencyList.Data.Select(pair => pair.Key).ToList();
@@ -59,7 +59,7 @@ namespace WebCrawler.Test.ModelTests
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.Title), actualAllWebsites.Select(website => website.Title));
             CollectionAssert.AreEqual(expectedAllWebsites.Select(website => website.CrawlTime), actualAllWebsites.Select(website => website.CrawlTime));
             
-            Assert.That(this.adjacencyList.EntryWebsite.Url, Is.EqualTo(adjacencyList.EntryWebsite.Url));
+            Assert.That(this.adjacencyList.EntryWebsite?.Url, Is.EqualTo(adjacencyList.EntryWebsite?.Url));
 
             for(int i = 0; i < actualAllWebsites.Count; ++i)
             {

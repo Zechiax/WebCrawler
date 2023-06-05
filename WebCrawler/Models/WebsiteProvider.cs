@@ -1,4 +1,6 @@
-﻿namespace WebCrawler.Interfaces
+﻿using WebCrawler.Interfaces;
+
+namespace WebCrawler.Models
 {
     public class WebsiteProvider : IWebsiteProvider
     {

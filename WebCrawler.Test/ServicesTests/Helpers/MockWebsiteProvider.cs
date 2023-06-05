@@ -1,6 +1,6 @@
 ﻿using WebCrawler.Interfaces;
 
-namespace WebCrawler.Test.ExecutorTests
+namespace WebCrawler.Test.ServicesTests.Helpers
 {
     public class MockWebsiteProvider : IWebsiteProvider
     {
@@ -11,7 +11,7 @@ namespace WebCrawler.Test.ExecutorTests
 
         public TimeSpan GetStringDelay { get; set; }
 
-        private Dictionary<string, string> urlToHtml = new(); 
+        private Dictionary<string, string> urlToHtml = new();
 
         public void Init()
         {
@@ -24,7 +24,7 @@ namespace WebCrawler.Test.ExecutorTests
             };
         }
 
-        public void Dispose() { } 
+        public void Dispose() { }
 
         public Task<string> GetStringAsync(string url)
         {

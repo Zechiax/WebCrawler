@@ -1,116 +1,122 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
+using Serilog;
+using WebCrawler.Interfaces;
 using WebCrawler.Models;
-using WebCrawler.Test.ExecutorTests;
+using WebCrawler.Services;
+using WebCrawler.Test.ServicesTests.Helpers;
 
 namespace WebCrawler.Test.ServicesTests;
 
 public class ExecutionManagerTests
 {
-    [Test]
-    public void MockRun()
+    private IServiceProvider _serviceProvider = null!;
+    
+    [SetUp]
+    public void SetUp()
     {
-        MockWebsiteProvider mockWebsiteProvider = new();
+        var serviceCollection = new ServiceCollection();
+        
+        var moqLoggerExecutionManager = new Mock<ILogger<ExecutionManagerService>>();
+        var moqLoggerCrawler = new Mock<ILogger<Crawler>>();
+        var moqIDataService = new Mock<IDataService>();
+
+        serviceCollection.AddSingleton(moqLoggerExecutionManager.Object);
+        serviceCollection.AddSingleton(moqLoggerCrawler.Object);
+        serviceCollection.AddSingleton<IDataService>(moqIDataService.Object);
+        
+        _serviceProvider = serviceCollection.BuildServiceProvider();
+    }
+
+    [Test]
+    public void MockRunTest()
+    {
         string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
             "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
             "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
             "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
 
-        #region htmls
-        mockWebsiteProvider.brouciHtml =
-        @"
-                <!DOCTYPE html>
-                <html>
-                    <title>Brouci</title>
-                    <h1>Brouci</h1>
-                    <p>Otravuji pomerne dost <a href=""www.wiki.com/lidi"">lidi</a> a sem tam i <a href=""www.wiki.com/psi"">psi</a>.</p>
-                </html>
-            ";
+        const int jobsCount = 100;
 
-        mockWebsiteProvider.psiHtml =
-        @"
-                <!DOCTYPE html>
-                <html>
-                    <title>Psi</title>
-                    <h1>Psi</h1>
-                    <p>Psi maji radi <a href=""www.wiki.com/lidi"">lidi</a> a boji se <a href=""www.wiki.com/auta"">aut</a>.</p>
-                </html>
-            ";
+        List<CrawlInfo> toCrawl = new();
 
-        mockWebsiteProvider.lidiHtml =
-        @"
-                <!DOCTYPE html>
-                <html>
-                    <title>Lidi</title>
-                    <h1>Lidi</h1>
-                    <p><a href=""www.wiki.com/auta""></a></p>
-                </html>
-            ";
-
-        mockWebsiteProvider.autaHtml =
-        @"
-                <!DOCTYPE html>
-                <html>
-                    <title>Auta</title>
-                    <h1><a href=""www.wiki.com/lidi"">lidi</a></h1>
-                    <p></p>
-                </html>
-            ";
-        mockWebsiteProvider.Init();
-        #endregion
-
-        mockWebsiteProvider.GetStringDelay = TimeSpan.FromMilliseconds(200);
-        const int executorsCount = 10;
-        
-        // We mock the logger - this is not the object, you need to access the Object property
-        var logger = new Mock<ILogger<ExecutionManager>>();
-        
-        // Use this in tests
-        ILogger<ExecutionManager> loggerObject = logger.Object;
-
-        List<Executor> executors = new();
-        ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
-
-        for(int i = 0; i < executorsCount; ++i)
+        ExecutionManagerService manager = new(_serviceProvider, new ExecutionManagerConfig()
         {
-            executors.Add(new Executor("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, mockWebsiteProvider));
+            CrawlersCount = 10,
+            TWebsiteProvider = typeof(InitializedMockWebsiteProvider)
+        });
+
+        for(int i = 0; i < jobsCount; ++i)
+        {
+            toCrawl.Add(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero));
         }
 
-        for(int i = 0; i < executorsCount; ++i )
+
+        List<ulong> jobIds = new();
+        for(int i = 0; i < jobsCount; ++i )
         {
-            manager.AddToQueue(executors[i]);
+            jobIds.Add(manager.EnqueueForCrawl(toCrawl[i]));
         }
 
-        manager.WaitForAllConsumersToFinish();
 
-        for(int i = 0; i < executorsCount; ++i)
+        foreach(ulong jobId in jobIds)
         {
-            string actual = executors[i].WebsiteExecution.GetAdjacencyList().GetStringRepresentation();
-            Assert.That(actual, Is.EqualTo(expected), $"{i}/{executorsCount}");
+            string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
+            Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");
         }
     }
 
     [Test]
-    public void CheckThatManagerIsUnusableAfterWait()
+    public void StopAllRunAllAgainTest()
     {
-        const int executorsCount = 10;
+        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
+            "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
+            "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
+            "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
 
-        List<Executor> executors = new();
-        ExecutionManager manager = new(new ExecutionManagerConfiguration() { CrawlConsumersCount = 5 });
+        // jobsCount should be big enough to be able to stop the last job while the crawlers still not dequeid it
+        const int jobsCount = 4;
 
-        for(int i = 0; i < executorsCount; ++i)
+        List<CrawlInfo> toCrawl = new();
+
+        ExecutionManagerService manager = new(_serviceProvider, new ExecutionManagerConfig()
         {
-            executors.Add(new Executor("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero, new MockWebsiteProvider()));
+            CrawlersCount = 3,
+            TWebsiteProvider = typeof(InitializedMockWebsiteProvider)
+        });
+
+        for (int i = 0; i < jobsCount; ++i)
+        {
+            toCrawl.Add(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero));
         }
 
-        for(int i = 0; i < executorsCount; ++i )
+        List<ulong> jobIds = new();
+        for (int i = 0; i < jobsCount; ++i)
         {
-            manager.AddToQueue(executors[i]);
+            jobIds.Add(manager.EnqueueForCrawl(toCrawl[i]));
         }
 
-        manager.WaitForAllConsumersToFinish();
+        for (int i = 0; i < jobsCount; ++i)
+        {
+            ulong jobId = jobIds[i];
 
+            bool wasStoppedSuccessfuly = manager.StopExecutionAsync(jobId).Result;
+        }
 
-        Assert.Throws<InvalidOperationException>(() => manager.AddToQueue(executors[0]));
+        jobIds.Clear();
+        for (int i = 0; i < jobsCount; ++i)
+        {
+            jobIds.Add(manager.EnqueueForCrawl(toCrawl[i]));
+        }
+
+        for (int i = 0; i < jobIds.Count; i++)
+        {
+            ulong jobId = jobIds[i];
+
+            string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
+            Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");
+        }
     }
 }

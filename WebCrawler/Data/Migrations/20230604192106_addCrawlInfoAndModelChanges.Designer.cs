@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebCrawler.Data;
 
@@ -10,9 +11,11 @@ using WebCrawler.Data;
 namespace WebCrawler.Data.Migrations
 {
     [DbContext(typeof(CrawlerContext))]
-    partial class CrawlerContextModelSnapshot : ModelSnapshot
+    [Migration("20230604192106_addCrawlInfoAndModelChanges")]
+    partial class addCrawlInfoAndModelChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
@@ -86,9 +89,6 @@ namespace WebCrawler.Data.Migrations
                     b.Property<DateTime?>("Started")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("WebsiteGraph")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("WebsiteRecordId")
                         .HasColumnType("INTEGER");
 
@@ -115,7 +115,7 @@ namespace WebCrawler.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong?>("JobId")
+                    b.Property<int?>("JobId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Label")

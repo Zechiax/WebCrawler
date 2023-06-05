@@ -21,7 +21,7 @@ builder.Services.AddSwaggerGen(options =>
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .WriteTo.Console()
-    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.Async(a => a.File("logs/log.txt", rollingInterval: RollingInterval.Day))
     .CreateLogger();
 
 builder.Logging.ClearProviders();
@@ -32,7 +32,7 @@ builder.Services.AddDbContext<CrawlerContext>(options =>
 {
     options.UseSqlite("Data Source=WebCrawler.db");
 });
-builder.Services.AddScoped<IDataService, DataService>();
+builder.Services.AddSingleton<IDataService, DataService>();
 
 var app = builder.Build();
 

@@ -2,34 +2,22 @@
 
 namespace WebCrawler.Models;
 
-/// <summary>
-/// Represents one execution of the executor.
-/// </summary>
 public class WebsiteExecution
 {
     [Key]
     public int Id { get; set; }
-    public string AdjacencyListJson { get; set; } = string.Empty;
+    public CrawlInfo Info { get; init; } = null!;
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
+    public WebsiteGraph? WebsiteGraph { get; set; }
 
-    public WebsiteExecution()
-    {
-    }
-    
-    public WebsiteExecution(WebsiteGraph websiteGraph)
-    {
-        SetWebsiteGraph(websiteGraph);
-    }
-    
-    public void SetWebsiteGraph(WebsiteGraph websiteGraph)
-    {
-        AdjacencyListJson = AdjacencyList.JsonConverter.Serialize(websiteGraph.GetAdjacencyListGraphRepresentation());
-    }
+    /// <summary>
+    /// Constructor for EF Core
+    /// </summary>
+    public WebsiteExecution() { }
 
-    public AdjacencyList GetAdjacencyList()
+    public WebsiteExecution(CrawlInfo info)
     {
-        return AdjacencyList.JsonConverter.Deserialize(AdjacencyListJson);
+        Info = info;
     }
 }
-

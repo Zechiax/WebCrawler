@@ -3,11 +3,8 @@ using WebCrawler.Models;
 
 namespace WebCrawler.Interfaces;
 
-public interface IExecutor
+interface IExecutor : IDisposable
 {
-    string EntryUrl { get; }
-    Regex Regex { get; }
-    TimeSpan Periodicity { get; }
-
+    WebsiteExecutionJob ExecutionJob { get; }
     Task StartCrawlAsync();
 }
