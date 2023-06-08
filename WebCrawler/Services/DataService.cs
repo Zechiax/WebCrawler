@@ -83,7 +83,13 @@ public class DataService : IDataService
         if (record is null)
             throw new EntryNotFoundException($"Website record with id {id} not found.");
 
+        var execution = record.LastExecution;
+        
         context.Entry(record).CurrentValues.SetValues(updatedWebsiteRecord);
+        
+        // In case the execution was not null, we want to keep it
+        if (execution is not null)
+            record.LastExecution = execution;
 
         await context.SaveChangesAsync();
     }
