@@ -28,7 +28,6 @@ public static class SeedData
                         Name = "Google"
                     }
                 },
-                Periodicity = TimeSpan.FromHours(1),
                 Label = "Google",
                 CrawlInfo = new()
                 {
@@ -55,7 +54,6 @@ public static class SeedData
                         Name = "Facebook"
                     }
                 },
-                Periodicity = TimeSpan.FromHours(2),
                 Label = "Facebook",
                 CrawlInfo = new()
                 {
@@ -78,7 +76,6 @@ public static class SeedData
                         Name = "Amazon"
                     }
                 },
-                Periodicity = TimeSpan.FromHours(3),
                 Label = "Amazon",
                 CrawlInfo = new()
                 {
@@ -105,7 +102,6 @@ public static class SeedData
                         Name = "TechCrunch"
                     }
                 },
-                Periodicity = TimeSpan.FromHours(1),
                 Label = "TechCrunch",
                 CrawlInfo = new()
                 {
@@ -128,7 +124,6 @@ public static class SeedData
                         Name = "StackOverflow"
                     }
                 },
-                Periodicity = TimeSpan.FromHours(4),
                 Label = "StackOverflow",
                 CrawlInfo = new()
                 {

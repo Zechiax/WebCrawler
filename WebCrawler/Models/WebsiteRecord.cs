@@ -11,7 +11,6 @@ public class WebsiteRecord
 {
     [Key]
     public int Id { get; set; }
-    public TimeSpan Periodicity { get; set; } = TimeSpan.Zero;
     public string Label { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public List<Tag> Tags { get; set; } = new();
