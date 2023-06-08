@@ -129,12 +129,7 @@ public static class SeedData
                 {
                     EntryUrl = "https://stackoverflow.com",
                     RegexPattern = ".*",
-                    Periodicity = TimeSpan.FromHours(4),
-                    LastExecution = new WebsiteExecution()
-                    {
-                        Started = DateTime.Now - TimeSpan.FromHours(4),
-                        Finished = DateTime.Now,
-                    }
+                    Periodicity = TimeSpan.FromHours(4)
                 }
             }
         };
