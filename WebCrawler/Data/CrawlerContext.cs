@@ -9,6 +9,7 @@ public class CrawlerContext : DbContext
     public DbSet<WebsiteRecord> WebsiteRecords { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
     public DbSet<WebsiteExecution> Executions { get; set; } = null!;
+    public DbSet<CrawlInfo> CrawlInfos { get; set; } = null!;
     
     public CrawlerContext(DbContextOptions<CrawlerContext> options) : base(options)
     {
@@ -25,9 +26,9 @@ public class CrawlerContext : DbContext
 
         // We define the one-to-one relationship between WebsiteRecord and WebsiteExecution.
         modelBuilder.Entity<WebsiteRecord>()
-            .HasOne(e => e.LastExecution)
+            .HasOne(e => e.CrawlInfo)
             .WithOne()
-            .HasForeignKey<WebsiteExecution>("WebsiteRecordId")
+            .HasForeignKey<WebsiteRecord>("CrawlInfoId")
             .IsRequired();
         
         // We define the tags and website records as a many-to-many relationship.
@@ -36,12 +37,6 @@ public class CrawlerContext : DbContext
             .WithMany(e => e.WebsiteRecords);
 
         modelBuilder.Entity<WebsiteExecution>()
-            .HasOne(e => e.Info)
-            .WithOne()
-            .HasForeignKey<WebsiteExecution>("CrawlInfoId")
-            .IsRequired();
-        
-        modelBuilder.Entity<WebsiteExecution>()
             .Property(e => e.WebsiteGraph)
             .HasConversion(websiteExecutionConverter!);
 
@@ -49,5 +44,16 @@ public class CrawlerContext : DbContext
         modelBuilder.Entity<CrawlInfo>()
             .Property(e => e.RegexPattern)
             .HasDefaultValue(".*");
+        
+        modelBuilder.Entity<CrawlInfo>()
+            .HasOne(e => e.LastExecution)
+            .WithOne()
+            .HasForeignKey<CrawlInfo>("LastExecutionId")
+            .IsRequired(false);
+        
+        modelBuilder.Entity<CrawlInfo>()
+            .HasOne<WebsiteRecord>()
+            .WithMany()
+            .HasForeignKey(c => c.WebsiteRecordId);
     }
 }
