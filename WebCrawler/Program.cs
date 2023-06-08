@@ -78,7 +78,10 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var data = scope.ServiceProvider.GetRequiredService<IDataService>();
     var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Seeding data");
     await SeedData.SeedDataAsync(context, data);
+    logger.LogInformation("Data seeded");
 }
 
 try
