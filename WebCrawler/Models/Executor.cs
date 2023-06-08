@@ -23,9 +23,9 @@ class Executor : IExecutor
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
 
         ExecutionJob = execution;
-        ExecutionJob.WebsiteExecution.WebsiteGraph = new WebsiteGraph(new Website(ExecutionJob.WebsiteExecution.Info.EntryUrl));
+        ExecutionJob.WebsiteExecution.WebsiteGraph = new WebsiteGraph(new Website(execution.CrawlInfo.EntryUrl));
         
-        _regex = new Regex(ExecutionJob.WebsiteExecution.Info.RegexPattern, RegexOptions.Compiled);
+        _regex = new Regex(execution.CrawlInfo.RegexPattern, RegexOptions.Compiled);
     }
 
     ~Executor()

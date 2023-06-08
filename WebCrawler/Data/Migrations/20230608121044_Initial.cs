@@ -30,8 +30,6 @@ namespace WebCrawler.Data.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Url = table.Column<string>(type: "TEXT", nullable: false),
-                    Regex = table.Column<string>(type: "TEXT", nullable: false),
                     Periodicity = table.Column<TimeSpan>(type: "TEXT", nullable: false),
                     Label = table.Column<string>(type: "TEXT", nullable: false),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -43,21 +41,22 @@ namespace WebCrawler.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Executions",
+                name: "CrawlInfos",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    AdjacencyListJson = table.Column<string>(type: "TEXT", nullable: false),
-                    Started = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Finished = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    JobId = table.Column<ulong>(type: "INTEGER", nullable: true),
+                    EntryUrl = table.Column<string>(type: "TEXT", nullable: false),
+                    RegexPattern = table.Column<string>(type: "TEXT", nullable: false, defaultValue: ".*"),
+                    Periodicity = table.Column<TimeSpan>(type: "TEXT", nullable: false),
                     WebsiteRecordId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Executions", x => x.Id);
+                    table.PrimaryKey("PK_CrawlInfos", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Executions_WebsiteRecord_WebsiteRecordId",
+                        name: "FK_CrawlInfos_WebsiteRecord_WebsiteRecordId",
                         column: x => x.WebsiteRecordId,
                         principalTable: "WebsiteRecord",
                         principalColumn: "Id",
@@ -88,10 +87,37 @@ namespace WebCrawler.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Executions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Started = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Finished = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    WebsiteGraph = table.Column<string>(type: "TEXT", nullable: true),
+                    CrawlInfoId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Executions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Executions_CrawlInfos_CrawlInfoId",
+                        column: x => x.CrawlInfoId,
+                        principalTable: "CrawlInfos",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.CreateIndex(
-                name: "IX_Executions_WebsiteRecordId",
-                table: "Executions",
+                name: "IX_CrawlInfos_WebsiteRecordId",
+                table: "CrawlInfos",
                 column: "WebsiteRecordId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Executions_CrawlInfoId",
+                table: "Executions",
+                column: "CrawlInfoId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -108,6 +134,9 @@ namespace WebCrawler.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "TagWebsiteRecord");
+
+            migrationBuilder.DropTable(
+                name: "CrawlInfos");
 
             migrationBuilder.DropTable(
                 name: "Tag");

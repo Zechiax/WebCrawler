@@ -72,6 +72,15 @@ using (var scope = app.Services.CreateScope())
     await data.MigrateAsync();
 }
 
+// Let's seed some initial data for development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var data = scope.ServiceProvider.GetRequiredService<IDataService>();
+    var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+    await SeedData.SeedDataAsync(context, data);
+}
+
 try
 {
     app.Run();
