@@ -11,8 +11,8 @@ using WebCrawler.Data;
 namespace WebCrawler.Data.Migrations
 {
     [DbContext(typeof(CrawlerContext))]
-    [Migration("20230531182750_addJobId")]
-    partial class addJobId
+    [Migration("20230608121044_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,39 @@ namespace WebCrawler.Data.Migrations
                     b.HasIndex("WebsiteRecordsId");
 
                     b.ToTable("TagWebsiteRecord");
+                });
+
+            modelBuilder.Entity("WebCrawler.Models.CrawlInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EntryUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong?>("JobId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan>("Periodicity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RegexPattern")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue(".*");
+
+                    b.Property<int>("WebsiteRecordId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WebsiteRecordId")
+                        .IsUnique();
+
+                    b.ToTable("CrawlInfos");
                 });
 
             modelBuilder.Entity("WebCrawler.Models.Tag", b =>
@@ -56,9 +89,8 @@ namespace WebCrawler.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("AdjacencyListJson")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("CrawlInfoId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("Finished")
                         .HasColumnType("TEXT");
@@ -66,12 +98,12 @@ namespace WebCrawler.Data.Migrations
                     b.Property<DateTime?>("Started")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("WebsiteRecordId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("WebsiteGraph")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WebsiteRecordId")
+                    b.HasIndex("CrawlInfoId")
                         .IsUnique();
 
                     b.ToTable("Executions");
@@ -89,22 +121,11 @@ namespace WebCrawler.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("JobId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<TimeSpan>("Periodicity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Regex")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -127,18 +148,31 @@ namespace WebCrawler.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WebCrawler.Models.WebsiteExecution", b =>
+            modelBuilder.Entity("WebCrawler.Models.CrawlInfo", b =>
                 {
                     b.HasOne("WebCrawler.Models.WebsiteRecord", null)
-                        .WithOne("LastExecution")
-                        .HasForeignKey("WebCrawler.Models.WebsiteExecution", "WebsiteRecordId")
+                        .WithOne("CrawlInfo")
+                        .HasForeignKey("WebCrawler.Models.CrawlInfo", "WebsiteRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WebCrawler.Models.WebsiteRecord", b =>
+            modelBuilder.Entity("WebCrawler.Models.WebsiteExecution", b =>
+                {
+                    b.HasOne("WebCrawler.Models.CrawlInfo", null)
+                        .WithOne("LastExecution")
+                        .HasForeignKey("WebCrawler.Models.WebsiteExecution", "CrawlInfoId");
+                });
+
+            modelBuilder.Entity("WebCrawler.Models.CrawlInfo", b =>
                 {
                     b.Navigation("LastExecution");
+                });
+
+            modelBuilder.Entity("WebCrawler.Models.WebsiteRecord", b =>
+                {
+                    b.Navigation("CrawlInfo")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

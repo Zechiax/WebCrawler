@@ -36,7 +36,9 @@ public class DataService : IDataService
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
             // Also if there is an execution, we want to include it too
-            .Include(wr => wr.LastExecution)
+            .Include(wr => wr.CrawlInfo)
+            // We should be able to suppress nullable warning, as EF Core should handle that
+            .ThenInclude(wr => wr.LastExecution)
             .ToListAsync();
     }
 
@@ -50,7 +52,8 @@ public class DataService : IDataService
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
             // Also if there is an execution, we want to include it too
-            .Include(wr => wr.LastExecution)
+            .Include(wr => wr.CrawlInfo)
+            .ThenInclude(wr => wr.LastExecution)
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
@@ -75,18 +78,21 @@ public class DataService : IDataService
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
         WebsiteRecord? record = await context.WebsiteRecords
+            .Include(wr => wr.CrawlInfo)
+            .ThenInclude(wr => wr.LastExecution)
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
-            throw new KeyNotFoundException($"Website record with id {id} not found.");
+            throw new EntryNotFoundException($"Website record with id {id} not found.");
+
+        WebsiteExecution? execution = record.CrawlInfo.LastExecution;
         
-        record.Url = updatedWebsiteRecord.Url;
-        record.Regex = updatedWebsiteRecord.Regex;
-        record.Periodicity = updatedWebsiteRecord.Periodicity;
-        record.Label = updatedWebsiteRecord.Label;
-        record.IsActive = updatedWebsiteRecord.IsActive;
-        record.Tags = updatedWebsiteRecord.Tags;
+        context.Entry(record).CurrentValues.SetValues(updatedWebsiteRecord);
         
+        // In case the execution was not null, we want to keep it
+        if (execution is not null)
+            record.CrawlInfo.LastExecution = execution;
+
         await context.SaveChangesAsync();
     }
 
@@ -111,7 +117,7 @@ public class DataService : IDataService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        WebsiteRecord? record = await context.WebsiteRecords
+        CrawlInfo? record = await context.CrawlInfos
             .FirstOrDefaultAsync(wr => wr.JobId == jobId);
         
         if (record is null)
@@ -128,12 +134,13 @@ public class DataService : IDataService
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
         WebsiteRecord? record = await context.WebsiteRecords
+            .Include(wr => wr.CrawlInfo)
             .FirstOrDefaultAsync(wr => wr.Id == websiteRecordId);
         
         if (record is null)
             throw new EntryNotFoundException("Website record with id {websiteRecordId} not found.");
         
-        record.JobId = jobId;
+        record.CrawlInfo.JobId = jobId;
         
         await context.SaveChangesAsync();
     }

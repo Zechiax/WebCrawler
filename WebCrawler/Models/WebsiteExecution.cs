@@ -6,7 +6,6 @@ public class WebsiteExecution
 {
     [Key]
     public int Id { get; set; }
-    public CrawlInfo Info { get; init; } = null!;
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
     public WebsiteGraph? WebsiteGraph { get; set; }
@@ -15,9 +14,4 @@ public class WebsiteExecution
     /// Constructor for EF Core
     /// </summary>
     public WebsiteExecution() { }
-
-    public WebsiteExecution(CrawlInfo info)
-    {
-        Info = info;
-    }
 }
