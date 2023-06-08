@@ -37,6 +37,8 @@ public class DataService : IDataService
             .Include(wr => wr.Tags)
             // Also if there is an execution, we want to include it too
             .Include(wr => wr.LastExecution)
+            // We should be able to suppress nullable warning, as EF Core should handle that
+            .ThenInclude(we => we!.Info)
             .ToListAsync();
     }
 
@@ -51,6 +53,7 @@ public class DataService : IDataService
             .Include(wr => wr.Tags)
             // Also if there is an execution, we want to include it too
             .Include(wr => wr.LastExecution)
+            .ThenInclude(we => we!.Info)
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
@@ -78,15 +81,10 @@ public class DataService : IDataService
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
-            throw new KeyNotFoundException($"Website record with id {id} not found.");
-        
-        record.Url = updatedWebsiteRecord.Url;
-        record.Regex = updatedWebsiteRecord.Regex;
-        record.Periodicity = updatedWebsiteRecord.Periodicity;
-        record.Label = updatedWebsiteRecord.Label;
-        record.IsActive = updatedWebsiteRecord.IsActive;
-        record.Tags = updatedWebsiteRecord.Tags;
-        
+            throw new EntryNotFoundException($"Website record with id {id} not found.");
+
+        context.Entry(record).CurrentValues.SetValues(updatedWebsiteRecord);
+
         await context.SaveChangesAsync();
     }
 
