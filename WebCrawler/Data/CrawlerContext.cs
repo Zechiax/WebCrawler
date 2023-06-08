@@ -30,7 +30,12 @@ public class CrawlerContext : DbContext
 
         modelBuilder.Entity<WebsiteRecord>()
             .HasMany(e => e.Tags)
-            .WithMany(e => e.WebsiteRecords);
+            .WithMany()
+            .UsingEntity<Dictionary<string, object>>(
+                "TagWebsiteRecord",
+                r => r.HasOne<Tag>().WithMany().HasForeignKey("TagsId").OnDelete(DeleteBehavior.Cascade),
+                l => l.HasOne<WebsiteRecord>().WithMany().HasForeignKey("WebsiteRecordsId").OnDelete(DeleteBehavior.Cascade)
+            );
 
         modelBuilder.Entity<CrawlInfo>()
             .Property(e => e.RegexPattern)
