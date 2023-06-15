@@ -37,7 +37,9 @@ export class Home extends Component {
                 Create new website record
               </Button>
             </Col>
-            <Col></Col>
+            <Col>
+              {/* TODO: Add button to see selected website record which are beining crawled - route to different page on click*/}
+            </Col>
           </Row>
         </Container>
 
