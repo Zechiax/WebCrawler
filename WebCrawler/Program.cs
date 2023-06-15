@@ -4,6 +4,7 @@ using WebCrawler.Data;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using Serilog;
+using WebCrawler.Formatters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,11 @@ builder.Services.AddDbContext<CrawlerContext>(options =>
     options.UseSqlite("Data Source=WebCrawler.db");
 });
 builder.Services.AddSingleton<IDataService, DataService>();
+
+builder.Services.AddMvcCore(options =>
+{
+    options.InputFormatters.Insert(0, new JsonFromBodyFormatter());
+});
 
 var app = builder.Build();
 

@@ -16,7 +16,8 @@ export class Home extends Component {
     };
   }
 
-  onCreateWebsiteRecordModalClose = () => this.setState({ isCreateWebsiteRecordModalShown: false });
+  onCreateWebsiteRecordModalClose = () =>
+    this.setState({ isCreateWebsiteRecordModalShown: false });
 
   render() {
     return (
@@ -36,6 +37,7 @@ export class Home extends Component {
                 Create new website record
               </Button>
             </Col>
+            <Col></Col>
           </Row>
         </Container>
 
