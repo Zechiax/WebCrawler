@@ -16,11 +16,15 @@ export class Home extends Component {
     };
   }
 
+  onCreateWebsiteRecordModalClose = () => this.setState({ isCreateWebsiteRecordModalShown: false });
+
   render() {
     return (
       <>
         <Container fluid="md">
-          <Row>{/*add the paginated view of website records here*/}</Row>
+          <Row>
+            {/* TODO: Add the paginated view of website records here */}
+          </Row>
           <Row>
             <Col>
               <Button
@@ -37,9 +41,7 @@ export class Home extends Component {
 
         <CreateWebsiteRecordModalWindow
           show={this.state.isCreateWebsiteRecordModalShown}
-          handleClose={() =>
-            this.setState({ isCreateWebsiteRecordModalShown: false })
-          }
+          onClose={this.onCreateWebsiteRecordModalClose}
         />
       </>
     );

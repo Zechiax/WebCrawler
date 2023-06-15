@@ -1,24 +1,144 @@
 import React, { Component } from "react";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
 
 export class CreateWebsiteRecordModalWindow extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      validated: false,
+    };
   }
+
+  handleSubmit = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      this.setState({ validated: true });
+
+      return;
+    }
+
+    const formData = Object.fromEntries(new FormData(form).entries());
+    fetch("/Record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    }).then((response) => console.log(response.json()));
+
+    this.setState({ validated: false });
+    this.props.onClose();
+  };
 
   render() {
     return (
-      <Modal show={this.props.show} onHide={this.props.handleClose}>
+      <Modal show={this.props.show} onHide={this.props.onClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Website Record</Modal.Title>
+          <Modal.Title>Create Website Record</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Woohoo, you are reading this text in a modal!</Modal.Body>
+        <Modal.Body>
+          <Form
+            id="form"
+            noValidate
+            validated={this.state.validated}
+            onSubmit={this.handleSubmit}
+          >
+            <Form.Group>
+              <Form.Label>Label</Form.Label>
+              <Form.Control
+                id="label"
+                name="label"
+                type="text"
+                required
+                placeholder="Label"
+                defaultValue="Wikipedia"
+              />
+              <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Is required
+              </Form.Control.Feedback>
+              <Form.Text id="label help" muted>
+                With this label you will be able to easily identify this website
+                record.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Entry Url</Form.Label>
+              <Form.Control
+                id="url"
+                name="url"
+                type="text"
+                required
+                placeholder="Entry Url"
+                defaultValue="https://en.wikipedia.org/wiki/Main_Page"
+              />
+              <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Is required
+              </Form.Control.Feedback>
+              <Form.Text id="entry url help" muted>
+                Entry url from which the crawling of this website record will
+                begin.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Regex</Form.Label>
+              <Form.Control
+                id="regex"
+                name="regex"
+                type="text"
+                required
+                placeholder="Regex"
+                defaultValue="*"
+              />
+              <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Is required
+              </Form.Control.Feedback>
+              <Form.Text id="regex help" muted>
+                Only found urls matching this regex will be crawled further.
+                Otherwise, they are just ignored.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Periodicity</Form.Label>
+              <Form.Control
+                id="periodicity"
+                name="periodicity"
+                required
+                type="number"
+                placeholder="Periodicity in minutes"
+                defaultValue="10"
+              />
+              <Form.Text id="regex help" muted>
+                In minutes. The page will be crawled periodically counting from
+                start of the last crawl. For the first time, it is added for the
+                crawl instantly.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Check
+                id="isactive"
+                name="isactive"
+                type="checkbox"
+                label="Is active"
+                defaultChecked
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={this.props.handleClose}>
+          <Button variant="secondary" onClick={this.props.onClose}>
             Close
           </Button>
-          <Button variant="success" onClick={this.props.handleClose}>
+          <Button type="submit" form="form" variant="success">
             Create
           </Button>
         </Modal.Footer>
