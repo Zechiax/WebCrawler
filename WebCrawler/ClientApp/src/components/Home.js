@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
 import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 
@@ -27,7 +27,7 @@ export class Home extends Component {
             {/* TODO: Add the paginated view of website records here */}
           </Row>
           <Row>
-            <Col>
+            <Stack direction="horizontal" gap={3}>
               <Button
                 variant="primary"
                 onClick={() =>
@@ -36,10 +36,10 @@ export class Home extends Component {
               >
                 Create new website record
               </Button>
-            </Col>
-            <Col>
+
               {/* TODO: Add button to see selected website record which are beining crawled - route to different page on click*/}
-            </Col>
+              <Button variant="primary">View graphs</Button>
+            </Stack>
           </Row>
         </Container>
 

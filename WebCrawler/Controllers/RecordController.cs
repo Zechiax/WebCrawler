@@ -41,40 +41,41 @@ public class RecordController : OurController
             return StatusCode(BadRequestCode);
         }
 
-        var jsonObjDefinition = new
+        var jsonObjScheme = new
         {
             Label = default(string),
             Url = default(string),
             Regex = default(string),
             Periodicity = default(string),
             IsActive = default(string),
+            Tags = default(string?[]) 
         };
 
         try
         {
-            var jsonObj = JsonConvert.DeserializeAnonymousType(jsonRaw, jsonObjDefinition)!;
+            var jsonObj = JsonConvert.DeserializeAnonymousType(jsonRaw, jsonObjScheme)!;
 
-            if(string.IsNullOrWhiteSpace(jsonObj.Label) || jsonObj.Label.Length > 30 || jsonObj.Label.Length == 0)
+            if (string.IsNullOrWhiteSpace(jsonObj.Label) || jsonObj.Label.Length > 30 || jsonObj.Label.Length == 0)
             {
                 return StatusCode(BadRequestCode);
             }
 
-            if(jsonObj.IsActive is not null && jsonObj.IsActive != "on")
+            if (jsonObj.IsActive is not null && jsonObj.IsActive != "on")
             {
                 return StatusCode(BadRequestCode);
             }
 
-            if(string.IsNullOrWhiteSpace(jsonObj.Url) || !Uri.TryCreate(jsonObj.Url, UriKind.Absolute, out var uriResult) && uriResult?.Scheme == Uri.UriSchemeHttp)
+            if (string.IsNullOrWhiteSpace(jsonObj.Url) || !Uri.TryCreate(jsonObj.Url, UriKind.Absolute, out var uriResult) && uriResult?.Scheme == Uri.UriSchemeHttp)
             {
                 return StatusCode(BadRequestCode);
             }
 
-            if(string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 30)
+            if (string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 30)
             {
                 return StatusCode(BadRequestCode);
             }
 
-            if(string.IsNullOrWhiteSpace(jsonObj.Regex))
+            if (string.IsNullOrWhiteSpace(jsonObj.Regex))
             {
                 return StatusCode(BadRequestCode);
             }
@@ -88,11 +89,22 @@ public class RecordController : OurController
                 return StatusCode(BadRequestCode);
             }
 
+            if (jsonObj.Tags is null || jsonObj.Tags.Length >= 50)
+            {
+                return StatusCode(BadRequestCode);
+            }
+
+            if (jsonObj.Tags.Any(tag => tag is null || tag.Length > 30) || (jsonObj.Tags.ToHashSet().Count != jsonObj.Tags.Length))
+            {
+                return StatusCode(BadRequestCode);
+            }
+
             WebsiteRecord record = new(); 
             record.Created = DateTime.UtcNow;
 
             record.Label = jsonObj.Label;
             record.IsActive = jsonObj.IsActive == "on";
+            record.Tags = jsonObj.Tags.Select(tagName => new Tag(tagName!)).ToList();
             record.CrawlInfo = new CrawlInfo(jsonObj.Url, jsonObj.Regex, TimeSpan.FromMinutes(int.Parse(jsonObj.Periodicity)));
 
             _dataService.AddWebsiteRecord(record!).Wait();

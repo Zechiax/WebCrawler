@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import InputGroup from "react-bootstrap/InputGroup";
 import Alert from "react-bootstrap/Alert";
 
 export class CreateWebsiteRecordModalWindow extends Component {
@@ -15,6 +15,8 @@ export class CreateWebsiteRecordModalWindow extends Component {
       submitSuccess: false,
       submitBadRequest: false,
       submitOtherError: false,
+      cantAddTagError: false,
+      tags: [],
     };
   }
 
@@ -30,6 +32,9 @@ export class CreateWebsiteRecordModalWindow extends Component {
     }
 
     const formData = Object.fromEntries(new FormData(form).entries());
+    formData["tags"] = this.state.tags;
+    console.log(formData);
+
     fetch("/Record", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -46,13 +51,24 @@ export class CreateWebsiteRecordModalWindow extends Component {
       .catch((error) => this.setState({ submitOtherError: true }));
 
     this.setState({ validated: false });
+
+    this.resetForm(form);
+  };
+
+  resetForm = (form) => {
     form.reset();
+    this.setState({ validated: false, tags: [] });
   };
 
   render() {
     return (
       <>
-        <Modal show={this.props.show} onHide={this.props.onClose}>
+        <Modal
+          show={this.props.show}
+          onHide={this.props.onClose}
+          size="xl"
+          centered
+        >
           <Modal.Header closeButton>
             <Container>
               <Row>
@@ -64,6 +80,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                 >
                   Website record successfully added for crawling!
                 </Alert>
+
                 <Alert
                   dismissible
                   show={this.state.submitBadRequest}
@@ -72,6 +89,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                 >
                   Can't create website record with specified data!
                 </Alert>
+
                 <Alert
                   dismissible
                   show={this.state.submitOtherError}
@@ -79,6 +97,16 @@ export class CreateWebsiteRecordModalWindow extends Component {
                   variant="danger"
                 >
                   Oops! Something went wrong. Try again a little later.
+                </Alert>
+
+                <Alert
+                  dismissible
+                  show={this.state.cantAddTagError}
+                  onClose={() => this.setState({ cantAddTagError: false })}
+                  variant="warning"
+                >
+                  Can't add this tag. It is either already included, too long,
+                  empty or too many tags are already assigned.
                 </Alert>
               </Row>
               <Row>
@@ -166,8 +194,57 @@ export class CreateWebsiteRecordModalWindow extends Component {
                 <Form.Text id="periodicity help" muted>
                   In minutes. The page will be crawled periodically counting
                   from start of the last crawl. For the first time, it is added
-                  for the crawl instantly.
+                  for crawl instantly.
                 </Form.Text>
+              </Form.Group>
+
+              <Form.Group>
+                <Form.Label>Tags</Form.Label>
+                <InputGroup className="mb-3">
+                  <Form.Control
+                    placeholder="write some tag"
+                    aria-label="write some tag"
+                    id="add-tag-input"
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    aria-describedby="add-tag-input"
+                    onClick={() => {
+                      const tagInput = document.getElementById("add-tag-input");
+                      const value = tagInput.value;
+
+                      if (
+                        !value ||
+                        value.length > 30 ||
+                        this.state.tags.length >= 50 ||
+                        this.state.tags.includes(value)
+                      ) {
+                        this.setState({ cantAddTagError: true });
+                        return;
+                      }
+
+                      this.setState((state, props) => ({
+                        tags: [...state.tags, value],
+                      }));
+
+                      tagInput.value = "";
+                    }}
+                  >
+                    Add
+                  </Button>
+                </InputGroup>
+                <Form.Text>
+                  Tags can help to organize and filter website records. Is
+                  optional.
+                </Form.Text>
+                <ul
+                  className="list-group list-group-vertical"
+                  style={{ fontSize: 14 }}
+                >
+                  {this.state.tags.map((tag) => {
+                    return <li className="list-group-item flex-fill">{tag}</li>;
+                  })}
+                </ul>
               </Form.Group>
 
               <Form.Group>
