@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { useLocation } from "react-router";
 import { NodeInfo } from "./NodeInfo";
 import * as d3 from "d3";
+import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 
 export const ViewGraph = (props) => {
   const location = useLocation();
@@ -44,24 +45,6 @@ class ViewGraphInternal extends Component {
         )
       );
 
-    const nodeElements = svg
-      .append("g")
-      .on("click", function (d) {
-        //TODO: might be useful eventually
-        const currentlySelectedNode = graph.nodes.find(
-          (node) => node.url === d.target.id
-        );
-      })
-      .selectAll("circle")
-      .data(nodes)
-      .enter()
-      .append("circle")
-      .attr("id", function (d) {
-        return d.url;
-      })
-      .attr("r", 10)
-      .attr("fill", "red");
-
     const linkElements = svg
       .append("g")
       .selectAll("line")
@@ -71,7 +54,48 @@ class ViewGraphInternal extends Component {
       .attr("stroke-width", 2)
       .attr("stroke", "#E5E5E5");
 
-    const textElements = svg
+    const nodeElements = svg
+      .append("g")
+      .on("click", function (d) {
+        //TODO: might be useful eventually to show some more data than url on click / or on hover potentially
+        const currentlySelectedNode = graph.nodes.find(
+          (node) => node.url === d.target.id
+        );
+      })
+      .on("mouseover", function (d) {
+        console.log("onhover");
+        console.log(d.explicitOriginalTarget.id);
+
+        d3.select(this)
+          .attr("r", 20)
+          .attr("fill", "#ffd95c")
+          .append("text")
+          .attr("x", function () {
+            return d.x;
+          })
+          .attr("y", function () {
+            return d.y;
+          })
+          .attr("font-size", 8)
+          .style("fill", "black")
+          .attr("class", "text-on-hover")
+          .text(() => d.explicitOriginalTarget.id);
+      })
+      .on("mouseout", function (d) {
+        console.log("onout");
+        d3.selectAll(".text-on-hover").remove();
+      })
+      .selectAll("circle")
+      .data(nodes)
+      .enter()
+      .append("circle")
+      .attr("id", function (d) {
+        return d.url;
+      })
+      .attr("r", 10)
+      .attr("fill", "#f2c32b");
+
+    /*     const textElements = svg
       .append("g")
       .selectAll("text")
       .data(nodes)
@@ -80,11 +104,11 @@ class ViewGraphInternal extends Component {
       .text((node) => node.url)
       .attr("font-size", 15)
       .attr("dx", 15)
-      .attr("dy", 4);
+      .attr("dy", 4); */
 
     simulation.nodes(nodes).on("tick", () => {
       nodeElements.attr("cx", (node) => node.x).attr("cy", (node) => node.y);
-      textElements.attr("x", (node) => node.x).attr("y", (node) => node.y);
+      //textElements.attr("x", (node) => node.x).attr("y", (node) => node.y);
 
       linkElements
         .attr("x1", (link) => link.source.x)
@@ -95,7 +119,10 @@ class ViewGraphInternal extends Component {
 
     simulation.force(
       "link",
-      d3.forceLink(links).id((link) => link.url)
+      d3
+        .forceLink(links)
+        .id((link) => link.url)
+        .distance(60)
     );
   }
 
@@ -113,22 +140,54 @@ class ViewGraphInternal extends Component {
     for (const id of this.props.ids) {
       console.log(id);
       const response = await fetch(`/Record/${id}/livegraph`);
+      console.log(response);
 
       if (response.ok) {
-        const graphJson = response.json();
+        const graphJson = await response.json();
         graphsJson.push(graphJson);
         console.log(graphJson);
       }
     }
 
+    const graph = this.convertGraphsJsonToD3Json(graphsJson);
+    return graph;
+  }
+
+  convertGraphsJsonToD3Json(graphsJson) {
+    console.log(graphsJson);
     const graph = {
-      nodes: [{ url: "wiki.com" }, { url: "fb.com" }, { url: "google.com" }],
-      links: [
-        { source: "wiki.com", target: "fb.com" },
-        { source: "wiki.com", target: "google.com" },
-      ],
+      nodes: [],
+      links: [],
     };
 
+    let graphId = 0;
+    for (const graphJson of graphsJson) {
+      graphId++;
+      for (const node of graphJson.Graph) {
+        const alreadyPresentNode = graph.nodes.find((n) => n.url === node.Url);
+
+        if (alreadyPresentNode) {
+          alreadyPresentNode.inWhichGraphs.push(graphId);
+        } else {
+          graph.nodes.push({
+            url: node.Url,
+            title: node.Title,
+            crawlTime: node.CrawlTime,
+            inWhichGraphs: [graphId],
+          });
+        }
+
+        for (const neighbourUrl of node.Neighbours) {
+          graph.links.push({
+            source: node.Url,
+            target: neighbourUrl,
+            forWhichGraph: graphId,
+          });
+        }
+      }
+    }
+
+    console.log(graph);
     return graph;
   }
 

@@ -14,7 +14,7 @@ export class Home extends Component {
 
     this.state = {
       isCreateWebsiteRecordModalShown: false,
-      selectedGraphsIds: [37],
+      selectedGraphsIds: [43], // TODO
     };
   }
 
@@ -39,7 +39,6 @@ export class Home extends Component {
                 Create new website record
               </Button>
 
-              {/* TODO: take the ids from state - currently selected ids*/}
               <NavLink
                 state={{ ids: this.state.selectedGraphsIds }}
                 to="/Graph"
