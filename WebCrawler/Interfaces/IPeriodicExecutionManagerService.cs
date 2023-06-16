@@ -17,7 +17,7 @@ public interface IPeriodicExecutionManagerService
     /// Returns full graph, after the underlying executor finishes crawling on it's own.
     /// After that, the job is again enqued and again crawled after <see cref="CrawlInfo.Periodicity"/> period elapses. 
     /// </summary>
-    Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId);
+    Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId);
 
     /// <summary>
     /// Returns graph how is currently looking.

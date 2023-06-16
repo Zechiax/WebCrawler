@@ -63,7 +63,7 @@ public class ExecutionManagerTests
 
         foreach(ulong jobId in jobIds)
         {
-            string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
+            string actual = manager.GetLiveGraphAsync(jobId).Result.GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");
         }
     }
@@ -115,7 +115,7 @@ public class ExecutionManagerTests
         {
             ulong jobId = jobIds[i];
 
-            string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
+            string actual = manager.GetLiveGraphAsync(jobId).Result.GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");
         }
     }

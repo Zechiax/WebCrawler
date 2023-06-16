@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using WebCrawler.Interfaces;
+﻿using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using WebCrawler.Models.Exceptions;
 
@@ -70,7 +69,7 @@ public class ExecutionManagerService : IExecutionManagerService
         return job.WebsiteExecution.WebsiteGraph?.GetSnapshot() ?? WebsiteGraphSnapshot.Empty;
     }
 
-    public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
+    public async Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId)
     {
         if (!IsValid(jobId))
         {

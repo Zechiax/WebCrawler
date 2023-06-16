@@ -12,12 +12,13 @@ namespace WebCrawler.Controllers;
 [Route("[controller]")]
 public class RecordController : OurController
 {
-    /**/
     private readonly IDataService _dataService;
-    public RecordController(IDataService dataService) {
+    private readonly IPeriodicExecutionManagerService _executionManager;
+
+    public RecordController(IDataService dataService, IPeriodicExecutionManagerService executionManager) {
         _dataService = dataService;
+        _executionManager = executionManager;
     }
-    /**/
 
     [HttpGet]
     [Route("{id:int}")]
@@ -106,6 +107,8 @@ public class RecordController : OurController
             record.IsActive = jsonObj.IsActive == "on";
             record.Tags = jsonObj.Tags.Select(tagName => new Tag(tagName!)).ToList();
             record.CrawlInfo = new CrawlInfo(jsonObj.Url, jsonObj.Regex, TimeSpan.FromMinutes(int.Parse(jsonObj.Periodicity)));
+
+            record.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
 
             _dataService.AddWebsiteRecord(record!).Wait();
             return Ok();
