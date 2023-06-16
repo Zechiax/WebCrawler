@@ -1,21 +1,20 @@
 ﻿import React, { useMemo } from 'react';
 
-//MRT Imports
-//import MaterialReactTable from 'material-react-table'; //default import deprecated
+// MRT Imports
+// import MaterialReactTable from 'material-react-table'; // default import deprecated
 import { MaterialReactTable } from 'material-react-table';
 
-//Material UI Imports
+// Material UI Imports
 import { Box, Button, ListItemIcon, MenuItem, Typography } from '@mui/material';
 
-//Icons Imports
+// Icons Imports
 import { Delete, Edit } from '@mui/icons-material';
 
 import Chip from '@mui/material/Chip';
 
-
-//Mock Data
-let fdata = await fetch("records")
-let data = await fdata.json()
+// Mock Data
+let fdata = await fetch('records');
+let data = await fdata.json();
 
 const Records = () => {
     const columns = useMemo(
@@ -34,10 +33,7 @@ const Records = () => {
                     <Box
                         component="span"
                         sx={(theme) => ({
-                            backgroundColor:
-                                cell.getValue() === true
-                                    ? theme.palette.success.dark
-                                    : theme.palette.error.dark,
+                            backgroundColor: cell.getValue() === true ? theme.palette.success.dark : theme.palette.error.dark,
                             borderRadius: '0.25rem',
                             color: '#fff',
                             maxWidth: '9ch',
@@ -59,7 +55,6 @@ const Records = () => {
         []
     );
 
-
     return (
         <MaterialReactTable
             columns={columns}
@@ -80,13 +75,14 @@ const Records = () => {
                     </Typography>
                     <Typography variant="body1">
                         <strong>Tags: </strong>
-                        {row.original.tags.map(tag => (
+                        {row.original.tags.map((tag) => (
                             <Chip
+                                key={tag.id}
                                 label={tag.name}
                                 variant="outlined"
                                 sx={{
                                     margin: '0.2rem',
-                                    color: 'purple',
+                                    color: 'white',
                                     borderColor: 'purple',
                                     fontWeight: 'bold',
                                 }}
@@ -102,8 +98,12 @@ const Records = () => {
                                     {row.original.crawlInfo.entryUrl}
                                 </a>
                             </li>
-                            <li><strong>Regex Pattern:</strong> {row.original.crawlInfo.regexPattern}</li>
-                            <li><strong>Periodicity:</strong> {row.original.crawlInfo.periodicity}</li>
+                            <li>
+                                <strong>Regex Pattern:</strong> {row.original.crawlInfo.regexPattern}
+                            </li>
+                            <li>
+                                <strong>Periodicity:</strong> {row.original.crawlInfo.periodicity}
+                            </li>
                         </ul>
                     </Typography>
                 </Box>
@@ -140,12 +140,14 @@ const Records = () => {
                 const handleDeactivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
                         alert('deactivating ' + row.getValue('name'));
+                        return null; 
                     });
                 };
 
                 const handleActivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
                         alert('activating ' + row.getValue('name'));
+                        return null; 
                     });
                 };
 
