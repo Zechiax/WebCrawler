@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using WebCrawler.Interfaces;
+﻿using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using WebCrawler.Models.Exceptions;
 
@@ -19,9 +18,9 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public ExecutionManagerService(IServiceProvider services, ExecutionManagerConfig config)
     {
-        this.logger = services.GetRequiredService<ILogger<ExecutionManagerService>>();
         Config = config;
-        crawlerManager = new CrawlerManager(config, services, toCrawlQueue);
+        logger = services.GetRequiredService<ILogger<ExecutionManagerService>>();
+        crawlerManager = new CrawlerManager(Config, services, toCrawlQueue);
         crawlerManager.StartCrawlers();
     }
 
@@ -70,7 +69,7 @@ public class ExecutionManagerService : IExecutionManagerService
         return job.WebsiteExecution.WebsiteGraph?.GetSnapshot() ?? WebsiteGraphSnapshot.Empty;
     }
 
-    public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
+    public async Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId)
     {
         if (!IsValid(jobId))
         {
