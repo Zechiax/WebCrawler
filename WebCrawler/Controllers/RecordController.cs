@@ -138,7 +138,15 @@ public class RecordController : OurController
     [Route("{id:int}/livegraph")]
     public IActionResult LiveGraph(int id)
     {
-        WebsiteRecord record = _dataService.GetWebsiteRecord(id).Result;
+        WebsiteRecord record;
+        try
+        {
+            record = _dataService.GetWebsiteRecord(id).Result;
+        }
+        catch
+        {
+            return StatusCode(BadRequestCode);
+        }
 
         ulong? jobId = record.CrawlInfo.JobId;
         if(jobId is null)
@@ -146,9 +154,16 @@ public class RecordController : OurController
             return StatusCode(BadRequestCode);
         }
 
-        WebsiteGraphSnapshot graph = _executionManager.GetLiveGraphAsync(record.CrawlInfo.JobId!.Value).Result;
-        string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
-        return Ok(jsonGraph);
+        try
+        {
+            WebsiteGraphSnapshot graph = _executionManager.GetLiveGraphAsync(record.CrawlInfo.JobId!.Value).Result;
+            string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
+            return Ok(jsonGraph);
+        }
+        catch
+        {
+            return StatusCode(BadRequestCode);
+        }
     }
 
     [HttpPost]

@@ -14,6 +14,7 @@ export class Home extends Component {
 
     this.state = {
       isCreateWebsiteRecordModalShown: false,
+      selectedGraphsIds: [37],
     };
   }
 
@@ -39,7 +40,10 @@ export class Home extends Component {
               </Button>
 
               {/* TODO: take the ids from state - currently selected ids*/}
-              <NavLink state={{ ids: [1, 2, 3] }} to="/Graph">
+              <NavLink
+                state={{ ids: this.state.selectedGraphsIds }}
+                to="/Graph"
+              >
                 <Button variant="primary">View Graph</Button>
               </NavLink>
             </Stack>
