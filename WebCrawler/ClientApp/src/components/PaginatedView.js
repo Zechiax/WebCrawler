@@ -35,7 +35,7 @@ const Records = () => {
                         component="span"
                         sx={(theme) => ({
                             backgroundColor:
-                                cell.getValue() == true
+                                cell.getValue() === true
                                     ? theme.palette.success.dark
                                     : theme.palette.error.dark,
                             borderRadius: '0.25rem',
@@ -44,7 +44,7 @@ const Records = () => {
                             p: '0.25rem',
                         })}
                     >
-                        {cell.getValue() == true ? 'Active' : 'Inactive'}
+                        {cell.getValue() === true ? 'Active' : 'Inactive'}
                     </Box>
                 ),
             },
