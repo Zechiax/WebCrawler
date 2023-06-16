@@ -110,7 +110,7 @@ class Executor : IExecutor
                 }
             }
 
-            website.Title = htmlDom.DocumentNode.SelectSingleNode("//title").InnerText;
+            website.Title = htmlDom.DocumentNode.SelectSingleNode("//title")?.InnerText ?? "???";
             website.CrawlTime = sw.Elapsed;
         }
     }
