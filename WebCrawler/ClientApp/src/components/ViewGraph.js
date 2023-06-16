@@ -50,6 +50,33 @@ class ViewGraphInternal extends Component {
         )
       );
 
+    svg.call(
+      d3
+        .drag()
+        .container(svg)
+        .subject((e) => simulation.find(e.x, e.y))
+        .on("start", (e) => {
+          if (!e.active) {
+            simulation.alphaTarget(0.3).restart();
+          }
+
+          e.subject.fx = e.subject.x;
+          e.subject.fy = e.subject.y;
+        })
+        .on("drag", (e) => {
+          e.subject.fx = e.x;
+          e.subject.fy = e.y;
+        })
+        .on("end", (e) => {
+          if (!e.active) {
+            simulation.alphaTarget(0);
+          }
+
+          e.subject.fx = null;
+          e.subject.fy = null;
+        })
+    );
+
     const linkElements = svg
       .append("g")
       .selectAll("line")
