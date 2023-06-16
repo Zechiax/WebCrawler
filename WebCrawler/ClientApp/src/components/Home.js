@@ -3,6 +3,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
+import { NavLink } from "react-router-dom";
 import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 
 export class Home extends Component {
@@ -37,8 +38,10 @@ export class Home extends Component {
                 Create new website record
               </Button>
 
-              {/* TODO: Add button to see selected website record which are beining crawled - route to different page on click*/}
-              <Button variant="primary">View graphs</Button>
+              {/* TODO: take the ids from state - currently selected ids*/}
+              <NavLink state={{ ids: [1, 2, 3] }} to="/Graph">
+                <Button variant="primary">View Graph</Button>
+              </NavLink>
             </Stack>
           </Row>
         </Container>

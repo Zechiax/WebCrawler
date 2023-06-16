@@ -133,6 +133,24 @@ public class RecordController : OurController
             return StatusCode(InternalErrorCode);
         }
     }
+
+    [HttpGet]
+    [Route("{id:int}/livegraph")]
+    public IActionResult LiveGraph(int id)
+    {
+        WebsiteRecord record = _dataService.GetWebsiteRecord(id).Result;
+
+        ulong? jobId = record.CrawlInfo.JobId;
+        if(jobId is null)
+        {
+            return StatusCode(BadRequestCode);
+        }
+
+        WebsiteGraphSnapshot graph = _executionManager.GetLiveGraphAsync(record.CrawlInfo.JobId!.Value).Result;
+        string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
+        return Ok(jsonGraph);
+    }
+
     [HttpPost]
     [Route("{id:int}/run")]
     public IActionResult RunRecord(int id)
@@ -140,6 +158,7 @@ public class RecordController : OurController
         //TODO: Implement
         return StatusCode(NotImplementedCode);
     }
+
     [HttpDelete]
     [Route("{id:int}")]
     public IActionResult DeleteRecord(int id)
