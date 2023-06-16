@@ -42,11 +42,11 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
         return jobId;
     }
 
-    public Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
+    public Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId)
     {
         lock (executionManager)
         {
-            return executionManager.GetFullGraphAsync(jobId);
+            return executionManager.GetLiveGraphAsync(jobId);
         }
     }
 

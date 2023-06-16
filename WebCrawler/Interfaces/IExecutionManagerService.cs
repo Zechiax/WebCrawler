@@ -14,7 +14,7 @@ public interface IExecutionManagerService
     /// <summary>
     /// Returns full graph, after the underlying executor finishes crawling on it's own.
     /// </summary>
-    Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId);
+    Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId);
 
     /// <summary>
     /// Returns graph how is currently looking.
