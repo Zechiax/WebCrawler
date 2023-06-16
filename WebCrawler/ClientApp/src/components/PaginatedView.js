@@ -175,5 +175,3 @@ const Records = () => {
 };
 
 export { Records };
-
-
