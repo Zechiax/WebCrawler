@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 
 // MRT Imports
 // import MaterialReactTable from 'material-react-table'; // default import deprecated
@@ -12,11 +12,19 @@ import { Delete, Edit } from '@mui/icons-material';
 
 import Chip from '@mui/material/Chip';
 
-// Mock Data
-let fdata = await fetch('records');
-let data = await fdata.json();
-
 const Records = () => {
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await fetch('records');
+            const recordsData = await response.json();
+            setData(recordsData);
+        };
+
+        fetchData();
+    }, []);
+
     const columns = useMemo(
         () => [
             {
@@ -82,7 +90,7 @@ const Records = () => {
                                 variant="outlined"
                                 sx={{
                                     margin: '0.2rem',
-                                    color: 'white',
+                                    color: 'purple',
                                     borderColor: 'purple',
                                     fontWeight: 'bold',
                                 }}
