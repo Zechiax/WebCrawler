@@ -8,168 +8,132 @@ import { MaterialReactTable } from 'material-react-table';
 import { Box, Button, ListItemIcon, MenuItem, Typography } from '@mui/material';
 
 //Icons Imports
-import { AccountCircle, Send } from '@mui/icons-material';
+import { Delete, Edit } from '@mui/icons-material';
+
+import Chip from '@mui/material/Chip';
+
 
 //Mock Data
-import { data } from './makeData';
+let fdata = await fetch("records")
+let data = await fdata.json()
 
 const Records = () => {
     const columns = useMemo(
         () => [
             {
-                id: 'employee', //id used to define `group` column
-                header: 'Employee',
-                columns: [
-                    {
-                        accessorFn: (row) => `${row.firstName} ${row.lastName}`, //accessorFn used to join multiple data into a single cell
-                        id: 'name', //id is still required when using accessorFn instead of accessorKey
-                        header: 'Name',
-                        size: 250,
-                        Cell: ({ renderedCellValue, row }) => (
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                }}
-                            >
-                                <img
-                                    alt="avatar"
-                                    height={30}
-                                    src={row.original.avatar}
-                                    loading="lazy"
-                                    style={{ borderRadius: '50%' }}
-                                />
-                                {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
-                                <span>{renderedCellValue}</span>
-                            </Box>
-                        ),
-                    },
-                    {
-                        accessorKey: 'email', //accessorKey used to define `data` column. `id` gets set to accessorKey automatically
-                        enableClickToCopy: true,
-                        header: 'Email',
-                        size: 300,
-                    },
-                ],
+                accessorFn: (row) => `${row.label}`,
+                id: 'name',
+                header: 'Name',
+                size: 250,
             },
             {
-                id: 'id',
-                header: 'Job Info',
-                columns: [
-                    {
-                        accessorKey: 'salary',
-                        // filterVariant: 'range', //if not using filter modes feature, use this instead of filterFn
-                        filterFn: 'between',
-                        header: 'Salary',
-                        size: 200,
-                        //custom conditional format and styling
-                        Cell: ({ cell }) => (
-                            <Box
-                                component="span"
-                                sx={(theme) => ({
-                                    backgroundColor:
-                                        cell.getValue() < 50_000
-                                            ? theme.palette.error.dark
-                                            : cell.getValue() >= 50_000 && cell.getValue() < 75_000
-                                                ? theme.palette.warning.dark
-                                                : theme.palette.success.dark,
-                                    borderRadius: '0.25rem',
-                                    color: '#fff',
-                                    maxWidth: '9ch',
-                                    p: '0.25rem',
-                                })}
-                            >
-                                {cell.getValue()?.toLocaleString?.('en-US', {
-                                    style: 'currency',
-                                    currency: 'USD',
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0,
-                                })}
-                            </Box>
-                        ),
-                    },
-                    {
-                        accessorKey: 'jobTitle', //hey a simple column for once
-                        header: 'Job Title',
-                        size: 350,
-                    },
-                    {
-                        accessorFn: (row) => new Date(row.startDate), //convert to Date for sorting and filtering
-                        id: 'startDate',
-                        header: 'Start Date',
-                        filterFn: 'lessThanOrEqualTo',
-                        sortingFn: 'datetime',
-                        Cell: ({ cell }) => cell.getValue()?.toLocaleDateString(), //render Date as a string
-                        Header: ({ column }) => <em>{column.columnDef.header}</em>, //custom header markup
-                    },
-                ],
+                accessorKey: 'isActive',
+                header: 'Status',
+                size: 150,
+                Cell: ({ cell }) => (
+                    <Box
+                        component="span"
+                        sx={(theme) => ({
+                            backgroundColor:
+                                cell.getValue() == true
+                                    ? theme.palette.success.dark
+                                    : theme.palette.error.dark,
+                            borderRadius: '0.25rem',
+                            color: '#fff',
+                            maxWidth: '9ch',
+                            p: '0.25rem',
+                        })}
+                    >
+                        {cell.getValue() == true ? 'Active' : 'Inactive'}
+                    </Box>
+                ),
+            },
+            {
+                accessorKey: 'created',
+                id: 'creationDate',
+                header: 'Created',
+                size: 250,
+                Cell: ({ cell }) => new Date(cell.getValue()).toLocaleDateString(),
             },
         ],
-        [],
+        []
     );
+
 
     return (
         <MaterialReactTable
             columns={columns}
             data={data}
             enableColumnFilterModes
-            enableColumnOrdering
             enableGrouping
-            enablePinning
             enableRowActions
             enableRowSelection
-            initialState={{ showColumnFilters: true }}
+            initialState={{ showColumnFilters: false }}
             positionToolbarAlertBanner="bottom"
             renderDetailPanel={({ row }) => (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'space-around',
-                        alignItems: 'center',
-                    }}
-                >
-                    <img
-                        alt="avatar"
-                        height={200}
-                        src={row.original.avatar}
-                        loading="lazy"
-                        style={{ borderRadius: '50%' }}
-                    />
-                    <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h4">Signature Catch Phrase:</Typography>
-                        <Typography variant="h1">
-                            &quot;{row.original.signatureCatchPhrase}&quot;
-                        </Typography>
-                    </Box>
+                <Box>
+                    <Typography variant="body1">
+                        <strong>ID:</strong> {row.original.id}
+                    </Typography>
+                    <Typography variant="body1">
+                        <strong>Exact creation time:</strong> {new Date(row.original.created).toLocaleString()}
+                    </Typography>
+                    <Typography variant="body1">
+                        <strong>Tags: </strong>
+                        {row.original.tags.map(tag => (
+                            <Chip
+                                label={tag.name}
+                                variant="outlined"
+                                sx={{
+                                    margin: '0.2rem',
+                                    color: 'purple',
+                                    borderColor: 'purple',
+                                    fontWeight: 'bold',
+                                }}
+                            />
+                        ))}
+                    </Typography>
+                    <Typography variant="body1">
+                        <strong>Crawl Info:</strong>
+                        <ul>
+                            <li>
+                                <strong>Entry URL: </strong>
+                                <a href={row.original.crawlInfo.entryUrl} target="_blank" rel="noopener noreferrer">
+                                    {row.original.crawlInfo.entryUrl}
+                                </a>
+                            </li>
+                            <li><strong>Regex Pattern:</strong> {row.original.crawlInfo.regexPattern}</li>
+                            <li><strong>Periodicity:</strong> {row.original.crawlInfo.periodicity}</li>
+                        </ul>
+                    </Typography>
                 </Box>
             )}
             renderRowActionMenuItems={({ closeMenu }) => [
                 <MenuItem
                     key={0}
                     onClick={() => {
-                        // View profile logic...
+                        // Delete logic...
                         closeMenu();
                     }}
                     sx={{ m: 0 }}
                 >
                     <ListItemIcon>
-                        <AccountCircle />
+                        <Delete />
                     </ListItemIcon>
-                    View Profile
+                    Delete
                 </MenuItem>,
                 <MenuItem
                     key={1}
                     onClick={() => {
-                        // Send email logic...
+                        // Edit logic...
                         closeMenu();
                     }}
                     sx={{ m: 0 }}
                 >
                     <ListItemIcon>
-                        <Send />
+                        <Edit />
                     </ListItemIcon>
-                    Send Email
+                    Edit
                 </MenuItem>,
             ]}
             renderTopToolbarCustomActions={({ table }) => {
@@ -182,12 +146,6 @@ const Records = () => {
                 const handleActivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
                         alert('activating ' + row.getValue('name'));
-                    });
-                };
-
-                const handleContact = () => {
-                    table.getSelectedRowModel().flatRows.map((row) => {
-                        alert('contact ' + row.getValue('name'));
                     });
                 };
 
@@ -208,14 +166,6 @@ const Records = () => {
                             variant="contained"
                         >
                             Activate
-                        </Button>
-                        <Button
-                            color="info"
-                            disabled={!table.getIsSomeRowsSelected()}
-                            onClick={handleContact}
-                            variant="contained"
-                        >
-                            Contact
                         </Button>
                     </div>
                 );

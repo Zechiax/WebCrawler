@@ -17,6 +17,8 @@ public static class SeedData
         {
             new WebsiteRecord()
             {
+                IsActive = true,
+                Created = DateTime.Now - TimeSpan.FromDays(1),
                 Tags = new List<Tag>()
                 {
                     new Tag()
@@ -76,6 +78,7 @@ public static class SeedData
                         Name = "Amazon"
                     }
                 },
+                Created = DateTime.Now - TimeSpan.FromDays(2) - TimeSpan.FromHours(3),
                 Label = "Amazon",
                 CrawlInfo = new()
                 {
@@ -91,6 +94,7 @@ public static class SeedData
             },
             new WebsiteRecord()
             {
+                IsActive = true,
                 Tags = new List<Tag>()
                 {
                     new Tag()
@@ -106,13 +110,15 @@ public static class SeedData
                 CrawlInfo = new()
                 {
                     EntryUrl = "https://techcrunch.com",
-                    RegexPattern = ".*",
+                    // some random regex
+                    RegexPattern = ".r{1,2}a*ndom",
                     Periodicity = TimeSpan.FromHours(1),
                     LastExecution = null
                 }
             },
             new WebsiteRecord()
             {
+                Created = DateTime.Now + TimeSpan.FromDays(42),
                 Tags = new List<Tag>()
                 {
                     new Tag()

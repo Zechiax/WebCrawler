@@ -18,8 +18,8 @@ const AppRoutes = [
   },
   {
      path: '/overview',
-      element: <Records />
-  }
+     element: <Records />
+  },
 ];
 
 export default AppRoutes;
