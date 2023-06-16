@@ -71,7 +71,7 @@ class Executor : IExecutor
             {
                 htmlPlain = await websiteProvider.GetStringAsync(website.Url);
             }
-            catch { return; }
+            catch { continue; }
 
             HtmlDocument htmlDom = new HtmlDocument();
             htmlDom.LoadHtml(htmlPlain);
