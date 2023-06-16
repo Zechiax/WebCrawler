@@ -44,6 +44,8 @@ export class CreateWebsiteRecordModalWindow extends Component {
         console.log(response.status);
         if (response.status === 200) {
           this.setState({ submitSuccess: true });
+        } else if (response.status === 500) {
+          this.setState({ submitOtherError: true });
         } else {
           this.setState({ submitBadRequest: true });
         }

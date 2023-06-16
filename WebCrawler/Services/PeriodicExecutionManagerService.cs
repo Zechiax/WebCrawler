@@ -12,11 +12,14 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
 
     private readonly Dictionary<ulong, PeriodicWebsiteExecutionJob> periodicJobs = new();
 
-    public PeriodicExecutionManagerService(IServiceProvider services, ExecutionManagerConfig config)
+    public PeriodicExecutionManagerService(IServiceProvider services, ExecutionManagerConfig? config = null)
     {
-        Config = config;
+        Config = config ?? new ExecutionManagerConfig
+        {
+            CrawlersCount = 20
+        };
         
-        executionManager = new ExecutionManagerService(services, config);
+        executionManager = new ExecutionManagerService(services, Config);
     }
 
     public ulong EnqueueForPeriodicCrawl(CrawlInfo crawlInfo)

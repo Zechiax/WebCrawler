@@ -18,9 +18,9 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public ExecutionManagerService(IServiceProvider services, ExecutionManagerConfig config)
     {
-        this.logger = services.GetRequiredService<ILogger<ExecutionManagerService>>();
         Config = config;
-        crawlerManager = new CrawlerManager(config, services, toCrawlQueue);
+        logger = services.GetRequiredService<ILogger<ExecutionManagerService>>();
+        crawlerManager = new CrawlerManager(Config, services, toCrawlQueue);
         crawlerManager.StartCrawlers();
     }
 
