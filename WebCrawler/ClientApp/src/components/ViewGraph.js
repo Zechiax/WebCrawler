@@ -9,7 +9,7 @@ export const ViewGraph = (props) => {
   return (
     <ViewGraphInternal
       ids={location.state.ids}
-      height="600px"
+      height="800px"
       width="100%"
       {...props}
     />
@@ -32,7 +32,12 @@ class ViewGraphInternal extends Component {
     const svg = d3
       .select("svg")
       .attr("width", this.props.width)
-      .attr("height", this.props.height);
+      .attr("height", this.props.height)
+      .call(
+        d3.zoom().on("zoom", function (e) {
+          d3.selectAll("svg g").attr("transform", e.transform);
+        })
+      );
 
     const simulation = d3
       .forceSimulation()
@@ -204,7 +209,7 @@ class ViewGraphInternal extends Component {
     return (
       <>
         {loading}
-        <svg style={{ backgroundColor: "aqua" }}></svg>
+        <svg></svg>
       </>
     );
   }
