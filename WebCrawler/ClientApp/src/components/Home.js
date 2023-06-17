@@ -5,6 +5,7 @@ import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
 import { NavLink } from "react-router-dom";
 import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
+import PaginatedView from "./PaginatedView";
 
 export class Home extends Component {
   static displayName = Home.name;
@@ -14,7 +15,7 @@ export class Home extends Component {
 
     this.state = {
       isCreateWebsiteRecordModalShown: false,
-      selectedGraphsIds: [21], // TODO
+      selectedGraphsIds: [10], // TODO
     };
   }
 
@@ -26,9 +27,15 @@ export class Home extends Component {
       <>
         <Container fluid="md">
           <Row>
-            {/* TODO: Add the paginated view of website records here */}
+            <PaginatedView />
           </Row>
-          <Row>
+          <Row
+            style={{
+              marginTop: "30px",
+              marginBottom: "15px",
+              marginLeft: "0px",
+            }}
+          >
             <Stack direction="horizontal" gap={3}>
               <Button
                 variant="primary"
@@ -43,7 +50,12 @@ export class Home extends Component {
                 state={{ ids: this.state.selectedGraphsIds }}
                 to="/Graph"
               >
-                <Button variant="primary">View Graph</Button>
+                <Button
+                  variant="primary"
+                  disabled={this.state.selectedGraphsIds.length === 0}
+                >
+                  View Graph
+                </Button>
               </NavLink>
             </Stack>
           </Row>

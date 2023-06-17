@@ -1,5 +1,4 @@
 import { Home } from "./components/Home";
-import { Records } from "./components/PaginatedView";
 import { ViewGraph } from "./components/ViewGraph";
 
 const AppRoutes = [

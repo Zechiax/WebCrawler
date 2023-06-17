@@ -1,128 +1,41 @@
-# TODO
+# OTAZKY a TODO na meeting
+## Home
+1. jak udelat, aby paginatedView poslal selected ids do rodice - home.js, ktery to uz jen pak preposle routingem do graf vizualizace
+	* callback onSelected, ktery prida id selected row do selectedIds
+1. Editace dodelat
+	* nezapomenout na refresh dat
+1. Delete dodelat
+	* nezapomenout na refresh dat
+1. filtrace a hledani je done?
+1. Souvisi activate a deactive se statusem?
+1. cudliky lepsi styling
+	* lepe umistit
+	* nemusi se posunout nahoru spolu s tabulkou, mozna ani ta tabulka se nemusi takhle zmensit?
 
-1. Controllery layer
+## WEBSITE RECORD DETAILS
+* novy route
+* kompletne totiz chybi executiony, by melo byt pod kazdym recordem nekde ...
 
-   - pepa
+## BACKEND
+1. otestovani periodicity, mam pocit ze nefunguje ...
+1. domimplementovani delete / update / run recordu na controlleru
 
-1. Executor implementace
+## GRAF VISUALIZACE
+1. live graf update
+1. moznost startovat exekuce z website recordu z graf view
+	* MODALNI OKNO 
+1. moznost vytvorit novy website rekord z graf view
+	* zmenit to co je momentalne onClick na onHover na grafu
+	* onClick se ukaze MODALNI OKNO
+1. cudliky na graf vizualizace lepsi styling
+	* celou dobu pekne pod sebou v pravem hornim rohu
+1. toggle na graf vizualizace se chova nejak debilne, asi jsem spatne pouzil react state?
 
-   - plus managment - paralelne
-   - tomas
-   TODO:
-		* podpora pro peridicke spousteni jedne instance exekutoru
+## MODALNI OKNO V GRAF VIZUALIZACE PRO NODE
+* node details
+* seznam website records
+* moznost prejit na WEBSITE RECORD DETAILS
 
-1. Model layer
-
-   - SQL lite - MILAN
-
-1. Knihovna na visualizaci Exekutoru / grafu
-
-1. GraphQL
-
-1. Seznam exekutoru - CRUD
-
+## NA KONEC
+1. graphQL API
 1. Docker
-
-## Endpoints
-
-1. `/record/{id}` - GET
-
-1. `/records` - GET
-
-1. `/record` - POST s `Json`
-
-   - save new
-
-1. `/record/{id}` - PATCH s `Json`
-
-   - update existing
-
-1. `/record/{id}/run` - POST  <<<--- TODO, not sure how to implement
-
-   - run existing
-
-1. `/record/{id}` - DELETE
-	 
-	- delete existing
-
-# POZNAMKY
-
-- SQLlite - entity framework
-- REACT bootstrap
-
-## Navigace
-Asi zatim prazdno.
-1. Home
-1. About us
-
-## Paginated View - seznam 
-### Active selection
-
-### Cudliky doleva - doprava
-na posun stranek
-
-### Search
-podle:
-* Label
-
-### Filter
-podle:
-* URL
-* Label
-Tags
-
-### Sort
-podle:
-* URL
-* Last execution time
-
-### Item
-ma:
-* Label
-* Periodicity
-* Tags
-* Last execution
-* status of last execution - puntiky na levo
-	* ceka na zpracovani
-	* aktualne bezi
-	* dobehal uspense
-	* dobehla zrusenim
-* RUD
-	* tri tecky napravo
-
-## ShowGraph cudlik
-
-## Create cudlik
-Otevre modalni okno. 
-
-Uzivatel musi zadat:
-1. Label
-1. Url
-1. Periodicity
-1. Regex
-
-# Visualizace grafu
-Nekdy pak.
-
-# Backend
-
-- GraphQL
-
-# Deployment
-
-- Docker
-
-# JOBS
-## Milan a Pepa:
-1. Paginated view
-	* hlavni kostra
-	* jak to pujde
-
-## Tomas
-1. Create WebsiteRecord modal window
-1. Dodelat executionera
-
-
-# Another meeting
-
-- pristi tyden nekdy - streda?
