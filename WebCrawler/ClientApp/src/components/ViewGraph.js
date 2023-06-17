@@ -16,17 +16,14 @@ export const ViewGraph = (props) => {
 };
 
 class ViewGraphInternal extends Component {
-  static WEBSITES_VIEW = "websitesView";
-  static DOMAINS_VIEW = "domainsView";
-  static LIVE_VIEW = "liveView";
-  static STATIC_VIEW = "staticView";
-
   constructor(props) {
     super(props);
     this.state = {
+      nodes: [],
+      links: [],
       loading: true,
-      graphView: ViewGraphInternal.WEBSITES_VIEW,
-      liveView: ViewGraphInternal.STATIC_VIEW,
+      isWebsitesView: false,
+      isLiveView: false,
       currentlySelectedNodeInfo: [],
     };
   }
@@ -34,6 +31,8 @@ class ViewGraphInternal extends Component {
   renderGraph(graph) {
     const nodes = graph.nodes.map((node) => Object.create(node));
     const links = graph.links.map((link) => Object.create(link));
+    this.setState({ nodes: nodes });
+    this.setState({ links: links });
 
     const nodeInfo = d3.select(".content .nodeInfo");
 
@@ -115,7 +114,7 @@ class ViewGraphInternal extends Component {
         svg
           .selectAll("circle")
           .filter(function () {
-            return d3.select(this).attr("fill") == "red";
+            return d3.select(this).attr("fill") === "red";
           })
           .attr("fill", d.color);
 
@@ -155,35 +154,38 @@ class ViewGraphInternal extends Component {
   }
 
   componentDidMount() {
-    let urlBase = "";
+    this.fetchAndRerenderGraph();
+  }
 
-    if (this.state.graphView === ViewGraphInternal.WEBSITES_VIEW) {
-      urlBase = "/Record/livegraph/websites/";
-    } else if (this.state.graphView === ViewGraphInternal.DOMAINS_VIEW) {
-      urlBase = "/Record/livegraph/domains/";
-    } else {
-      console.log(
-        "ERROR - view can't be anything else than websites view or domains view."
-      );
-    }
-
-    console.log(urlBase);
-    this.getGraphAsync(urlBase)
+  fetchAndRerenderGraph() {
+    this.setState({ loading: true });
+    this.getGraphAsync()
       .then((graph) => this.renderGraph(graph))
       .then(this.setState({ loading: false }));
   }
 
-  async getGraphAsync(url) {
+  async getGraphAsync() {
+    let urlBase = "";
+
+    if (this.state.isWebsitesView) {
+      urlBase = "/Record/livegraph/websites/";
+    } else {
+      urlBase = "/Record/livegraph/domains/";
+    }
+
+    console.log(urlBase);
+
     const graphsJson = [];
 
     console.log(this.props.ids);
 
     for (const id of this.props.ids) {
-      const response = await fetch(url + id);
+      const response = await fetch(urlBase + id);
 
       if (response.ok) {
         const graphJson = await response.json();
         graphJson["websiteRecordId"] = id;
+        console.log(graphJson);
         graphsJson.push(graphJson);
       }
     }
@@ -195,8 +197,6 @@ class ViewGraphInternal extends Component {
   }
 
   static async convertGraphsJsonToD3JsonAsync(graphsJson) {
-    let addNewNodes = true;
-
     const graph = {
       nodes: [],
       links: [],
@@ -206,55 +206,55 @@ class ViewGraphInternal extends Component {
       const recordForGraph = await (
         await fetch(`/Record/${graphJson.websiteRecordId}`)
       ).json();
+      console.log("record for graph");
+      console.log(recordForGraph);
 
       for (const node of graphJson.Graph) {
-        if (addNewNodes) {
-          const alreadyPresentNode = graph.nodes.find(
-            (n) => n.url === node.Url
-          );
+        // if regex doesn't match is orange
+        const color = new RegExp(recordForGraph.crawlInfo.regexPattern).test(
+          node.Url
+        )
+          ? ViewGraphInternal.stringToColour(recordForGraph.label)
+          : "orange";
 
-          if (alreadyPresentNode) {
-            if (
-              Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
-              alreadyPresentNode.started
-            ) {
-              // overwrite with latest data
-              alreadyPresentNode.url = node.Url;
-              alreadyPresentNode.title = node.Title;
-              alreadyPresentNode.crawlTime = node.CrawlTime;
-              alreadyPresentNode.started = Date.parse(
-                recordForGraph.crawlInfo.lastExecution.started
-              );
-              alreadyPresentNode.color = this.stringToColour(
-                recordForGraph.label
-              );
-            }
+        const alreadyPresentNode = graph.nodes.find((n) => n.url === node.Url);
 
-            alreadyPresentNode.inWhichGraphs.push(recordForGraph.label);
-          } else {
-            graph.nodes.push({
-              url: node.Url,
-              title: node.Title,
-              crawlTime: node.CrawlTime,
-              started: Date.parse(
-                recordForGraph.crawlInfo.lastExecution.started
-              ),
-              inWhichGraphs: [recordForGraph.label],
-              color: ViewGraphInternal.stringToColour(recordForGraph.label),
-            });
+        // present but this one is newer
+        if (alreadyPresentNode) {
+          if (
+            Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
+            alreadyPresentNode.started
+          ) {
+            console.log(alreadyPresentNode);
+            // overwrite with latest data
+            alreadyPresentNode.url = node.Url;
+            alreadyPresentNode.title = node.Title;
+            alreadyPresentNode.crawlTime = node.CrawlTime;
+            alreadyPresentNode.started = Date.parse(
+              recordForGraph.crawlInfo.lastExecution.started
+            );
+
+            alreadyPresentNode.color = color;
           }
+
+          alreadyPresentNode.inWhichGraphs.push(recordForGraph.label);
+        } else {
+          graph.nodes.push({
+            url: node.Url,
+            title: node.Title,
+            crawlTime: node.CrawlTime,
+            started: Date.parse(recordForGraph.crawlInfo.lastExecution.started),
+            inWhichGraphs: [recordForGraph.label],
+            color: color,
+          });
         }
 
         for (const neighbourUrl of node.Neighbours) {
-          try {
-            graph.links.push({
-              source: node.Url,
-              target: neighbourUrl,
-              forWhichGraph: recordForGraph.label,
-            });
-          } catch (except) {
-            continue;
-          }
+          graph.links.push({
+            source: node.Url,
+            target: neighbourUrl,
+            forWhichGraph: recordForGraph.label,
+          });
         }
       }
     }
@@ -276,6 +276,42 @@ class ViewGraphInternal extends Component {
     return colour;
   }
 
+  updateGraph() {
+    // TODO: attempt for live update instead of rererending the whole graph all the time - not working
+    /*     this.setState((state, props) => ({
+      nodes: [
+        ...nodes,
+        {
+          url: "borek",
+        },
+      ],
+    }));
+
+    let nodes = d3.selectAll("circle").data(this.state.nodes);
+    const newNodesEnter = nodes
+      .enter()
+      .append("circle")
+      .attr("id", function (d) {
+        return d.url;
+      })
+      .attr("class", ".node")
+      .attr("r", 3)
+      .attr("fill", function (d) {
+        return d.color;
+      });
+
+    nodes = newNodesEnter.merge(nodes);
+    // */
+
+    this.deleteGraph();
+    this.fetchAndRerenderGraph();
+  }
+
+  deleteGraph() {
+    d3.selectAll("circle").remove();
+    d3.selectAll("line").remove();
+  }
+
   render() {
     let loading = "";
     if (this.state.loading) {
@@ -295,55 +331,62 @@ class ViewGraphInternal extends Component {
             zIndex: 1,
           }}
         />
-        <Button
+        <div
           style={{
             position: "absolute",
-            left: "80%",
-            width: "130px",
+            left: "85vw",
           }}
-          variant="primary"
-          checked={this.state.graphView}
-          onClick={(e) =>
-            this.setState((state, props) => {
-              console.log("CLICK");
-              return {
-                graphView:
-                  state.graphView == ViewGraphInternal.DOMAINS_VIEW
-                    ? ViewGraphInternal.WEBSITES_VIEW
-                    : ViewGraphInternal.DOMAINS_VIEW,
-              };
-            })
-          }
         >
-          {this.state.graphView == ViewGraphInternal.DOMAINS_VIEW
-            ? "Websites view"
-            : "Domains view"}
-        </Button>
-        <Button
-          style={{
-            position: "absolute",
-            left: "80%",
-            top: "115px",
-            width: "130px",
-          }}
-          variant="primary"
-          checked={this.state.liveView}
-          onClick={(e) =>
-            this.setState((state, props) => {
-              console.log("CLICK");
-              return {
-                liveView:
-                  state.liveView == ViewGraphInternal.LIVE_VIEW
-                    ? ViewGraphInternal.STATIC_VIEW
-                    : ViewGraphInternal.LIVE_VIEW,
-              };
-            })
-          }
-        >
-          {this.state.liveView == ViewGraphInternal.LIVE_VIEW
-            ? "Static view"
-            : "Live view"}
-        </Button>
+          <Button
+            style={{
+              width: "130px",
+            }}
+            variant="primary"
+            onClick={(e) => {
+              this.setState((state, props) => ({
+                isWebsitesView: !state.isWebsitesView,
+              }));
+
+              this.deleteGraph();
+              this.fetchAndRerenderGraph();
+            }}
+          >
+            {this.state.isWebsitesView ? "Websites view" : "Domains view"}
+          </Button>
+          <Button
+            style={{
+              marginTop: "10px",
+              width: "130px",
+            }}
+            variant="primary"
+            onClick={(e) => {
+              this.setState((state, props) => ({
+                isLiveView: !state.isLiveView,
+              }));
+            }}
+          >
+            {this.state.isLiveView ? "Live view" : "Static view"}
+          </Button>
+        </div>
+        {!this.state.isLiveView ? (
+          <div
+            style={{
+              position: "fixed",
+              left: "85vw",
+              bottom: "2vw",
+            }}
+          >
+            <Button
+              onClick={() => {
+                this.updateGraph();
+              }}
+            >
+              Update Graph
+            </Button>
+          </div>
+        ) : (
+          <div></div>
+        )}
         {loading}
         <svg
           style={{

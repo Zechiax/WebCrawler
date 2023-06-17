@@ -143,8 +143,36 @@ public class RecordController : OurController
     }
 
     [HttpGet]
+    [Route("livegraph/domains/{id:int}")]
+    public IActionResult LiveGraphDomains(int id)
+    {
+        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
+
+        if(graph is null)
+        {
+            return StatusCode(BadRequestCode, "There is no graph");
+        }
+
+        string jsonGraph = WebsiteGraphSnapshot.JsonConverterToDomainView.Serialize(graph.Value);
+        return Ok(jsonGraph);
+    }
+
+    [HttpGet]
     [Route("livegraph/websites/{id:int}")]
     public IActionResult LiveGraphWebsites(int id)
+    {
+        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
+
+        if(graph is null)
+        {
+            return StatusCode(BadRequestCode, "There is no graph");
+        }
+
+        string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph.Value);
+        return Ok(jsonGraph);
+    }
+
+    private WebsiteGraphSnapshot? GetLiveGraph(int id)
     {
         WebsiteRecord record;
         try
@@ -153,33 +181,24 @@ public class RecordController : OurController
         }
         catch
         {
-            return StatusCode(BadRequestCode);
+            return null; 
         }
 
         ulong? jobId = record.CrawlInfo.JobId;
         if(jobId is null)
         {
-            return StatusCode(BadRequestCode, "There is no crawling happening under given Website record.");
+            return null; 
         }
 
         try
         {
             WebsiteGraphSnapshot graph = _executionManager.GetLiveGraph(record.CrawlInfo.JobId!.Value);
-            string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
-            return Ok(jsonGraph);
+            return graph;
         }
         catch
         {
-            return StatusCode(BadRequestCode);
+            return null;
         }
-    }
-
-    [HttpGet]
-    [Route("livegraph/domains/{id:int}")]
-    public IActionResult LiveGraphDomains(int id)
-    {
-        //TODO: implement
-        return Ok();
     }
 
     [HttpPost]
