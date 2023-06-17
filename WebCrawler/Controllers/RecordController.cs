@@ -108,7 +108,10 @@ public class RecordController : OurController
             record.Tags = jsonObj.Tags.Select(tagName => new Tag(tagName!)).ToList();
             record.CrawlInfo = new CrawlInfo(jsonObj.Url, jsonObj.Regex, TimeSpan.FromMinutes(int.Parse(jsonObj.Periodicity)));
 
-            record.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
+            if (record.IsActive)
+            {
+                record.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
+            }
 
             _dataService.AddWebsiteRecord(record!).Wait();
             return Ok();
@@ -137,6 +140,9 @@ public class RecordController : OurController
     [HttpGet]
     [Route("{id:int}/livegraph")]
     public IActionResult LiveGraph(int id)
+            /// <summary>
+    /// Only valid links are counted.
+    /// </summary>
     {
         WebsiteRecord record;
         try
