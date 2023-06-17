@@ -27,41 +27,42 @@ public readonly partial struct WebsiteGraphSnapshot
             );
             
             // We add the entry website to the graph, so that we can easily deserialize it later.
-            return JsonConvert.SerializeObject(new { EntryUrl = graph.EntryWebsite?.Url, Graph = websiteVertices});
+            return JsonConvert.SerializeObject(new
+            {
+                EntryUrl = graph.EntryWebsite?.Url,
+                Graph = websiteVertices
+            });
         }
 
         public static WebsiteGraphSnapshot Deserialize(string json)
         {
-            var snapshot = JsonConvert.DeserializeAnonymousType(json, new { EntryUrl = string.Empty, Graph = Enumerable.Empty<WebsiteNodeWithNeighbours>() });
+            var snapshot = JsonConvert.DeserializeAnonymousType(json, new
+            {
+                EntryUrl = string.Empty,
+                Graph = Enumerable.Empty<WebsiteNodeWithNeighbours>()
+            });
 
             if(snapshot is null)
             {
                 throw new ArgumentException("Can't deserialize from given json.");
             }
 
-            try
+            Dictionary<string, Website> urlToWebsiteLookup = snapshot.Graph
+                .ToDictionary(model => model.Url, model => new Website(model.Url) { Title = model.Title, CrawlTime = model.CrawlTime });
+
+            Dictionary<Website, List<Website>> data = urlToWebsiteLookup.Values.ToDictionary(website => website, _ => new List<Website>()); 
+
+            foreach(WebsiteNodeWithNeighbours model in snapshot.Graph)
             {
-                Dictionary<string, Website> urlToWebsiteLookup = snapshot.Graph
-                    .ToDictionary(model => model.Url, model => new Website(model.Url) { Title = model.Title, CrawlTime = model.CrawlTime });
-
-                Dictionary<Website, List<Website>> data = urlToWebsiteLookup.Values.ToDictionary(website => website, _ => new List<Website>()); 
-
-                foreach(WebsiteNodeWithNeighbours model in snapshot.Graph)
+                foreach(string neighbour in model.Neighbours)
                 {
-                    foreach(string neighbour in model.Neighbours)
-                    {
-                        data[urlToWebsiteLookup[model.Url]].Add(urlToWebsiteLookup[neighbour]);
-                    }
+                    data[urlToWebsiteLookup[model.Url]].Add(urlToWebsiteLookup[neighbour]);
                 }
-                
-                var entryWebsite = urlToWebsiteLookup[snapshot.EntryUrl];
+            }
+            
+            var entryWebsite = urlToWebsiteLookup[snapshot.EntryUrl];
 
-                return new WebsiteGraphSnapshot(data, entryWebsite);
-            }
-            catch
-            {
-                throw new ArgumentException($"The Json representation of {nameof(WebsiteGraphSnapshot)} is invalid. Check that for example each vertex (url) is present only once.");
-            }
+            return new WebsiteGraphSnapshot(data, entryWebsite);
         }
     }
 }

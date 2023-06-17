@@ -58,27 +58,33 @@ public class RecordController : OurController
 
             if (string.IsNullOrWhiteSpace(jsonObj.Label) || jsonObj.Label.Length > 30 || jsonObj.Label.Length == 0)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Label is invalid.");
+            }
+
+            IEnumerable<WebsiteRecord> allRecords = _dataService.GetWebsiteRecords().Result;
+            if(allRecords.Any(record => record.Label == jsonObj.Label))
+            {
+                return StatusCode(BadRequestCode, "Label already present.");
             }
 
             if (jsonObj.IsActive is not null && jsonObj.IsActive != "on")
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "IsActive is invalid.");
             }
 
             if (string.IsNullOrWhiteSpace(jsonObj.Url) || !Uri.TryCreate(jsonObj.Url, UriKind.Absolute, out var uriResult) && uriResult?.Scheme == Uri.UriSchemeHttp)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Url is invalid.");
             }
 
-            if (string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 30)
+            if (string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 15)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Periodicity is invalid");
             }
 
             if (string.IsNullOrWhiteSpace(jsonObj.Regex))
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Regex is invalid.");
             }
 
             try
@@ -87,17 +93,17 @@ public class RecordController : OurController
             }
             catch (ArgumentException)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Regex is invalid.");
             }
 
             if (jsonObj.Tags is null || jsonObj.Tags.Length >= 50)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Tags are invalid.");
             }
 
             if (jsonObj.Tags.Any(tag => tag is null || tag.Length > 30) || (jsonObj.Tags.ToHashSet().Count != jsonObj.Tags.Length))
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Tags are invalid.");
             }
 
             WebsiteRecord record = new(); 
@@ -118,7 +124,7 @@ public class RecordController : OurController
         }
         catch
         {
-            return StatusCode(BadRequestCode);
+            return StatusCode(BadRequestCode, "Something went wrong.");
         }
     }
 
@@ -140,9 +146,6 @@ public class RecordController : OurController
     [HttpGet]
     [Route("{id:int}/livegraph")]
     public IActionResult LiveGraph(int id)
-            /// <summary>
-    /// Only valid links are counted.
-    /// </summary>
     {
         WebsiteRecord record;
         try
@@ -157,7 +160,7 @@ public class RecordController : OurController
         ulong? jobId = record.CrawlInfo.JobId;
         if(jobId is null)
         {
-            return StatusCode(BadRequestCode);
+            return StatusCode(BadRequestCode, "There is no crawling happening under given Website record.");
         }
 
         try

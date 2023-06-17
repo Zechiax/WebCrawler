@@ -42,15 +42,16 @@ class ViewGraphInternal extends Component {
 
     const simulation = d3
       .forceSimulation()
-      .force("charge", d3.forceManyBody().strength(-20))
+      .force("charge", d3.forceManyBody().strength(-5))
       .force(
         "center",
         d3.forceCenter(
-          350, //TODO
-          350 //TODO
+          350, //TODO - calculate center somehow from svg dimension
+          350
         )
       );
 
+    // TODO: Attempt to implement dragging, but doesn't work for some reason
     svg.call(
       d3
         .drag()
@@ -77,6 +78,7 @@ class ViewGraphInternal extends Component {
           e.subject.fy = null;
         })
     );
+    //
 
     const linkElements = svg
       .append("g")
@@ -108,32 +110,21 @@ class ViewGraphInternal extends Component {
 
         nodeInfo
           .append("div")
-          .attr("background-color", "green")
           .append("ul")
           .append("li")
           .text("Title: " + (d.title ? d.title : "???"))
           .append("li")
           .text("Url: " + d.url)
           .append("li")
-          .text("Crawl time: " + d.crawlTime);
+          .text("Crawl time: " + d.crawlTime)
+          .append("li")
+          .text(d.inWhichGraphs.map((graphId) => graphId));
 
         d3.select(this).attr("fill", "red");
       });
 
-    /*     const textElements = svg
-      .append("g")
-      .selectAll("text")
-      .data(nodes)
-      .enter()
-      .append("text")
-      .text((node) => node.url)
-      .attr("font-size", 15)
-      .attr("dx", 15)
-      .attr("dy", 4); */
-
     simulation.nodes(nodes).on("tick", () => {
       nodeElements.attr("cx", (node) => node.x).attr("cy", (node) => node.y);
-      //textElements.attr("x", (node) => node.x).attr("y", (node) => node.y);
 
       linkElements
         .attr("x1", (link) => link.source.x)
@@ -147,7 +138,7 @@ class ViewGraphInternal extends Component {
       d3
         .forceLink(links)
         .id((link) => link.url)
-        .distance(30)
+        .distance(20)
     );
   }
 
@@ -169,16 +160,17 @@ class ViewGraphInternal extends Component {
 
       if (response.ok) {
         const graphJson = await response.json();
+        graphJson["websiteRecordId"] = id;
         graphsJson.push(graphJson);
         console.log(graphJson);
       }
     }
 
-    const graph = this.convertGraphsJsonToD3Json(graphsJson);
+    const graph = await this.convertGraphsJsonToD3JsonAsync(graphsJson);
     return graph;
   }
 
-  convertGraphsJsonToD3Json(graphsJson) {
+  async convertGraphsJsonToD3JsonAsync(graphsJson) {
     let addNewNodes = true;
 
     const graph = {
@@ -186,9 +178,12 @@ class ViewGraphInternal extends Component {
       links: [],
     };
 
-    let graphId = 0;
     for (const graphJson of graphsJson) {
-      graphId++;
+      /*       const response = await fetch(`/Record/${graphJson.websiteRecordId}`);
+      const obj = response.json();
+      console.log(obj); */
+      const label = "label";
+
       for (const node of graphJson.Graph) {
         if (addNewNodes) {
           const alreadyPresentNode = graph.nodes.find(
@@ -196,14 +191,14 @@ class ViewGraphInternal extends Component {
           );
 
           if (alreadyPresentNode) {
-            alreadyPresentNode.inWhichGraphs.push(graphId);
+            alreadyPresentNode.inWhichGraphs.push(label);
           } else {
             console.log(node.Title);
             graph.nodes.push({
               url: node.Url,
               title: node.Title,
               crawlTime: node.CrawlTime,
-              inWhichGraphs: [graphId],
+              inWhichGraphs: [label],
             });
           }
         }
@@ -213,7 +208,7 @@ class ViewGraphInternal extends Component {
             graph.links.push({
               source: node.Url,
               target: neighbourUrl,
-              forWhichGraph: graphId,
+              forWhichGraph: label,
             });
           } catch (except) {
             continue;
