@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { useLocation } from "react-router";
 import { NodeInfo } from "./NodeInfo";
 import * as d3 from "d3";
-import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 
 export const ViewGraph = (props) => {
   const location = useLocation();
@@ -28,6 +27,8 @@ class ViewGraphInternal extends Component {
   renderGraph(graph) {
     const nodes = graph.nodes.map((node) => Object.create(node));
     const links = graph.links.map((link) => Object.create(link));
+
+    const nodeInfo = d3.select(".content .nodeInfo");
 
     const svg = d3
       .select("svg")
@@ -83,49 +84,41 @@ class ViewGraphInternal extends Component {
       .data(links)
       .enter()
       .append("line")
-      .attr("stroke-width", 2)
+      .attr("stroke-width", 1)
       .attr("stroke", "#E5E5E5");
 
     const nodeElements = svg
       .append("g")
-      .on("click", function (d) {
-        //TODO: might be useful eventually to show some more data than url on click / or on hover potentially
-        const currentlySelectedNode = graph.nodes.find(
-          (node) => node.url === d.target.id
-        );
-      })
-      .on("mouseover", function (d) {
-        console.log("onhover");
-        console.log(d.explicitOriginalTarget.id);
-
-        d3.select(this)
-          .attr("r", 20)
-          .attr("fill", "#ffd95c")
-          .append("text")
-          .attr("x", function () {
-            return d.x;
-          })
-          .attr("y", function () {
-            return d.y;
-          })
-          .attr("font-size", 8)
-          .style("fill", "black")
-          .attr("class", "text-on-hover")
-          .text(() => d.explicitOriginalTarget.id);
-      })
-      .on("mouseout", function (d) {
-        console.log("onout");
-        d3.selectAll(".text-on-hover").remove();
-      })
       .selectAll("circle")
       .data(nodes)
       .enter()
       .append("circle")
+      .on("hover", function (d) {
+        console.log("HOVER");
+      })
       .attr("id", function (d) {
         return d.url;
       })
-      .attr("r", 10)
-      .attr("fill", "#f2c32b");
+      .attr("class", ".node")
+      .attr("r", 3)
+      .attr("fill", "#f2c32b")
+      .on("click", function (e, d, i) {
+        nodeInfo.selectAll("ul").remove();
+        d3.selectAll("circle").attr("fill", "#f2c32b");
+
+        nodeInfo
+          .append("div")
+          .attr("background-color", "green")
+          .append("ul")
+          .append("li")
+          .text("Title: " + (d.title ? d.title : "???"))
+          .append("li")
+          .text("Url: " + d.url)
+          .append("li")
+          .text("Crawl time: " + d.crawlTime);
+
+        d3.select(this).attr("fill", "red");
+      });
 
     /*     const textElements = svg
       .append("g")
@@ -154,7 +147,7 @@ class ViewGraphInternal extends Component {
       d3
         .forceLink(links)
         .id((link) => link.url)
-        .distance(60)
+        .distance(30)
     );
   }
 
@@ -186,7 +179,8 @@ class ViewGraphInternal extends Component {
   }
 
   convertGraphsJsonToD3Json(graphsJson) {
-    console.log(graphsJson);
+    let addNewNodes = true;
+
     const graph = {
       nodes: [],
       links: [],
@@ -196,25 +190,34 @@ class ViewGraphInternal extends Component {
     for (const graphJson of graphsJson) {
       graphId++;
       for (const node of graphJson.Graph) {
-        const alreadyPresentNode = graph.nodes.find((n) => n.url === node.Url);
+        if (addNewNodes) {
+          const alreadyPresentNode = graph.nodes.find(
+            (n) => n.url === node.Url
+          );
 
-        if (alreadyPresentNode) {
-          alreadyPresentNode.inWhichGraphs.push(graphId);
-        } else {
-          graph.nodes.push({
-            url: node.Url,
-            title: node.Title,
-            crawlTime: node.CrawlTime,
-            inWhichGraphs: [graphId],
-          });
+          if (alreadyPresentNode) {
+            alreadyPresentNode.inWhichGraphs.push(graphId);
+          } else {
+            console.log(node.Title);
+            graph.nodes.push({
+              url: node.Url,
+              title: node.Title,
+              crawlTime: node.CrawlTime,
+              inWhichGraphs: [graphId],
+            });
+          }
         }
 
         for (const neighbourUrl of node.Neighbours) {
-          graph.links.push({
-            source: node.Url,
-            target: neighbourUrl,
-            forWhichGraph: graphId,
-          });
+          try {
+            graph.links.push({
+              source: node.Url,
+              target: neighbourUrl,
+              forWhichGraph: graphId,
+            });
+          } catch (except) {
+            continue;
+          }
         }
       }
     }
@@ -234,10 +237,21 @@ class ViewGraphInternal extends Component {
     }
 
     return (
-      <>
+      <div className="content">
+        <div
+          className="nodeInfo"
+          style={{
+            position: "absolute",
+            zIndex: 1,
+          }}
+        />
         {loading}
-        <svg></svg>
-      </>
+        <svg
+          style={{
+            zIndex: 0,
+          }}
+        ></svg>
+      </div>
     );
   }
 }
