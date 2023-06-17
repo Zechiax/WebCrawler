@@ -92,7 +92,7 @@ public class Crawler
 
                 _currentJob.JobStatus = JobStatus.Active;
                 _currentJob.Crawler = this;
-                executor = new Executor(_currentJob, _websiteProvider);
+                executor = new DeferredExecutor(TimeSpan.FromSeconds(10), _currentJob, _websiteProvider);
             }
             
             _logger.LogDebug("{CurrentThreadManagedThreadId}: start crawling ({JobId})",
