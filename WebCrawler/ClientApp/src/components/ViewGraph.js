@@ -103,10 +103,17 @@ class ViewGraphInternal extends Component {
       })
       .attr("class", ".node")
       .attr("r", 3)
-      .attr("fill", "#f2c32b")
+      .attr("fill", function (d) {
+        return d.color;
+      })
       .on("click", function (e, d, i) {
         nodeInfo.selectAll("ul").remove();
-        d3.selectAll("circle").attr("fill", "#f2c32b");
+        svg
+          .selectAll("circle")
+          .filter(function () {
+            return d3.select(this).attr("fill") == "red";
+          })
+          .attr("fill", d.color);
 
         nodeInfo
           .append("div")
@@ -179,10 +186,11 @@ class ViewGraphInternal extends Component {
     };
 
     for (const graphJson of graphsJson) {
-      /*       const response = await fetch(`/Record/${graphJson.websiteRecordId}`);
-      const obj = response.json();
-      console.log(obj); */
-      const label = "label";
+      const responseJson = await (
+        await fetch(`/Record/${graphJson.websiteRecordId}`)
+      ).json();
+
+      const label = responseJson.label;
 
       for (const node of graphJson.Graph) {
         if (addNewNodes) {
@@ -192,6 +200,7 @@ class ViewGraphInternal extends Component {
 
           if (alreadyPresentNode) {
             alreadyPresentNode.inWhichGraphs.push(label);
+            alreadyPresentNode.color = "black";
           } else {
             console.log(node.Title);
             graph.nodes.push({
@@ -199,6 +208,7 @@ class ViewGraphInternal extends Component {
               title: node.Title,
               crawlTime: node.CrawlTime,
               inWhichGraphs: [label],
+              color: this.stringToColour(label),
             });
           }
         }
@@ -219,6 +229,20 @@ class ViewGraphInternal extends Component {
 
     console.log(graph);
     return graph;
+  }
+
+  //https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
+  stringToColour(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    var colour = "#";
+    for (var i = 0; i < 3; i++) {
+      var value = (hash >> (i * 8)) & 0xff;
+      colour += ("00" + value.toString(16)).substr(-2);
+    }
+    return colour;
   }
 
   render() {
