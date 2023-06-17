@@ -156,7 +156,7 @@ public class RecordController : OurController
 
         try
         {
-            WebsiteGraphSnapshot graph = _executionManager.GetLiveGraphAsync(record.CrawlInfo.JobId!.Value).Result;
+            WebsiteGraphSnapshot graph = _executionManager.GetLiveGraph(record.CrawlInfo.JobId!.Value);
             string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
             return Ok(jsonGraph);
         }
