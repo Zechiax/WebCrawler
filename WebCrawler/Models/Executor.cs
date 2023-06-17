@@ -56,7 +56,10 @@ class Executor : IExecutor
 
     public void InitCrawling()
     {
-        toCrawl.Enqueue(ExecutionJob.WebsiteExecution.WebsiteGraph!.EntryWebsite);
+        Website entryWebsite = ExecutionJob.WebsiteExecution.WebsiteGraph!.EntryWebsite;
+
+        VisitedUrlToWebsite[entryWebsite.Url] = entryWebsite;
+        toCrawl.Enqueue(entryWebsite);
     }
 
     public bool CrawlFinished()

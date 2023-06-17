@@ -47,7 +47,8 @@ public readonly partial struct WebsiteGraphSnapshot
                 throw new ArgumentException("Can't deserialize from given json.");
             }
 
-            Dictionary<string, Website> urlToWebsiteLookup = snapshot.Graph
+
+         Dictionary<string, Website> urlToWebsiteLookup = snapshot.Graph
                 .ToDictionary(model => model.Url, model => new Website(model.Url) { Title = model.Title, CrawlTime = model.CrawlTime });
 
             Dictionary<Website, List<Website>> data = urlToWebsiteLookup.Values.ToDictionary(website => website, _ => new List<Website>()); 
