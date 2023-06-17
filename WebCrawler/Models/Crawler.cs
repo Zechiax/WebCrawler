@@ -98,6 +98,9 @@ public class Crawler
 
                 _currentJob.JobStatus = JobStatus.Active;
                 _currentJob.Crawler = this;
+
+                // NOTE: Executor to pass test. DefferedLimited for debugging on client recommended.
+                //executor = new DeferredLimitedExecutor(TimeSpan.Zero, 700, _currentJob, _websiteProvider);
                 //executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(10), 700, _currentJob, _websiteProvider);
                 executor = new Executor(_currentJob, _websiteProvider);
             }

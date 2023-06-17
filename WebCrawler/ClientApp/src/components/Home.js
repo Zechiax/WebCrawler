@@ -14,7 +14,7 @@ export class Home extends Component {
 
     this.state = {
       isCreateWebsiteRecordModalShown: false,
-      selectedGraphsIds: [16], // TODO
+      selectedGraphsIds: [21], // TODO
     };
   }
 
