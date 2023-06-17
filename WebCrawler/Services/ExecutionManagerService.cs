@@ -121,6 +121,12 @@ public class ExecutionManagerService : IExecutionManagerService
                 Monitor.Wait(job);
                 return true;
             }
+
+            // already stopped
+            if(job.JobStatus == JobStatus.Stopped)
+            {
+                return false;
+            }
         }
 
         return await job.Crawler!.StopCurrentJob();

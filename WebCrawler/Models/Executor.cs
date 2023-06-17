@@ -52,6 +52,14 @@ class Executor : IExecutor
 
         while (!CrawlFinished())
         {
+            lock (ExecutionJob)
+            {
+                if (ExecutionJob.JobStatus == JobStatus.Stopped)
+                {
+                    return;
+                }
+            }
+
             await ProcessOne();
         }
     }
@@ -76,21 +84,12 @@ class Executor : IExecutor
             return;
         }
 
-        lock (ExecutionJob)
-        {
-            if (ExecutionJob.JobStatus == JobStatus.Stopped)
-            {
-                return;
-            }
-        }
-
         Website website = toCrawl.Dequeue();
 
         if (!_regex.IsMatch(website.Url))
         {
             return;
         }
-
 
         Stopwatch sw = Stopwatch.StartNew();
         string htmlPlain;
