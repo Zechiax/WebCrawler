@@ -17,10 +17,10 @@ namespace WebCrawler.Test.ServicesTests.Helpers
         {
             urlToHtml = new()
             {
-                { "www.wiki.com/brouci", brouciHtml },
-                { "www.wiki.com/psi", psiHtml },
-                { "www.wiki.com/lidi", lidiHtml },
-                { "www.wiki.com/auta", autaHtml },
+                { "http://www.wiki.com/brouci", brouciHtml },
+                { "http://www.wiki.com/psi", psiHtml },
+                { "http://www.wiki.com/lidi", lidiHtml },
+                { "http://www.wiki.com/auta", autaHtml },
             };
         }
 

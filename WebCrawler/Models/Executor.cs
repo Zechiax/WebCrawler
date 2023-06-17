@@ -1,5 +1,5 @@
 ﻿using HtmlAgilityPack;
-using System.Collections.Concurrent;
+using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using WebCrawler.Interfaces;
@@ -13,6 +13,8 @@ class Executor : IExecutor
 {
     public WebsiteExecutionJob ExecutionJob { get; }
 
+    private readonly Queue<Website> toCrawl = new();
+
     private readonly IWebsiteProvider websiteProvider;
     private Dictionary<string, Website> VisitedUrlToWebsite = new();
     private bool disposed = false;
@@ -23,6 +25,7 @@ class Executor : IExecutor
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
 
         ExecutionJob = execution;
+        ExecutionJob.CrawlInfo.LastExecution = ExecutionJob.WebsiteExecution; 
         ExecutionJob.WebsiteExecution.WebsiteGraph = new WebsiteGraph(new Website(execution.CrawlInfo.EntryUrl));
         
         _regex = new Regex(execution.CrawlInfo.RegexPattern, RegexOptions.Compiled);
@@ -39,80 +42,105 @@ class Executor : IExecutor
     public async Task StartCrawlAsync()
     {
         ExecutionJob.WebsiteExecution.Started = DateTime.Now;
-
-        await CrawlAsync(ExecutionJob.WebsiteExecution.WebsiteGraph!.EntryWebsite)
-        .ContinueWith(_ =>
-        {
-            ExecutionJob.WebsiteExecution.Finished = DateTime.Now;
-        });
+        await CrawlAsync();
+        ExecutionJob.WebsiteExecution.Finished = DateTime.Now;
     }
 
-    private async Task CrawlAsync(Website entryWebsite)
+    private async Task CrawlAsync()
     {
-        Queue<Website> toCrawl = new();
-        toCrawl.Enqueue(entryWebsite);
+        InitCrawling();
 
-        while(toCrawl.Count > 0)
+        while (!CrawlFinished())
         {
             lock (ExecutionJob)
             {
-                if(ExecutionJob.JobStatus == JobStatus.Stopped)
+                if (ExecutionJob.JobStatus == JobStatus.Stopped)
                 {
                     return;
                 }
             }
 
-            Website website = toCrawl.Dequeue();
+            await ProcessOne();
+        }
+    }
 
-            Stopwatch sw = Stopwatch.StartNew();
-            string htmlPlain;
+    public void InitCrawling()
+    {
+        Website entryWebsite = ExecutionJob.WebsiteExecution.WebsiteGraph!.EntryWebsite;
 
-            try
+        VisitedUrlToWebsite[entryWebsite.Url] = entryWebsite; 
+        toCrawl.Enqueue(entryWebsite);
+    }
+
+    public bool CrawlFinished()
+    {
+        return toCrawl.Count <= 0;
+    }
+
+    public async Task ProcessOne()
+    {
+        if (CrawlFinished())
+        {
+            return;
+        }
+
+        Website website = toCrawl.Dequeue();
+
+        if (!_regex.IsMatch(website.Url))
+        {
+            return;
+        }
+
+        Stopwatch sw = Stopwatch.StartNew();
+        string htmlPlain;
+
+        try
+        {
+            htmlPlain = await websiteProvider.GetStringAsync(website.Url);
+        }
+        catch { return; }
+
+        HtmlDocument htmlDom = new HtmlDocument();
+        htmlDom.LoadHtml(htmlPlain);
+
+        HtmlNodeCollection linkNodes = htmlDom.DocumentNode.SelectNodes("//a[@href]");
+        if (linkNodes is not null)
+        {
+            foreach (HtmlNode linkNode in linkNodes)
             {
-                htmlPlain = await websiteProvider.GetStringAsync(website.Url);
-            }
-            catch { return; }
+                string url = linkNode.Attributes["href"].Value;
 
-            HtmlDocument htmlDom = new HtmlDocument();
-            htmlDom.LoadHtml(htmlPlain);
-
-            HtmlNodeCollection linkNodes = htmlDom.DocumentNode.SelectNodes("//a[@href]");
-            if(linkNodes is not null)
-            {
-                foreach (HtmlNode linkNode in linkNodes)
+                if (!url.StartsWith("http://") && !url.StartsWith("https://"))
                 {
-                    string link = linkNode.Attributes["href"].Value;
+                    // link is most likely relative url
+                    url = string.Format("{0}/{1}", website.Url.TrimEnd('/'), url.TrimStart('/'));
+                }
 
-                    if (VisitedUrlToWebsite.TryGetValue(link, out Website? value))
+                if (VisitedUrlToWebsite.TryGetValue(url, out Website? value))
+                {
+                    lock (website)
                     {
-                        lock(website)
-                        {
-                            website.OutgoingWebsites.Add(value);
-                        }
-                    }
-                    else
-                    {
-                        Website outgoingWebsite = new(link);
-
-                        VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite;
-
-                        lock(website)
-                        {
-                            website.OutgoingWebsites.Add(outgoingWebsite);
-                        }
-
-                        // crawl iff not visited yet and regex matches
-                        if (_regex.IsMatch(link))
-                        {
-                            toCrawl.Enqueue(outgoingWebsite);
-                        }
+                        website.OutgoingWebsites.Add(value);
                     }
                 }
-            }
+                else
+                {
+                    Website outgoingWebsite = new(url);
+                    VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite; 
 
-            website.Title = htmlDom.DocumentNode.SelectSingleNode("//title")?.InnerText ?? "???";
-            website.CrawlTime = sw.Elapsed;
+                    lock (website)
+                    {
+                        website.OutgoingWebsites.Add(outgoingWebsite);
+                    }
+
+                    // crawl iff not visited yet
+                    toCrawl.Enqueue(outgoingWebsite);
+                }
+            }
         }
+
+        website.Title = htmlDom.DocumentNode.SelectSingleNode("//title")?.InnerText ?? "???";
+        website.CrawlTime = sw.Elapsed;
     }
 
     public void Dispose()

@@ -51,15 +51,6 @@ export class NavMenu extends Component {
                   Website Records
                 </NavLink>
               </NavItem>
-              <NavItem>
-                <NavLink tag={Link} className="text-dark" to="/">
-                  {/* TODO: route to graph url endpoint. Create the graph visualizing page. */}
-                  Graph
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink tag={Link} className="text-dark" to="/overview">Overview</NavLink>
-              </NavItem>
             </ul>
           </Collapse>
         </Navbar>

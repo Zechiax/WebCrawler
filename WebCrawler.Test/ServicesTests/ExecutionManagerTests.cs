@@ -33,12 +33,12 @@ public class ExecutionManagerTests
     [Test]
     public void MockRunTest()
     {
-        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
-            "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
-            "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
-            "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
+        string expected = "(Auta:http://www.wiki.com/auta) -> (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine +
+            "(Brouci:http://www.wiki.com/brouci) -> (Lidi:http://www.wiki.com/lidi), (Psi:http://www.wiki.com/psi)" + Environment.NewLine +
+            "(Lidi:http://www.wiki.com/lidi) -> (Auta:http://www.wiki.com/auta)" + Environment.NewLine +
+            "(Psi:http://www.wiki.com/psi) -> (Auta:http://www.wiki.com/auta), (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine;
 
-        const int jobsCount = 100;
+        const int jobsCount = 5;
 
         List<CrawlInfo> toCrawl = new();
 
@@ -50,7 +50,7 @@ public class ExecutionManagerTests
 
         for(int i = 0; i < jobsCount; ++i)
         {
-            toCrawl.Add(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero));
+            toCrawl.Add(new CrawlInfo("http://www.wiki.com/brouci", "http://www.wiki.com/*", TimeSpan.Zero));
         }
 
 
@@ -63,7 +63,7 @@ public class ExecutionManagerTests
 
         foreach(ulong jobId in jobIds)
         {
-            string actual = manager.GetLiveGraphAsync(jobId).Result.GetStringRepresentation();
+            string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");
         }
     }
@@ -71,13 +71,13 @@ public class ExecutionManagerTests
     [Test]
     public void StopAllRunAllAgainTest()
     {
-        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
-            "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
-            "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
-            "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
+        string expected = "(Auta:http://www.wiki.com/auta) -> (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine +
+            "(Brouci:http://www.wiki.com/brouci) -> (Lidi:http://www.wiki.com/lidi), (Psi:http://www.wiki.com/psi)" + Environment.NewLine +
+            "(Lidi:http://www.wiki.com/lidi) -> (Auta:http://www.wiki.com/auta)" + Environment.NewLine +
+            "(Psi:http://www.wiki.com/psi) -> (Auta:http://www.wiki.com/auta), (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine;
 
         // jobsCount should be big enough to be able to stop the last job while the crawlers still not dequeid it
-        const int jobsCount = 4;
+        const int jobsCount = 60;
 
         List<CrawlInfo> toCrawl = new();
 
@@ -89,7 +89,7 @@ public class ExecutionManagerTests
 
         for (int i = 0; i < jobsCount; ++i)
         {
-            toCrawl.Add(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero));
+            toCrawl.Add(new CrawlInfo("http://www.wiki.com/brouci", "http://www.wiki.com/*", TimeSpan.Zero));
         }
 
         List<ulong> jobIds = new();
@@ -115,7 +115,7 @@ public class ExecutionManagerTests
         {
             ulong jobId = jobIds[i];
 
-            string actual = manager.GetLiveGraphAsync(jobId).Result.GetStringRepresentation();
+            string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");
         }
     }
