@@ -14,14 +14,14 @@ public interface IExecutionManagerService
     /// <summary>
     /// Returns full graph, after the underlying executor finishes crawling on it's own.
     /// </summary>
-    Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId);
+    Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId);
 
     /// <summary>
     /// Returns graph how is currently looking.
     /// Isn't blocking.
     /// To make such operation more efficient, it doesn't lock the whole graph, only each node.
     /// </summary>
-    WebsiteGraphSnapshot GetGraph(ulong jobId);
+    WebsiteGraphSnapshot GetLiveGraph(ulong jobId);
 
     /// <summary>
     /// Stops the execution of the job.

@@ -34,25 +34,7 @@ public class ExecutionManagerService : IExecutionManagerService
         return lastJobId;
     }
 
-    public void WaitForExecutionToFinish(ulong jobId)
-    {
-        if (!IsValid(jobId))
-        {
-            throw JobIdInvalidException(jobId);
-        }
-
-        WebsiteExecutionJob job = jobs[jobId];
-
-        lock (job)
-        {
-            while (job.JobStatus != JobStatus.Finished)
-            {
-                Monitor.Wait(job);
-            }
-        }
-    }
-
-    public WebsiteGraphSnapshot GetGraph(ulong jobId)
+    public WebsiteGraphSnapshot GetLiveGraph(ulong jobId)
     {
         if (!IsValid(jobId))
         {
@@ -69,7 +51,7 @@ public class ExecutionManagerService : IExecutionManagerService
         return job.WebsiteExecution.WebsiteGraph?.GetSnapshot() ?? WebsiteGraphSnapshot.Empty;
     }
 
-    public async Task<WebsiteGraphSnapshot> GetLiveGraphAsync(ulong jobId)
+    public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
     {
         if (!IsValid(jobId))
         {
@@ -78,7 +60,25 @@ public class ExecutionManagerService : IExecutionManagerService
 
         await Task.CompletedTask;
         WaitForExecutionToFinish(jobId);
-        return GetGraph(jobId);
+        return GetLiveGraph(jobId);
+    }
+
+    public void WaitForExecutionToFinish(ulong jobId)
+    {
+        if (!IsValid(jobId))
+        {
+            throw JobIdInvalidException(jobId);
+        }
+
+        WebsiteExecutionJob job = jobs[jobId];
+
+        lock (job)
+        {
+            while (job.JobStatus != JobStatus.Finished)
+            {
+                Monitor.Wait(job);
+            }
+        }
     }
 
     public async Task<bool> ResetJobAsync(ulong jobId)
@@ -120,6 +120,12 @@ public class ExecutionManagerService : IExecutionManagerService
             {
                 Monitor.Wait(job);
                 return true;
+            }
+
+            // already stopped
+            if(job.JobStatus == JobStatus.Stopped)
+            {
+                return false;
             }
         }
 

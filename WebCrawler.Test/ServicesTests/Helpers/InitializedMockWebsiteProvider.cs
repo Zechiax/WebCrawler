@@ -10,7 +10,7 @@
                 <html>
                     <title>Brouci</title>
                     <h1>Brouci</h1>
-                    <p>Otravuji pomerne dost <a href=""www.wiki.com/lidi"">lidi</a> a sem tam i <a href=""www.wiki.com/psi"">psi</a>.</p>
+                    <p>Otravuji pomerne dost <a href=""http://www.wiki.com/lidi"">lidi</a> a sem tam i <a href=""http://www.wiki.com/psi"">psi</a>.</p>
                 </html>
             ";
 
@@ -20,7 +20,7 @@
                 <html>
                     <title>Psi</title>
                     <h1>Psi</h1>
-                    <p>Psi maji radi <a href=""www.wiki.com/lidi"">lidi</a> a boji se <a href=""www.wiki.com/auta"">aut</a>.</p>
+                    <p>Psi maji radi <a href=""http://www.wiki.com/lidi"">lidi</a> a boji se <a href=""http://www.wiki.com/auta"">aut</a>.</p>
                 </html>
             ";
 
@@ -30,7 +30,7 @@
                 <html>
                     <title>Lidi</title>
                     <h1>Lidi</h1>
-                    <p><a href=""www.wiki.com/auta""></a></p>
+                    <p><a href=""http://www.wiki.com/auta""></a></p>
                 </html>
             ";
 
@@ -39,7 +39,7 @@
                 <!DOCTYPE html>
                 <html>
                     <title>Auta</title>
-                    <h1><a href=""www.wiki.com/lidi"">lidi</a></h1>
+                    <h1><a href=""http://www.wiki.com/lidi"">lidi</a></h1>
                     <p></p>
                 </html>
             ";

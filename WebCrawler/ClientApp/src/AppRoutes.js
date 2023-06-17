@@ -1,24 +1,15 @@
-import { Counter } from "./components/Counter";
-import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
 import { Records } from "./components/PaginatedView";
+import { ViewGraph } from "./components/ViewGraph";
 
 const AppRoutes = [
   {
     index: true,
-    element: <Home />
+    element: <Home />,
   },
   {
-    path: '/counter',
-    element: <Counter />
-  },
-  {
-    path: '/fetch-data',
-    element: <FetchData />
-  },
-  {
-     path: '/overview',
-     element: <Records />
+    path: "/Graph",
+    element: <ViewGraph />,
   },
 ];
 
