@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { useLocation } from "react-router";
-import { NodeInfo } from "./NodeInfo";
+import ToggleButton from "react-bootstrap/ToggleButton";
 import * as d3 from "d3";
 
 export const ViewGraph = (props) => {
@@ -16,10 +16,14 @@ export const ViewGraph = (props) => {
 };
 
 class ViewGraphInternal extends Component {
+  static WEBSITES_VIEW = "websitesView";
+  static DOMAINS_VIEW = "domainsView";
+
   constructor(props) {
     super(props);
     this.state = {
       loading: true,
+      graphView: ViewGraphInternal.WEBSITES_VIEW,
       currentlySelectedNodeInfo: [],
     };
   }
@@ -95,9 +99,6 @@ class ViewGraphInternal extends Component {
       .data(nodes)
       .enter()
       .append("circle")
-      .on("hover", function (d) {
-        console.log("HOVER");
-      })
       .attr("id", function (d) {
         return d.url;
       })
@@ -117,6 +118,7 @@ class ViewGraphInternal extends Component {
 
         nodeInfo
           .append("div")
+          .style("font-size", "12px")
           .append("ul")
           .append("li")
           .text("Title: " + (d.title ? d.title : "???"))
@@ -150,34 +152,46 @@ class ViewGraphInternal extends Component {
   }
 
   componentDidMount() {
-    this.getGraphAsync().then((graph) => this.renderGraph(graph));
+    let urlBase = "";
 
-    this.setState({ loading: false });
+    if (this.state.graphView === ViewGraphInternal.WEBSITES_VIEW) {
+      urlBase = "/Record/livegraph/websites/";
+    } else if (this.state.graphView === ViewGraphInternal.DOMAINS_VIEW) {
+      urlBase = "/Record/livegraph/domains/";
+    } else {
+      console.log(
+        "ERROR - view can't be anything else than websites view or domains view."
+      );
+    }
+
+    console.log(urlBase);
+    this.getGraphAsync(urlBase)
+      .then((graph) => this.renderGraph(graph))
+      .then(this.setState({ loading: false }));
   }
 
-  async getGraphAsync() {
+  async getGraphAsync(url) {
     const graphsJson = [];
 
     console.log(this.props.ids);
 
     for (const id of this.props.ids) {
-      console.log(id);
-      const response = await fetch(`/Record/${id}/livegraph`);
-      console.log(response);
+      const response = await fetch(url + id);
 
       if (response.ok) {
         const graphJson = await response.json();
         graphJson["websiteRecordId"] = id;
         graphsJson.push(graphJson);
-        console.log(graphJson);
       }
     }
 
-    const graph = await this.convertGraphsJsonToD3JsonAsync(graphsJson);
+    const graph = await ViewGraphInternal.convertGraphsJsonToD3JsonAsync(
+      graphsJson
+    );
     return graph;
   }
 
-  async convertGraphsJsonToD3JsonAsync(graphsJson) {
+  static async convertGraphsJsonToD3JsonAsync(graphsJson) {
     let addNewNodes = true;
 
     const graph = {
@@ -223,7 +237,7 @@ class ViewGraphInternal extends Component {
                 recordForGraph.crawlInfo.lastExecution.started
               ),
               inWhichGraphs: [recordForGraph.label],
-              color: this.stringToColour(recordForGraph.label),
+              color: ViewGraphInternal.stringToColour(recordForGraph.label),
             });
           }
         }
@@ -242,12 +256,11 @@ class ViewGraphInternal extends Component {
       }
     }
 
-    console.log(graph);
     return graph;
   }
 
   //https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
-  stringToColour(str) {
+  static stringToColour(str) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -279,6 +292,32 @@ class ViewGraphInternal extends Component {
             zIndex: 1,
           }}
         />
+        <ToggleButton
+          id="toggle-check"
+          style={{
+            position: "absolute",
+            left: "80%",
+            width: "130px",
+          }}
+          type="checkbox"
+          variant="primary"
+          checked={this.state.graphView}
+          value="1"
+          onChange={(e) =>
+            this.setState((state, props) => {
+              return {
+                graphView:
+                  state.graphView == ViewGraphInternal.DOMAINS_VIEW
+                    ? ViewGraphInternal.WEBSITES_VIEW
+                    : ViewGraphInternal.DOMAINS_VIEW,
+              };
+            })
+          }
+        >
+          {this.state.graphView == ViewGraphInternal.DOMAINS_VIEW
+            ? "Websites view"
+            : "Domains view"}
+        </ToggleButton>
         {loading}
         <svg
           style={{
