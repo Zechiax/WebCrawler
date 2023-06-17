@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { useLocation } from "react-router";
-import ToggleButton from "react-bootstrap/ToggleButton";
+import Button from "react-bootstrap/Button";
 import * as d3 from "d3";
 
 export const ViewGraph = (props) => {
@@ -18,12 +18,15 @@ export const ViewGraph = (props) => {
 class ViewGraphInternal extends Component {
   static WEBSITES_VIEW = "websitesView";
   static DOMAINS_VIEW = "domainsView";
+  static LIVE_VIEW = "liveView";
+  static STATIC_VIEW = "staticView";
 
   constructor(props) {
     super(props);
     this.state = {
       loading: true,
       graphView: ViewGraphInternal.WEBSITES_VIEW,
+      liveView: ViewGraphInternal.STATIC_VIEW,
       currentlySelectedNodeInfo: [],
     };
   }
@@ -292,19 +295,17 @@ class ViewGraphInternal extends Component {
             zIndex: 1,
           }}
         />
-        <ToggleButton
-          id="toggle-check"
+        <Button
           style={{
             position: "absolute",
             left: "80%",
             width: "130px",
           }}
-          type="checkbox"
           variant="primary"
           checked={this.state.graphView}
-          value="1"
-          onChange={(e) =>
+          onClick={(e) =>
             this.setState((state, props) => {
+              console.log("CLICK");
               return {
                 graphView:
                   state.graphView == ViewGraphInternal.DOMAINS_VIEW
@@ -317,7 +318,32 @@ class ViewGraphInternal extends Component {
           {this.state.graphView == ViewGraphInternal.DOMAINS_VIEW
             ? "Websites view"
             : "Domains view"}
-        </ToggleButton>
+        </Button>
+        <Button
+          style={{
+            position: "absolute",
+            left: "80%",
+            top: "115px",
+            width: "130px",
+          }}
+          variant="primary"
+          checked={this.state.liveView}
+          onClick={(e) =>
+            this.setState((state, props) => {
+              console.log("CLICK");
+              return {
+                liveView:
+                  state.liveView == ViewGraphInternal.LIVE_VIEW
+                    ? ViewGraphInternal.STATIC_VIEW
+                    : ViewGraphInternal.LIVE_VIEW,
+              };
+            })
+          }
+        >
+          {this.state.liveView == ViewGraphInternal.LIVE_VIEW
+            ? "Static view"
+            : "Live view"}
+        </Button>
         {loading}
         <svg
           style={{
