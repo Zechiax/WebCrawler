@@ -186,11 +186,9 @@ class ViewGraphInternal extends Component {
     };
 
     for (const graphJson of graphsJson) {
-      const responseJson = await (
+      const recordForGraph = await (
         await fetch(`/Record/${graphJson.websiteRecordId}`)
       ).json();
-
-      const label = responseJson.label;
 
       for (const node of graphJson.Graph) {
         if (addNewNodes) {
@@ -199,16 +197,33 @@ class ViewGraphInternal extends Component {
           );
 
           if (alreadyPresentNode) {
-            alreadyPresentNode.inWhichGraphs.push(label);
-            alreadyPresentNode.color = "black";
+            if (
+              Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
+              alreadyPresentNode.started
+            ) {
+              // overwrite with latest data
+              alreadyPresentNode.url = node.Url;
+              alreadyPresentNode.title = node.Title;
+              alreadyPresentNode.crawlTime = node.CrawlTime;
+              alreadyPresentNode.started = Date.parse(
+                recordForGraph.crawlInfo.lastExecution.started
+              );
+              alreadyPresentNode.color = this.stringToColour(
+                recordForGraph.label
+              );
+            }
+
+            alreadyPresentNode.inWhichGraphs.push(recordForGraph.label);
           } else {
-            console.log(node.Title);
             graph.nodes.push({
               url: node.Url,
               title: node.Title,
               crawlTime: node.CrawlTime,
-              inWhichGraphs: [label],
-              color: this.stringToColour(label),
+              started: Date.parse(
+                recordForGraph.crawlInfo.lastExecution.started
+              ),
+              inWhichGraphs: [recordForGraph.label],
+              color: this.stringToColour(recordForGraph.label),
             });
           }
         }
@@ -218,7 +233,7 @@ class ViewGraphInternal extends Component {
             graph.links.push({
               source: node.Url,
               target: neighbourUrl,
-              forWhichGraph: label,
+              forWhichGraph: recordForGraph.label,
             });
           } catch (except) {
             continue;

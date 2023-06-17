@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using WebCrawler.Interfaces;
@@ -24,6 +25,7 @@ class Executor : IExecutor
         this.websiteProvider = websiteProvider ?? new WebsiteProvider();
 
         ExecutionJob = execution;
+        ExecutionJob.CrawlInfo.LastExecution = ExecutionJob.WebsiteExecution; 
         ExecutionJob.WebsiteExecution.WebsiteGraph = new WebsiteGraph(new Website(execution.CrawlInfo.EntryUrl));
         
         _regex = new Regex(execution.CrawlInfo.RegexPattern, RegexOptions.Compiled);
@@ -58,7 +60,7 @@ class Executor : IExecutor
     {
         Website entryWebsite = ExecutionJob.WebsiteExecution.WebsiteGraph!.EntryWebsite;
 
-        VisitedUrlToWebsite[entryWebsite.Url] = entryWebsite;
+        VisitedUrlToWebsite[entryWebsite.Url] = entryWebsite; 
         toCrawl.Enqueue(entryWebsite);
     }
 
@@ -69,6 +71,11 @@ class Executor : IExecutor
 
     public async Task ProcessOne()
     {
+        if (CrawlFinished())
+        {
+            return;
+        }
+
         lock (ExecutionJob)
         {
             if (ExecutionJob.JobStatus == JobStatus.Stopped)
@@ -78,6 +85,12 @@ class Executor : IExecutor
         }
 
         Website website = toCrawl.Dequeue();
+
+        if (!_regex.IsMatch(website.Url))
+        {
+            return;
+        }
+
 
         Stopwatch sw = Stopwatch.StartNew();
         string htmlPlain;
@@ -97,9 +110,15 @@ class Executor : IExecutor
         {
             foreach (HtmlNode linkNode in linkNodes)
             {
-                string link = linkNode.Attributes["href"].Value;
+                string url = linkNode.Attributes["href"].Value;
 
-                if (VisitedUrlToWebsite.TryGetValue(link, out Website? value))
+                if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+                {
+                    // link is most likely relative url
+                    url = string.Format("{0}/{1}", website.Url.TrimEnd('/'), url.TrimStart('/'));
+                }
+
+                if (VisitedUrlToWebsite.TryGetValue(url, out Website? value))
                 {
                     lock (website)
                     {
@@ -108,20 +127,16 @@ class Executor : IExecutor
                 }
                 else
                 {
-                    Website outgoingWebsite = new(link);
-
-                    VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite;
+                    Website outgoingWebsite = new(url);
+                    VisitedUrlToWebsite[outgoingWebsite.Url] = outgoingWebsite; 
 
                     lock (website)
                     {
                         website.OutgoingWebsites.Add(outgoingWebsite);
                     }
 
-                    // crawl iff not visited yet and regex matches
-                    if (_regex.IsMatch(link))
-                    {
-                        toCrawl.Enqueue(outgoingWebsite);
-                    }
+                    // crawl iff not visited yet
+                    toCrawl.Enqueue(outgoingWebsite);
                 }
             }
         }
