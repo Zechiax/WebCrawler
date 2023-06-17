@@ -19,10 +19,10 @@ public class ExecutorTests
     {
 
         string expected =
-            $"(:www.fiki.com/lidi) -> " +
-            $"{n}(Auta:www.wiki.com/auta) -> (:www.fiki.com/lidi)" +
-            $"{n}(Brouci:www.wiki.com/brouci) -> (:www.fiki.com/lidi), (Psi:www.wiki.com/psi)" +
-            $"{n}(Psi:www.wiki.com/psi) -> (:www.fiki.com/lidi), (Auta:www.wiki.com/auta)" +
+            $"(:http://www.fiki.com/lidi) -> " +
+            $"{n}(Auta:http://www.wiki.com/auta) -> (:http://www.fiki.com/lidi)" +
+            $"{n}(Brouci:http://www.wiki.com/brouci) -> (:http://www.fiki.com/lidi), (Psi:http://www.wiki.com/psi)" +
+            $"{n}(Psi:http://www.wiki.com/psi) -> (:http://www.fiki.com/lidi), (Auta:http://www.wiki.com/auta)" +
             $"{n}";
 
         MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
@@ -34,7 +34,7 @@ public class ExecutorTests
                 <html>
                     <title>Brouci</title>
                     <h1>Brouci</h1>
-                    <p>Otravuji pomerne dost <a href=""www.fiki.com/lidi"">lidi</a> a sem tam i <a href=""www.wiki.com/psi"">psi</a>.</p>
+                    <p>Otravuji pomerne dost <a href=""http://www.fiki.com/lidi"">lidi</a> a sem tam i <a href=""http://www.wiki.com/psi"">psi</a>.</p>
                 </html>
             ";
 
@@ -44,7 +44,7 @@ public class ExecutorTests
                 <html>
                     <title>Psi</title>
                     <h1>Psi</h1>
-                    <p>Psi maji radi <a href=""www.fiki.com/lidi"">lidi</a> a boji se <a href=""www.wiki.com/auta"">aut</a>.</p>
+                    <p>Psi maji radi <a href=""http://www.fiki.com/lidi"">lidi</a> a boji se <a href=""http://www.wiki.com/auta"">aut</a>.</p>
                 </html>
             ";
 
@@ -54,7 +54,7 @@ public class ExecutorTests
                 <html>
                     <title>Lidi</title>
                     <h1>Lidi</h1>
-                    <p><a href=""www.wiki.com/auta""></a></p>
+                    <p><a href=""http://www.wiki.com/auta""></a></p>
                 </html>
             ";
 
@@ -63,14 +63,14 @@ public class ExecutorTests
                 <!DOCTYPE html>
                 <html>
                     <title>Auta</title>
-                    <h1><a href=""www.fiki.com/lidi"">lidi</a></h1>
+                    <h1><a href=""http://www.fiki.com/lidi"">lidi</a></h1>
                     <p></p>
                 </html>
             ";
         mockWebsiteProvider.Init();
         #endregion
 
-        Executor executor = new(new WebsiteExecutionJob(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), 0), mockWebsiteProvider);
+        Executor executor = new(new WebsiteExecutionJob(new CrawlInfo("http://www.wiki.com/brouci", "http://www.wiki.com/*", TimeSpan.Zero), 0), mockWebsiteProvider);
 
 
         executor.StartCrawlAsync().Wait();
@@ -84,10 +84,10 @@ public class ExecutorTests
     [Test]
     public void GeneralGraphTest()
     {
-        string expected = "(Auta:www.wiki.com/auta) -> (Lidi:www.wiki.com/lidi)" + Environment.NewLine +
-            "(Brouci:www.wiki.com/brouci) -> (Lidi:www.wiki.com/lidi), (Psi:www.wiki.com/psi)" + Environment.NewLine +
-            "(Lidi:www.wiki.com/lidi) -> (Auta:www.wiki.com/auta)" + Environment.NewLine +
-            "(Psi:www.wiki.com/psi) -> (Auta:www.wiki.com/auta), (Lidi:www.wiki.com/lidi)" + Environment.NewLine;
+        string expected = "(Auta:http://www.wiki.com/auta) -> (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine +
+            "(Brouci:http://www.wiki.com/brouci) -> (Lidi:http://www.wiki.com/lidi), (Psi:http://www.wiki.com/psi)" + Environment.NewLine +
+            "(Lidi:http://www.wiki.com/lidi) -> (Auta:http://www.wiki.com/auta)" + Environment.NewLine +
+            "(Psi:http://www.wiki.com/psi) -> (Auta:http://www.wiki.com/auta), (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine;
 
         MockWebsiteProvider mockWebsiteProvider = new MockWebsiteProvider();
 
@@ -98,7 +98,7 @@ public class ExecutorTests
                 <html>
                     <title>Brouci</title>
                     <h1>Brouci</h1>
-                    <p>Otravuji pomerne dost <a href=""www.wiki.com/lidi"">lidi</a> a sem tam i <a href=""www.wiki.com/psi"">psi</a>.</p>
+                    <p>Otravuji pomerne dost <a href=""http://www.wiki.com/lidi"">lidi</a> a sem tam i <a href=""http://www.wiki.com/psi"">psi</a>.</p>
                 </html>
             ";
 
@@ -108,7 +108,7 @@ public class ExecutorTests
                 <html>
                     <title>Psi</title>
                     <h1>Psi</h1>
-                    <p>Psi maji radi <a href=""www.wiki.com/lidi"">lidi</a> a boji se <a href=""www.wiki.com/auta"">aut</a>.</p>
+                    <p>Psi maji radi <a href=""http://www.wiki.com/lidi"">lidi</a> a boji se <a href=""http://www.wiki.com/auta"">aut</a>.</p>
                 </html>
             ";
 
@@ -118,7 +118,7 @@ public class ExecutorTests
                 <html>
                     <title>Lidi</title>
                     <h1>Lidi</h1>
-                    <p><a href=""www.wiki.com/auta""></a></p>
+                    <p><a href=""http://www.wiki.com/auta""></a></p>
                 </html>
             ";
 
@@ -127,14 +127,14 @@ public class ExecutorTests
                 <!DOCTYPE html>
                 <html>
                     <title>Auta</title>
-                    <h1><a href=""www.wiki.com/lidi"">lidi</a></h1>
+                    <h1><a href=""http://www.wiki.com/lidi"">lidi</a></h1>
                     <p></p>
                 </html>
             ";
         mockWebsiteProvider.Init();
         #endregion
 
-        Executor executor = new(new WebsiteExecutionJob(new CrawlInfo("www.wiki.com/brouci", "www.wiki.com/*", TimeSpan.Zero), 0), mockWebsiteProvider);
+        Executor executor = new(new WebsiteExecutionJob(new CrawlInfo("http://www.wiki.com/brouci", "http://www.wiki.com/*", TimeSpan.Zero), 0), mockWebsiteProvider);
 
 
         executor.StartCrawlAsync().Wait();

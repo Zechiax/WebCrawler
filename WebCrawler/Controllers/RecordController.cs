@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
@@ -58,27 +57,33 @@ public class RecordController : OurController
 
             if (string.IsNullOrWhiteSpace(jsonObj.Label) || jsonObj.Label.Length > 30 || jsonObj.Label.Length == 0)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Label is invalid.");
+            }
+
+            IEnumerable<WebsiteRecord> allRecords = _dataService.GetWebsiteRecords().Result;
+            if(allRecords.Any(record => record.Label == jsonObj.Label))
+            {
+                return StatusCode(BadRequestCode, "Label already present.");
             }
 
             if (jsonObj.IsActive is not null && jsonObj.IsActive != "on")
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "IsActive is invalid.");
             }
 
             if (string.IsNullOrWhiteSpace(jsonObj.Url) || !Uri.TryCreate(jsonObj.Url, UriKind.Absolute, out var uriResult) && uriResult?.Scheme == Uri.UriSchemeHttp)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Url is invalid.");
             }
 
-            if (string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 30)
+            if (string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 15)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Periodicity is invalid");
             }
 
             if (string.IsNullOrWhiteSpace(jsonObj.Regex))
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Regex is invalid.");
             }
 
             try
@@ -87,17 +92,17 @@ public class RecordController : OurController
             }
             catch (ArgumentException)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Regex is invalid.");
             }
 
             if (jsonObj.Tags is null || jsonObj.Tags.Length >= 50)
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Tags are invalid.");
             }
 
             if (jsonObj.Tags.Any(tag => tag is null || tag.Length > 30) || (jsonObj.Tags.ToHashSet().Count != jsonObj.Tags.Length))
             {
-                return StatusCode(BadRequestCode);
+                return StatusCode(BadRequestCode, "Tags are invalid.");
             }
 
             WebsiteRecord record = new(); 
@@ -108,14 +113,17 @@ public class RecordController : OurController
             record.Tags = jsonObj.Tags.Select(tagName => new Tag(tagName!)).ToList();
             record.CrawlInfo = new CrawlInfo(jsonObj.Url, jsonObj.Regex, TimeSpan.FromMinutes(int.Parse(jsonObj.Periodicity)));
 
-            record.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
+            if (record.IsActive)
+            {
+                record.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
+            }
 
             _dataService.AddWebsiteRecord(record!).Wait();
             return Ok();
         }
         catch
         {
-            return StatusCode(BadRequestCode);
+            return StatusCode(BadRequestCode, "Something went wrong.");
         }
     }
 
@@ -133,13 +141,74 @@ public class RecordController : OurController
             return StatusCode(InternalErrorCode);
         }
     }
+
+    [HttpGet]
+    [Route("livegraph/domains/{id:int}")]
+    public IActionResult LiveGraphDomains(int id)
+    {
+        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
+
+        if(graph is null)
+        {
+            return StatusCode(BadRequestCode, "There is no graph");
+        }
+
+        string jsonGraph = WebsiteGraphSnapshot.JsonConverterToDomainView.Serialize(graph.Value);
+        return Ok(jsonGraph);
+    }
+
+    [HttpGet]
+    [Route("livegraph/websites/{id:int}")]
+    public IActionResult LiveGraphWebsites(int id)
+    {
+        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
+
+        if(graph is null)
+        {
+            return StatusCode(BadRequestCode, "There is no graph");
+        }
+
+        string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph.Value);
+        return Ok(jsonGraph);
+    }
+
+    private WebsiteGraphSnapshot? GetLiveGraph(int id)
+    {
+        WebsiteRecord record;
+        try
+        {
+            record = _dataService.GetWebsiteRecord(id).Result;
+        }
+        catch
+        {
+            return null; 
+        }
+
+        ulong? jobId = record.CrawlInfo.JobId;
+        if(jobId is null)
+        {
+            return null; 
+        }
+
+        try
+        {
+            WebsiteGraphSnapshot graph = _executionManager.GetLiveGraph(record.CrawlInfo.JobId!.Value);
+            return graph;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     [HttpPost]
-    [Route("{id:int}/run")]
+    [Route("run/{id:int}")]
     public IActionResult RunRecord(int id)
     {
         //TODO: Implement
         return StatusCode(NotImplementedCode);
     }
+
     [HttpDelete]
     [Route("{id:int}")]
     public IActionResult DeleteRecord(int id)
