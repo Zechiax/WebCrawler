@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
@@ -144,8 +143,8 @@ public class RecordController : OurController
     }
 
     [HttpGet]
-    [Route("{id:int}/livegraph")]
-    public IActionResult LiveGraph(int id)
+    [Route("livegraph/websites/{id:int}")]
+    public IActionResult LiveGraphWebsites(int id)
     {
         WebsiteRecord record;
         try
@@ -175,8 +174,16 @@ public class RecordController : OurController
         }
     }
 
+    [HttpGet]
+    [Route("livegraph/domains/{id:int}")]
+    public IActionResult LiveGraphDomains(int id)
+    {
+        //TODO: implement
+        return Ok();
+    }
+
     [HttpPost]
-    [Route("{id:int}/run")]
+    [Route("run/{id:int}")]
     public IActionResult RunRecord(int id)
     {
         //TODO: Implement
