@@ -22,20 +22,35 @@ public readonly partial struct WebsiteGraphSnapshot
             HashSet<string> alreadyAddedDomains = new();
             foreach(KeyValuePair<Website, List<Website>> websiteNeighbours in graph.Data)
             {
-                string domain = new Uri(websiteNeighbours.Key.Url).Host;
+                string domain;
+                try
+                {
+                    domain = new Uri(websiteNeighbours.Key.Url).Host;
+                }
+                catch
+                {
+                    continue;
+                }
 
                 if (!alreadyAddedDomains.Contains(domain))
                 {
-                    TimeSpan crawlTimeSum = TimeSpan.Zero; 
+                    TimeSpan crawlTimeSum = TimeSpan.Zero;
 
                     alreadyAddedDomains.Add(domain);
-                    var domainNodes = graph.Data.Where(nodeAndNeighbours => new Uri(nodeAndNeighbours.Key.Url).Host == domain);
+                    var domainNodes = graph.Data.Where(nodeAndNeighbours =>
+                    {
+                        try
+                        {
+                            return new Uri(nodeAndNeighbours.Key.Url).Host == domain;
+                        }
+                        catch { return false; }
+                    });
 
                     Dictionary<string, Website> allNeighboursOfDomainNodes = new();
-                    foreach(var domainNode in domainNodes)
+                    foreach (var domainNode in domainNodes)
                     {
                         crawlTimeSum += domainNode.Key.CrawlTime;
-                        foreach(var neighbour in domainNode.Value)
+                        foreach (var neighbour in domainNode.Value)
                         {
                             allNeighboursOfDomainNodes[neighbour.Url] = neighbour;
                         }
@@ -46,7 +61,10 @@ public readonly partial struct WebsiteGraphSnapshot
                         Url = domain,
                         Title = domain,
                         CrawlTime = crawlTimeSum,
-                        Neighbours = allNeighboursOfDomainNodes.Values.Select(node => new Uri(node.Url).Host).ToList()
+                        Neighbours = allNeighboursOfDomainNodes.Values.Select(node =>
+                        {
+                            return new Uri(node.Url).Host;
+                        })
                     });
                 }
             }
