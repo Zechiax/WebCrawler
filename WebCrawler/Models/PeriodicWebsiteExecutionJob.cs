@@ -13,7 +13,7 @@ record class PeriodicWebsiteExecutionJob
     {
         this.periodicity = periodicity;
 
-        task = new Task(() => PeriodicJob(job, cancelSource.Token), cancelSource.Token);
+        task = Task.Run(() => PeriodicJob(job, cancelSource.Token), cancelSource.Token);
     }
 
     public void Start()

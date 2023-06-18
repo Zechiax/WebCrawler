@@ -23,6 +23,7 @@ class ViewGraphInternal extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      graphsIds: [...props.ids],
       nodes: [],
       links: [],
       isWebsitesView: false,
@@ -194,9 +195,9 @@ class ViewGraphInternal extends Component {
 
     const graphsJson = [];
 
-    console.log(this.props.ids);
+    console.log(this.state.graphsIds);
 
-    for (const id of this.props.ids) {
+    for (const id of this.state.graphsIds) {
       const response = await fetch(urlbase + id);
 
       if (response.ok) {
@@ -504,6 +505,11 @@ class ViewGraphInternal extends Component {
 
         <CreateWebsiteRecordModalWindow
           show={this.state.createNewWebsiteRecord.show}
+          passCreatedRecordId={(id) => {
+            this.setState((oldState, props) => ({
+              graphsIds: [...oldState.graphsIds, id],
+            }));
+          }}
           urlPresetValue={this.state.nodeInfo.url}
           labelPresetValue={this.state.nodeInfo.title}
           onClose={() =>

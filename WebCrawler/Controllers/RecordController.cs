@@ -109,7 +109,7 @@ public class RecordController : OurControllerBase
             }
 
             _dataService.AddWebsiteRecord(record!).Wait();
-            return Ok();
+            return Ok(record.Id);
         }
         catch
         {

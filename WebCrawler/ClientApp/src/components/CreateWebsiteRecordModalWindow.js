@@ -20,7 +20,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
     };
   }
 
-  handleSubmit = (event) => {
+  handleSubmit = async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
 
@@ -35,25 +35,38 @@ export class CreateWebsiteRecordModalWindow extends Component {
     formData["tags"] = this.state.tags;
     console.log(formData);
 
-    fetch("/Record", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => {
-        console.log(response.status);
-        if (response.status === 200) {
-          this.setState({ submitSuccess: true });
-        } else if (response.status === 500) {
-          this.setState({ submitOtherError: true });
-        } else {
-          this.setState({ submitBadRequest: true });
-        }
-      })
-      .catch((error) => this.setState({ submitOtherError: true }));
+    try {
+      const response = await fetch("/Record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      console.log("response status: " + response.status);
+      if (response.status === 200) {
+        this.setState({ submitSuccess: true });
+      } else if (response.status === 500) {
+        this.setState({ submitOtherError: true });
+      } else {
+        this.setState({ submitBadRequest: true });
+      }
+
+      try {
+        const id = await response.json();
+        this.props.passCreatedRecordId(id);
+
+        console.log("just created record id:");
+        console.log(id);
+      } catch {
+        console.log(
+          "Server returning id from server failed, when created new website record."
+        );
+      }
+    } catch {
+      this.setState({ submitOtherError: true });
+    }
 
     this.setState({ validated: false });
-
     this.resetForm(form);
   };
 
@@ -67,7 +80,15 @@ export class CreateWebsiteRecordModalWindow extends Component {
       <>
         <Modal
           show={this.props.show}
-          onHide={this.props.onClose}
+          onHide={() => {
+            this.setState({
+              submitSuccess: false,
+              submitBadRequest: false,
+              submitOtherError: false,
+            });
+
+            this.props.onClose();
+          }}
           size="xl"
           centered
         >
