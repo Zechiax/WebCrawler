@@ -2,6 +2,10 @@ import React, { Component } from "react";
 import { useLocation } from "react-router";
 import Button from "react-bootstrap/Button";
 import * as d3 from "d3";
+import Modal from "react-bootstrap/Modal";
+import ListGroup from "react-bootstrap/ListGroup";
+import { Label } from "reactstrap";
+import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 
 export const ViewGraph = (props) => {
   const location = useLocation();
@@ -25,6 +29,16 @@ class ViewGraphInternal extends Component {
       isWebsitesView: false,
       isLiveView: false,
       currentlySelectedNodeInfo: [],
+      nodeInfo: {
+        show: false,
+        title: null,
+        url: null,
+        crawlTime: null,
+        records: [],
+      },
+      createNewWebsiteRecord: {
+        show: false,
+      },
     };
   }
 
@@ -33,6 +47,8 @@ class ViewGraphInternal extends Component {
     const links = graph.links.map((link) => Object.create(link));
     this.setState({ nodes: nodes });
     this.setState({ links: links });
+
+    const self = this;
 
     const nodeInfo = d3.select(".content .nodeInfo");
 
@@ -108,6 +124,17 @@ class ViewGraphInternal extends Component {
       .attr("r", 3)
       .attr("fill", function (d) {
         return d.color;
+      })
+      .on("click", function (e, d, i) {
+        self.setState({
+          nodeInfo: {
+            show: true,
+            title: d.title,
+            url: d.url,
+            crawlTime: d.crawlTime,
+            records: d.inWhichRecords,
+          },
+        });
       })
       .on("mouseover", function (e, d, i) {
         nodeInfo
@@ -329,77 +356,154 @@ class ViewGraphInternal extends Component {
     }
 
     return (
-      <div className="content">
-        <div
-          className="nodeInfo"
-          style={{
-            position: "absolute",
-            zIndex: 1,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "85vw",
-          }}
-        >
-          <Button
+      <>
+        <div className="content">
+          <div
+            className="nodeInfo"
             style={{
-              width: "130px",
+              position: "absolute",
+              zIndex: 1,
             }}
-            variant="primary"
-            onClick={(e) => {
-              this.setState((state, props) => ({
-                isWebsitesView: !state.isWebsitesView,
-              }));
-
-              this.deleteGraph();
-              this.fetchAndRerenderGraph();
-            }}
-          >
-            {this.state.isWebsitesView ? "Websites view" : "Domains view"}
-          </Button>
-          <Button
-            style={{
-              marginTop: "10px",
-              width: "130px",
-            }}
-            variant="primary"
-            onClick={(e) => {
-              this.setState((state, props) => ({
-                isLiveView: !state.isLiveView,
-              }));
-            }}
-          >
-            {this.state.isLiveView ? "Live view" : "Static view"}
-          </Button>
-        </div>
-        {!this.state.isLiveView ? (
+          />
           <div
             style={{
-              position: "fixed",
+              position: "absolute",
               left: "85vw",
-              bottom: "2vw",
+            }}
+          >
+            <Button
+              style={{
+                width: "130px",
+              }}
+              variant="primary"
+              onClick={(e) => {
+                this.setState((state, props) => ({
+                  isWebsitesView: !state.isWebsitesView,
+                }));
+
+                this.deleteGraph();
+                this.fetchAndRerenderGraph();
+              }}
+            >
+              {this.state.isWebsitesView ? "Websites view" : "Domains view"}
+            </Button>
+            <Button
+              style={{
+                marginTop: "10px",
+                width: "130px",
+              }}
+              variant="primary"
+              onClick={(e) => {
+                this.setState((state, props) => ({
+                  isLiveView: !state.isLiveView,
+                }));
+              }}
+            >
+              {this.state.isLiveView ? "Live view" : "Static view"}
+            </Button>
+          </div>
+          {!this.state.isLiveView ? (
+            <div
+              style={{
+                position: "fixed",
+                left: "85vw",
+                bottom: "2vw",
+              }}
+            >
+              <Button
+                onClick={() => {
+                  this.updateGraph();
+                }}
+              >
+                Update Graph
+              </Button>
+            </div>
+          ) : (
+            <div></div>
+          )}
+          {loading}
+          <svg
+            style={{
+              zIndex: 0,
+            }}
+          ></svg>
+        </div>
+
+        <Modal
+          show={this.state.nodeInfo.show}
+          onHide={() => {
+            this.setState({
+              nodeInfo: {
+                show: false,
+              },
+            });
+          }}
+          size="lg"
+          centered
+        >
+          <Modal.Header closeButton>Node Info</Modal.Header>
+          <ListGroup
+            style={{
+              margin: 10,
+            }}
+          >
+            <ListGroup.Item>title: {this.state.nodeInfo.title}</ListGroup.Item>
+            <ListGroup.Item>url: {this.state.nodeInfo.url}</ListGroup.Item>
+            <ListGroup.Item>
+              crawl time: {this.state.nodeInfo.crawlTime}
+            </ListGroup.Item>
+            <Label
+              style={{
+                marginTop: "20px",
+                marginLeft: "16px",
+              }}
+            >
+              Website records
+            </Label>
+            <ListGroup>
+              {this.state.nodeInfo.records?.map((record, i) => {
+                return (
+                  // TODO: add arrow that will reveal more info about website record - component from home.js table
+                  // HOW: we have id, so just fetch the record from server and bind it to the props
+                  <ListGroup.Item
+                    key={i}
+                    variant="light"
+                  >{`${record.label}(${record.id})`}</ListGroup.Item>
+                );
+              })}
+            </ListGroup>
+          </ListGroup>
+          <div
+            style={{
+              margin: 10,
             }}
           >
             <Button
               onClick={() => {
-                this.updateGraph();
+                this.setState({
+                  createNewWebsiteRecord: {
+                    show: true,
+                  },
+                });
               }}
+              variant="primary"
             >
-              Update Graph
+              Create new website record from this node
             </Button>
           </div>
-        ) : (
-          <div></div>
-        )}
-        {loading}
-        <svg
-          style={{
-            zIndex: 0,
-          }}
-        ></svg>
-      </div>
+        </Modal>
+
+        <CreateWebsiteRecordModalWindow
+          show={this.state.createNewWebsiteRecord.show}
+          onClose={() =>
+            this.setState({
+              createNewWebsiteRecord: {
+                show: false,
+              },
+            })
+          }
+        />
+      </>
     );
   }
 }
