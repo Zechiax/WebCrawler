@@ -51,12 +51,10 @@ class ViewGraphInternal extends Component {
       .force("charge", d3.forceManyBody().strength(-5))
       .force(
         "center",
-        d3
-          .forceCenter(
-            350, //TODO - calculate center somehow from svg dimension
-            350
-          )
-          .strength(150)
+        d3.forceCenter(
+          350, //TODO - calculate center somehow from svg dimension
+          350
+        )
       );
 
     // TODO: Attempt to implement dragging, but doesn't work for some reason
@@ -131,7 +129,9 @@ class ViewGraphInternal extends Component {
           .append("li")
           .text("Crawl time: " + d.crawlTime)
           .append("li")
-          .text(d.inWhichGraphs.map((graphId) => graphId));
+          .text(
+            d.inWhichRecords.map((record) => `${record.label}(${record.id})`)
+          );
 
         d3.select(this).attr("fill", "red");
       });
@@ -239,14 +239,16 @@ class ViewGraphInternal extends Component {
             alreadyPresentNode.color = color;
           }
 
-          alreadyPresentNode.inWhichGraphs.push(recordForGraph.label);
+          alreadyPresentNode.inWhichRecords.push(recordForGraph.label);
         } else {
           graph.nodes.push({
             url: node.Url,
             title: node.Title,
             crawlTime: node.CrawlTime,
             started: Date.parse(recordForGraph.crawlInfo.lastExecution.started),
-            inWhichGraphs: [recordForGraph.label],
+            inWhichRecords: [
+              { label: recordForGraph.label, id: recordForGraph.id },
+            ],
             color: color,
           });
         }
@@ -255,12 +257,13 @@ class ViewGraphInternal extends Component {
           graph.links.push({
             source: node.Url,
             target: neighbourUrl,
-            forWhichGraph: recordForGraph.label,
           });
         }
       }
     }
 
+    console.log("converted graph for d3");
+    console.log(graph);
     return graph;
   }
 

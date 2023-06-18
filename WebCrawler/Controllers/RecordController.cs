@@ -56,12 +56,6 @@ public class RecordController : OurControllerBase
                 return StatusCode(BadRequestCode, "Label is invalid.");
             }
 
-            IEnumerable<WebsiteRecord> allRecords = _dataService.GetWebsiteRecords().Result;
-            if(allRecords.Any(record => record.Label == jsonObj.Label))
-            {
-                return StatusCode(BadRequestCode, "Label already present.");
-            }
-
             if (jsonObj.IsActive is not null && jsonObj.IsActive != "on")
             {
                 return StatusCode(BadRequestCode, "IsActive is invalid.");
