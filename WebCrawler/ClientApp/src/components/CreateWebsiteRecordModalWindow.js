@@ -131,7 +131,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                   type="text"
                   required
                   placeholder="Label"
-                  defaultValue="Wikipedia"
+                  defaultValue={this.props.labelPresetValue}
                 />
                 <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
                 <Form.Control.Feedback type="invalid">
@@ -151,7 +151,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                   type="text"
                   required
                   placeholder="Entry Url"
-                  defaultValue="https://en.wikipedia.org/wiki/Main_Page"
+                  defaultValue={this.props.urlPresetValue}
                 />
                 <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
                 <Form.Control.Feedback type="invalid">

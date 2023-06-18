@@ -487,6 +487,10 @@ class ViewGraphInternal extends Component {
                 });
               }}
               variant="primary"
+              style={{
+                fontSize: 12,
+                width: 300,
+              }}
             >
               Create new website record from this node
             </Button>
@@ -495,6 +499,8 @@ class ViewGraphInternal extends Component {
 
         <CreateWebsiteRecordModalWindow
           show={this.state.createNewWebsiteRecord.show}
+          urlPresetValue={this.state.nodeInfo.url}
+          labelPresetValue={this.state.nodeInfo.title}
           onClose={() =>
             this.setState({
               createNewWebsiteRecord: {

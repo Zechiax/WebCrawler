@@ -63,6 +63,8 @@ export class Home extends Component {
 
         <CreateWebsiteRecordModalWindow
           show={this.state.isCreateWebsiteRecordModalShown}
+          urlPresetValue="https://cs.wikipedia.org/wiki/Hlavn%C3%AD_strana"
+          labelPresetValue="Wikipedie"
           onClose={this.onCreateWebsiteRecordModalClose}
         />
       </>
