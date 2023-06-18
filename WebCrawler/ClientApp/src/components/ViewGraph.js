@@ -25,7 +25,6 @@ class ViewGraphInternal extends Component {
     this.state = {
       nodes: [],
       links: [],
-      loading: true,
       isWebsitesView: false,
       isLiveView: false,
       currentlySelectedNodeInfo: [],
@@ -45,8 +44,6 @@ class ViewGraphInternal extends Component {
   renderGraph(graph) {
     const nodes = graph.nodes.map((node) => Object.create(node));
     const links = graph.links.map((link) => Object.create(link));
-    this.setState({ nodes: nodes });
-    this.setState({ links: links });
 
     const self = this;
 
@@ -184,33 +181,23 @@ class ViewGraphInternal extends Component {
   }
 
   componentDidMount() {
-    this.fetchAndRerenderGraph();
+    this.fetchAndRerenderGraph("Record/livegraph/domains/");
   }
 
-  fetchAndRerenderGraph() {
-    this.setState({ loading: true });
-    this.getGraphAsync()
-      .then((graph) => this.renderGraph(graph))
-      .then(this.setState({ loading: false }));
+  fetchAndRerenderGraph(urlbase) {
+    console.log(urlbase);
+    this.getGraphAsync(urlbase).then((graph) => this.renderGraph(graph));
   }
 
-  async getGraphAsync() {
-    let urlBase = "";
-
-    if (this.state.isWebsitesView) {
-      urlBase = "/Record/livegraph/websites/";
-    } else {
-      urlBase = "/Record/livegraph/domains/";
-    }
-
-    console.log(urlBase);
+  async getGraphAsync(urlbase) {
+    console.log(urlbase);
 
     const graphsJson = [];
 
     console.log(this.props.ids);
 
     for (const id of this.props.ids) {
-      const response = await fetch(urlBase + id);
+      const response = await fetch(urlbase + id);
 
       if (response.ok) {
         const graphJson = await response.json();
@@ -309,7 +296,7 @@ class ViewGraphInternal extends Component {
     return colour;
   }
 
-  updateGraph() {
+  updateGraph(urlbase) {
     // TODO: attempt for live update instead of rererending the whole graph all the time - not working
     /*     this.setState((state, props) => ({
       nodes: [
@@ -337,7 +324,7 @@ class ViewGraphInternal extends Component {
     // */
 
     this.deleteGraph();
-    this.fetchAndRerenderGraph();
+    this.fetchAndRerenderGraph(urlbase);
   }
 
   deleteGraph() {
@@ -346,15 +333,6 @@ class ViewGraphInternal extends Component {
   }
 
   render() {
-    let loading = "";
-    if (this.state.loading) {
-      loading = (
-        <p>
-          <em>Loading ...</em>
-        </p>
-      );
-    }
-
     return (
       <>
         <div className="content">
@@ -376,13 +354,21 @@ class ViewGraphInternal extends Component {
                 width: "130px",
               }}
               variant="primary"
-              onClick={(e) => {
-                this.setState((state, props) => ({
-                  isWebsitesView: !state.isWebsitesView,
-                }));
+              onClick={() => {
+                this.setState((oldState, props) => {
+                  let state = {
+                    ...oldState,
+                  };
+
+                  state.isWebsitesView = !oldState.isWebsitesView;
+                  return state;
+                });
 
                 this.deleteGraph();
-                this.fetchAndRerenderGraph();
+                const urlbase = this.state.isWebsitesView
+                  ? "/Record/livegraph/domains/"
+                  : "/Record/livegraph/websites/";
+                this.fetchAndRerenderGraph(urlbase);
               }}
             >
               {this.state.isWebsitesView ? "Websites view" : "Domains view"}
@@ -393,10 +379,15 @@ class ViewGraphInternal extends Component {
                 width: "130px",
               }}
               variant="primary"
-              onClick={(e) => {
-                this.setState((state, props) => ({
-                  isLiveView: !state.isLiveView,
-                }));
+              onClick={() => {
+                this.setState((oldState, props) => {
+                  let state = {
+                    ...oldState,
+                  };
+
+                  state.isLiveView = !oldState.isLiveView;
+                  return state;
+                });
               }}
             >
               {this.state.isLiveView ? "Live view" : "Static view"}
@@ -412,7 +403,10 @@ class ViewGraphInternal extends Component {
             >
               <Button
                 onClick={() => {
-                  this.updateGraph();
+                  const urlbase = !this.state.isWebsitesView
+                    ? "/Record/livegraph/domains/"
+                    : "/Record/livegraph/websites/";
+                  this.updateGraph(urlbase);
                 }}
               >
                 Update Graph
@@ -421,7 +415,6 @@ class ViewGraphInternal extends Component {
           ) : (
             <div></div>
           )}
-          {loading}
           <svg
             style={{
               zIndex: 0,
@@ -432,10 +425,16 @@ class ViewGraphInternal extends Component {
         <Modal
           show={this.state.nodeInfo.show}
           onHide={() => {
-            this.setState({
-              nodeInfo: {
+            this.setState((oldState, props) => {
+              let state = {
+                ...oldState,
+              };
+
+              state.nodeInfo = {
                 show: false,
-              },
+              };
+
+              return state;
             });
           }}
           size="lg"
@@ -480,10 +479,16 @@ class ViewGraphInternal extends Component {
           >
             <Button
               onClick={() => {
-                this.setState({
-                  createNewWebsiteRecord: {
+                this.setState((oldState, props) => {
+                  let state = {
+                    ...oldState,
+                  };
+
+                  state.createNewWebsiteRecord = {
                     show: true,
-                  },
+                  };
+
+                  return state;
                 });
               }}
               variant="primary"
@@ -502,10 +507,16 @@ class ViewGraphInternal extends Component {
           urlPresetValue={this.state.nodeInfo.url}
           labelPresetValue={this.state.nodeInfo.title}
           onClose={() =>
-            this.setState({
-              createNewWebsiteRecord: {
+            this.setState((oldState, props) => {
+              let state = {
+                ...oldState,
+              };
+
+              state.createNewWebsiteRecord = {
                 show: false,
-              },
+              };
+
+              return state;
             })
           }
         />
