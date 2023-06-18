@@ -109,15 +109,7 @@ class ViewGraphInternal extends Component {
       .attr("fill", function (d) {
         return d.color;
       })
-      .on("click", function (e, d, i) {
-        nodeInfo.selectAll("ul").remove();
-        svg
-          .selectAll("circle")
-          .filter(function () {
-            return d3.select(this).attr("fill") === "red";
-          })
-          .attr("fill", d.color);
-
+      .on("mouseover", function (e, d, i) {
         nodeInfo
           .append("div")
           .style("font-size", "12px")
@@ -134,6 +126,15 @@ class ViewGraphInternal extends Component {
           );
 
         d3.select(this).attr("fill", "red");
+      })
+      .on("mouseout", function (e, d, i) {
+        nodeInfo.selectAll("ul").remove();
+        svg
+          .selectAll("circle")
+          .filter(function () {
+            return d3.select(this).attr("fill") === "red";
+          })
+          .attr("fill", d.color);
       });
 
     simulation.nodes(nodes).on("tick", () => {
