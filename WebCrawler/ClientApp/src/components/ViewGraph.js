@@ -51,10 +51,12 @@ class ViewGraphInternal extends Component {
       .force("charge", d3.forceManyBody().strength(-5))
       .force(
         "center",
-        d3.forceCenter(
-          350, //TODO - calculate center somehow from svg dimension
-          350
-        )
+        d3
+          .forceCenter(
+            350, //TODO - calculate center somehow from svg dimension
+            350
+          )
+          .strength(150)
       );
 
     // TODO: Attempt to implement dragging, but doesn't work for some reason
