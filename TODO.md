@@ -30,7 +30,7 @@
 
 ## TOMAS
 ### Modalni okno
-1. naimplementovat controller Controller.RunCrawler() a Controller.StopController()
+1. naimplementovat controller Controller.RunCrawler() a Controller.StopCrawler()
 
 1. picnout records do modalniho okna po kliknuti na node
 	* ja jen pak picnu pepovu komponentu do seznamu 

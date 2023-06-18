@@ -77,7 +77,7 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
         }
     }
 
-    public bool StopPeriodicExecutionAsync(ulong jobId)
+    public bool StopPeriodicExecution(ulong jobId)
     {
         lock (executionManager)
         {

@@ -44,7 +44,7 @@ public interface IPeriodicExecutionManagerService
     /// The job (with the graph) is stored in the <see cref="IPeriodicExecutionManagerService"/> for later use.
     /// After <see cref="CrawlInfo.Periodicity"/> period elapses, the job is resetted and crawled again.
     /// Note, that this will not stop the job for good, only the current execution.
-    /// To stop the job completely, <see cref="StopPeriodicExecutionAsync(ulong)"/> method.
+    /// To stop the job completely, <see cref="StopPeriodicExecution(ulong)"/> method.
     /// </summary>
     Task<bool> StopCurrentExecutionAsync(ulong jobId);
 
@@ -55,7 +55,7 @@ public interface IPeriodicExecutionManagerService
     /// </summary>
     /// <param name="jobId"></param>
     /// <returns></returns>
-    bool StopPeriodicExecutionAsync(ulong jobId);
+    bool StopPeriodicExecution(ulong jobId);
 
     /// <summary>
     /// Waits for the execution of the job.

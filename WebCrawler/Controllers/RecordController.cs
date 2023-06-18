@@ -7,9 +7,7 @@ using WebCrawler.Models;
 
 namespace WebCrawler.Controllers;
 
-[ApiController]
-[Route("[controller]")]
-public class RecordController : OurController
+public class RecordController : OurControllerBase
 {
     private readonly IDataService _dataService;
     private readonly IPeriodicExecutionManagerService _executionManager;
@@ -23,14 +21,12 @@ public class RecordController : OurController
     [Route("{id:int}")]
     public IActionResult GetRecord(int id)
     {
-        try
-        {
-            return Ok(_dataService.GetWebsiteRecord(id).Result);
-    }
-        catch
+        if (!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
             return StatusCode(InternalErrorCode);
         }
+
+        return Ok(_dataService.GetWebsiteRecord(id).Result);
     }
 
     [HttpPost]
@@ -174,17 +170,12 @@ public class RecordController : OurController
 
     private WebsiteGraphSnapshot? GetLiveGraph(int id)
     {
-        WebsiteRecord record;
-        try
-        {
-            record = _dataService.GetWebsiteRecord(id).Result;
-        }
-        catch
+        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
             return null; 
         }
 
-        ulong? jobId = record.CrawlInfo.JobId;
+        ulong? jobId = record!.CrawlInfo.JobId;
         if(jobId is null)
         {
             return null; 
@@ -203,10 +194,40 @@ public class RecordController : OurController
 
     [HttpPost]
     [Route("run/{id:int}")]
-    public IActionResult RunRecord(int id)
+    public IActionResult RunExecutionOnRecord(int id)
     {
-        //TODO: Implement
-        return StatusCode(NotImplementedCode);
+        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
+        {
+            return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
+        }
+
+        record!.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route("stop/{id:int}")]
+    public IActionResult StopExecutionOnRecord(int id)
+    {
+        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
+        {
+            return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
+        }
+
+        ulong? jobId = record!.CrawlInfo.JobId;
+        if(jobId is null)
+        {
+            return StatusCode(BadRequestCode, $"Can't stop execution for record with given id: {id}, since jobId is not set, meaning there is no active crawler for this website record.");
+        }
+
+        bool didIJustStopped = _executionManager.StopPeriodicExecution(record.CrawlInfo.JobId!.Value);
+
+        if (!didIJustStopped)
+        {
+            return Ok("Job already stopped.");
+        }
+
+        return Ok("Job successfuly stopped.");
     }
 
     [HttpDelete]
@@ -221,6 +242,21 @@ public class RecordController : OurController
         catch
         {
             return StatusCode(InternalErrorCode);
+        }
+    }
+
+    private bool TryGetWebsiteRecord(int id, out WebsiteRecord? record)
+    {
+        record = null;
+
+        try
+        {
+            record = _dataService.GetWebsiteRecord(id).Result;
+            return true;
+        }
+        catch (KeyNotFoundException)
+        {
+            return false;
         }
     }
 }

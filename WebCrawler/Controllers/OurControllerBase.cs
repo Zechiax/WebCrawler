@@ -3,7 +3,9 @@ using System.Net;
 
 namespace WebCrawler.Controllers;
 
-public abstract class OurController : Controller
+[ApiController]
+[Route("[controller]")]
+public abstract class OurControllerBase : ControllerBase
 {
     protected static int InternalErrorCode => 500;
     protected static int NotImplementedCode => 501;
