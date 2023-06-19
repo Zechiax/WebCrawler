@@ -9,7 +9,7 @@ public interface IDataService
     
     public Task<WebsiteRecord> GetWebsiteRecord(int id);
     
-    public Task AddWebsiteRecord(WebsiteRecord websiteRecord);
+    public Task<int> AddWebsiteRecord(WebsiteRecord websiteRecord);
     
     public Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord);
     

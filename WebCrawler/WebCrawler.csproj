@@ -16,6 +16,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="FluentValidation" Version="11.5.2" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
         <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
         <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="7.0.5" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.5" />

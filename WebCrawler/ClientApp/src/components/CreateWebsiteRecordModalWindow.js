@@ -33,6 +33,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
 
     const formData = Object.fromEntries(new FormData(form).entries());
     formData["tags"] = this.state.tags;
+    formData["isActive"] = form.elements.isActive.checked;
     console.log(formData);
 
     try {
