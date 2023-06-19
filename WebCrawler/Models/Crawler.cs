@@ -58,20 +58,20 @@ public class Crawler
             {
                 while (_toCrawlQueue.Count == 0)
                 {
-                    //_logger.LogDebug("{CurrentThreadManagedThreadId}: waiting for jobs to come in",
-                    //    Thread.CurrentThread.ManagedThreadId);
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: waiting for jobs to come in",
+                        Thread.CurrentThread.ManagedThreadId);
                     Monitor.Wait(_toCrawlQueue);
                 }
 
                 _currentJob = _toCrawlQueue.Dequeue();
-                //_logger.LogDebug("{CurrentThreadManagedThreadId}: dequeuing job: {JobId}",
-                //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+                _logger.LogDebug("{CurrentThreadManagedThreadId}: dequeuing job: {JobId}",
+                    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
                 // redpilled
                 if (_currentJob is null)
                 {
-                    //_logger.LogDebug("{CurrentThreadManagedThreadId}: job is a redpill",
-                    //    Thread.CurrentThread.ManagedThreadId);
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: job is a redpill",
+                        Thread.CurrentThread.ManagedThreadId);
                     return;
                 }
             }
@@ -82,9 +82,9 @@ public class Crawler
             {
                 if(_currentJob.JobStatus == JobStatus.Stopped)
                 {
-                    //_logger.LogDebug(
-                    //    "{CurrentThreadManagedThreadId}: job stopped in queue - skipping and pulsing ({JobId})",
-                    //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+                    _logger.LogDebug(
+                        "{CurrentThreadManagedThreadId}: job stopped in queue - skipping and pulsing ({JobId})",
+                        Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
                     Debug.WriteLine(
                         string.Format("{0}: job stopped in queue - skipping and pulsing ({1})",
@@ -101,26 +101,26 @@ public class Crawler
 
                 // NOTE: Executor to pass test. DefferedLimited for debugging on client recommended.
                 //executor = new DeferredLimitedExecutor(TimeSpan.Zero, 500, _currentJob, _websiteProvider);
-                executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(6), 500, _currentJob, _websiteProvider);
+                executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(1), 100, _currentJob, _websiteProvider);
                 //executor = new Executor(_currentJob, _websiteProvider);
             }
 
-            //_logger.LogDebug(string.Format("{CurrentThreadManagedThreadId}: start crawling ({JobId})",
-            //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
+            _logger.LogDebug("{CurrentThreadManagedThreadId}: start crawling ({JobId})",
+                Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
-            Debug.WriteLine(string.Format("{0}: start crawling ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
+            // Debug.WriteLine(string.Format("{0}: start crawling ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
 
             executor.StartCrawlAsync().Wait();
             
-            //_logger.LogDebug("{CurrentThreadManagedThreadId}: finished crawling ({JobId})",
-            //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+            _logger.LogDebug("{CurrentThreadManagedThreadId}: finished crawling ({JobId})",
+                Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
-            Debug.WriteLine(string.Format("{0}: finished crawling ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
+            // Debug.WriteLine(string.Format("{0}: finished crawling ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
             
-            //_logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is finished ({JobId})",
-            //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+            _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is finished ({JobId})",
+                Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
-            Debug.WriteLine(string.Format("{0}: pulsing that job is finished ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
+            // Debug.WriteLine(string.Format("{0}: pulsing that job is finished ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
             lock (_currentJob)
             {
                 // If job was not stopped during crawling, it finished successfuly on it's own.
@@ -129,26 +129,26 @@ public class Crawler
                     _currentJob.JobStatus = JobStatus.Finished;
                     
                     // Add the job to the database
-                    //_logger.LogDebug("{CurrentThreadManagedThreadId}: adding job to database ({JobId})",
-                    //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: adding job to database ({JobId})",
+                        Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
-                    Debug.WriteLine(string.Format("{0}: adding job to database ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
+                    // Debug.WriteLine(string.Format("{0}: adding job to database ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
                     
-                    _data.AddWebsiteExecution(_currentJob.JobId, _currentJob.WebsiteExecution);
+                    _data.AddWebsiteExecution(_currentJob.CrawlInfo.WebsiteRecordId, _currentJob.WebsiteExecution);
                         
-                    //_logger.LogDebug("{CurrentThreadManagedThreadId}: job added to database ({JobId})",
-                    //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
+                    _logger.LogDebug("{CurrentThreadManagedThreadId}: job added to database ({JobId})",
+                        Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
 
-                    Debug.WriteLine(string.Format("{0}: job added to database ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
+                    // Debug.WriteLine(string.Format("{0}: job added to database ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
                 }
                 
-                //_logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over ({JobStatus}) ({JobId})",
-                //    Thread.CurrentThread.ManagedThreadId, _currentJob.JobStatus
-                //    ,_currentJob.JobId);
-
-                Debug.WriteLine(string.Format("{0}: pulsing that job is over ({1}) ({2})",
+                _logger.LogDebug("{CurrentThreadManagedThreadId}: pulsing that job is over ({JobStatus}) ({JobId})",
                     Thread.CurrentThread.ManagedThreadId, _currentJob.JobStatus
-                    ,_currentJob.JobId));
+                    ,_currentJob.JobId);
+
+                // Debug.WriteLine(string.Format("{0}: pulsing that job is over ({1}) ({2})",
+                //     Thread.CurrentThread.ManagedThreadId, _currentJob.JobStatus
+                //     ,_currentJob.JobId));
 
                 // Pulses all threads waiting for the job to be stopped, when the job was active.
                 Monitor.PulseAll(_currentJob);

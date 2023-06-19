@@ -9,7 +9,7 @@ public interface IExecutionManagerService
     /// Enques crawling job according to <paramref name="crawlInfo"/>. 
     /// Returns jobId, which can be later use to query the job information.
     /// </summary>
-    ulong EnqueueForCrawl(CrawlInfo crawlInfo);
+    void EnqueueForCrawl(CrawlInfo crawlInfo, ulong jobId);
 
     /// <summary>
     /// Returns full graph, after the underlying executor finishes crawling on it's own.

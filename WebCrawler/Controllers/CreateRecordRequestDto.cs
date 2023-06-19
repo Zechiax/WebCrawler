@@ -17,7 +17,8 @@ public class CreateRecordRequestDtoValidator : AbstractValidator<CreateRecordReq
     public CreateRecordRequestDtoValidator()
     {
         RuleFor(x => x.Label).NotEmpty().MaximumLength(30);
-        RuleFor(x => x.Url).NotEmpty().Must(x => Uri.TryCreate(x, UriKind.Absolute, out var uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps));
+        RuleFor(x => x.Url).NotEmpty()
+            .Must(x => Uri.TryCreate(x, UriKind.Absolute, out var uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps));
         RuleFor(x => x.Regex).NotEmpty();
         RuleFor(x => x.Periodicity).NotEmpty().GreaterThan(0);
         RuleFor(x => x.Tags).Must(x => x.Count < 50);

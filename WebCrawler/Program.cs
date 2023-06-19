@@ -6,6 +6,7 @@ using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using Serilog;
 using WebCrawler.Formatters;
+using WebCrawler.Models.AutomapperProfiles;
 using WebCrawler.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +48,7 @@ builder.Services.AddMvcCore(options =>
 });
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(typeof(DbToFromDomainProfile));
 
 var app = builder.Build();
 
