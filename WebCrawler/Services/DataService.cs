@@ -113,16 +113,16 @@ public class DataService : IDataService
         await context.SaveChangesAsync();
     }
 
-    public async Task AddWebsiteExecution(ulong jobId, WebsiteExecution websiteExecution)
+    public async Task AddWebsiteExecution(int recordId, WebsiteExecution websiteExecution)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
         CrawlInfo? record = await context.CrawlInfos
-            .FirstOrDefaultAsync(wr => wr.JobId == jobId);
+            .FirstOrDefaultAsync(wr => wr.WebsiteRecordId == recordId);
         
         if (record is null)
-            throw new EntryNotFoundException($"Website record with job id {jobId} not found.");
+            throw new EntryNotFoundException($"Website record with job id {recordId} not found.");
         
         record.LastExecution = websiteExecution;
         

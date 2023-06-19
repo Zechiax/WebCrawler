@@ -14,6 +14,6 @@ public interface IDataService
     public Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord);
     
     public Task DeleteWebsiteRecord(int id);
-    public Task AddWebsiteExecution(ulong jobId, WebsiteExecution websiteExecution);
+    public Task AddWebsiteExecution(int recordId, WebsiteExecution websiteExecution);
     public Task UpdateJobId(int websiteRecordId, ulong? jobId);
 }
