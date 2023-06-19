@@ -53,7 +53,7 @@
 1. zkusit pri vice datech tu simulaci neauktualizovat a pockat az se nejak ustali ten graf do finalni pozice
 
 ## MILAN
-1. domimplementovani delete / update recordu na controlleru
+✅ 1. domimplementovani delete / update recordu na controlleru
 
 1. dat validaci nekam jinam, ne do controlleru - navic, spis neni treba imo
 
