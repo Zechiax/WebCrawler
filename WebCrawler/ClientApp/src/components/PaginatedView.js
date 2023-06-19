@@ -1,4 +1,5 @@
-import React, {useMemo, useEffect, useState} from "react";
+import React, { useMemo, useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 // MRT Imports
 // import MaterialReactTable from 'material-react-table'; // default import deprecated
@@ -14,6 +15,7 @@ import Chip from "@mui/material/Chip";
 
 const Records = () => {
     const [data, setData] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -170,6 +172,19 @@ const Records = () => {
                     });
                 };
 
+                const handleViewGraph = () => {
+                    let selectedGraphsIds = [];
+
+                    table.getSelectedRowModel().flatRows.map((row) => {
+                        selectedGraphsIds.push(row.original.id);
+                        return null;
+                    });
+
+                    alert("viewing graph for " + selectedGraphsIds);
+
+                    navigate('/Graph', {state: {ids: selectedGraphsIds}});
+                };
+
                 return (
                     <div style={{display: "flex", gap: "0.5rem"}}>
                         <Button
@@ -187,6 +202,14 @@ const Records = () => {
                             variant="contained"
                         >
                             Activate
+                        </Button>
+                        <Button
+                            color="primary"
+                            disabled={!table.getIsSomeRowsSelected()}
+                            onClick={handleViewGraph}
+                            variant="contained"
+                        >
+                            View Graph
                         </Button>
                     </div>
                 );
