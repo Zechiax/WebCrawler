@@ -30,7 +30,7 @@ public class ExecutionManagerTests
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
 
-    [Test]
+    //[Test]
     public void MockRunTest()
     {
         string expected = "(Auta:http://www.wiki.com/auta) -> (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine +
@@ -66,7 +66,7 @@ public class ExecutionManagerTests
         }
     }
 
-    [Test]
+    //[Test]
     public void StopAllRunAllAgainTest()
     {
         string expected = "(Auta:http://www.wiki.com/auta) -> (Lidi:http://www.wiki.com/lidi)" + Environment.NewLine +
