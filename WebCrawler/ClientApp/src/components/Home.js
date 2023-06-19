@@ -25,40 +25,21 @@ export class Home extends Component {
   render() {
     return (
       <>
-        <Container fluid="md">
-          <Row>
-            <PaginatedView />
-          </Row>
-          <Row
-            style={{
-              marginTop: "30px",
-              marginBottom: "15px",
-              marginLeft: "0px",
-            }}
-          >
-            <Stack direction="horizontal" gap={3}>
-              <Button
-                variant="primary"
-                onClick={() =>
-                  this.setState({ isCreateWebsiteRecordModalShown: true })
-                }
-              >
-                Create new website record
-              </Button>
+        <Container fluid="md" style={{ display: 'flex', flexDirection: 'column'}}>
+            <div style={{ flex: '1', marginBottom: '1rem' }}>
+                <PaginatedView />
+            </div>
 
-              <NavLink
-                state={{ ids: this.state.selectedGraphsIds }}
-                to="/Graph"
-              >
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
-                  variant="primary"
-                  disabled={this.state.selectedGraphsIds.length === 0}
+                    variant="primary"
+                    onClick={() =>
+                        this.setState({ isCreateWebsiteRecordModalShown: true })
+                    }
                 >
-                  View Graph
+                    Create new website record
                 </Button>
-              </NavLink>
-            </Stack>
-          </Row>
+            </div>
         </Container>
 
         <CreateWebsiteRecordModalWindow
