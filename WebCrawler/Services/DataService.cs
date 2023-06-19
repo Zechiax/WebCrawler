@@ -49,7 +49,7 @@ public class DataService : IDataService
         return records;
     }
 
-    public async Task<WebsiteRecord> GetWebsiteRecord(int id)
+    public async Task<WebsiteRecordData> GetWebsiteRecordData(int id)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
@@ -66,9 +66,7 @@ public class DataService : IDataService
         if (recordData is null)
             throw new KeyNotFoundException($"Website record with id {id} not found.");
 
-        var record = _mapper.Map<WebsiteRecord>(recordData);
-
-        return record;
+        return recordData;
     }
 
     public async Task<int> AddWebsiteRecord(WebsiteRecord websiteRecord)
@@ -134,18 +132,6 @@ public class DataService : IDataService
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-
-        var snapshot = new WebsiteExecutionData
-        {
-            Started = websiteExecution.Started,
-            Finished = websiteExecution.Finished,
-        };
-
-        if (websiteExecution.WebsiteGraph is not null)
-        {
-            snapshot.WebsiteGraphSnapshotJson =
-                WebsiteGraphSnapshot.JsonConverter.Serialize(websiteExecution.WebsiteGraph.GetSnapshot());
-        }
 
         CrawlInfoData? record = await context.CrawlInfos
             .FirstOrDefaultAsync(wr => wr.WebsiteRecordDataId == recordId);

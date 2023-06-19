@@ -21,7 +21,8 @@ public class DbToFromDomainProfile : Profile
             .ForMember(dest => dest.CrawlInfo, opt => opt.MapFrom(src => src.CrawlInfoData))
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags));
         CreateMap<CrawlInfoData, CrawlInfo>()
-            .ForMember(dest => dest.LastExecution, opt => opt.MapFrom(src => src.LastExecutionData));
+            .ForMember(dest => dest.LastExecution, opt => opt.MapFrom(src => src.LastExecutionData))
+            .ForMember(dest => dest.WebsiteRecordId, opt => opt.MapFrom(src => src.WebsiteRecordDataId));
     }
     
     private void CreateMapsToDb()
@@ -36,6 +37,7 @@ public class DbToFromDomainProfile : Profile
             .ForMember(dest => dest.CrawlInfoData, opt => opt.MapFrom(src => src.CrawlInfo))
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags));
         CreateMap<CrawlInfo, CrawlInfoData>()
-            .ForMember(dest => dest.LastExecutionData, opt => opt.MapFrom(src => src.LastExecution));
+            .ForMember(dest => dest.LastExecutionData, opt => opt.MapFrom(src => src.LastExecution))
+            .ForMember(dest => dest.WebsiteRecordDataId, opt => opt.MapFrom(src => src.WebsiteRecordId));
     }
 }

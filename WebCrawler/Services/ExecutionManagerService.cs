@@ -12,8 +12,6 @@ public class ExecutionManagerService : IExecutionManagerService
 
     private Queue<WebsiteExecutionJob> toCrawlQueue = new();
     private Dictionary<ulong, WebsiteExecutionJob> jobs = new();
-
-    private ulong lastJobId = 0;
     private ILogger logger;
 
     public ExecutionManagerService(IServiceProvider services, ExecutionManagerConfig config)
@@ -24,14 +22,17 @@ public class ExecutionManagerService : IExecutionManagerService
         crawlerManager.StartCrawlers();
     }
 
-    public ulong EnqueueForCrawl(CrawlInfo crawlInfo)
+    public void EnqueueForCrawl(CrawlInfo crawlInfo, ulong jobId)
     {
-        WebsiteExecutionJob job = new(crawlInfo, ++lastJobId);
-        jobs[lastJobId] = job;
+        if (!IsValid(jobId))
+        {
+            throw new ArgumentException("No duplicate job ids allowed");
+        }
+        
+        WebsiteExecutionJob job = new(crawlInfo, jobId);
+        jobs[jobId] = job;
 
         EnqueueJob(job);
-
-        return lastJobId;
     }
 
     public WebsiteGraphSnapshot GetLiveGraph(ulong jobId)
@@ -144,7 +145,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public bool IsValid(ulong jobId)
     {
-        return jobs.ContainsKey(jobId);
+        return !jobs.ContainsKey(jobId);
     }
 
     private JobIdInvalidException JobIdInvalidException(ulong jobId)
