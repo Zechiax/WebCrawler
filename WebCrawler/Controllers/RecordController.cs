@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
+using WebCrawler.Models.Exceptions;
 
 namespace WebCrawler.Controllers;
 
@@ -248,7 +249,7 @@ public class RecordController : OurControllerBase
             record = _dataService.GetWebsiteRecord(id).Result;
             return true;
         }
-        catch (KeyNotFoundException)
+        catch (EntryNotFoundException)
         {
             return false;
         }
