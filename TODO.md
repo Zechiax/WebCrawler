@@ -55,7 +55,7 @@
 ## MILAN
 ✅ 1. domimplementovani delete / update recordu na controlleru
 
-1. dat validaci nekam jinam, ne do controlleru - navic, spis neni treba imo
+✅ 1. dat validaci nekam jinam, ne do controlleru - navic, spis neni treba imo
 
 1. filtrace a hledani - presne to co ma skoda na strankach - nic vin a nic min
 	* inactive / active filtrovani - jenom nejaky switch
