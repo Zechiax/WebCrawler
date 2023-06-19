@@ -101,7 +101,7 @@ public class Crawler
 
                 // NOTE: Executor to pass test. DefferedLimited for debugging on client recommended.
                 //executor = new DeferredLimitedExecutor(TimeSpan.Zero, 500, _currentJob, _websiteProvider);
-                executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(6), 500, _currentJob, _websiteProvider);
+                executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(1), 100, _currentJob, _websiteProvider);
                 //executor = new Executor(_currentJob, _websiteProvider);
             }
 
@@ -134,7 +134,7 @@ public class Crawler
 
                     // Debug.WriteLine(string.Format("{0}: adding job to database ({1})", Thread.CurrentThread.ManagedThreadId, _currentJob.JobId));
                     
-                    _data.AddWebsiteExecution(_currentJob.JobId, _currentJob.WebsiteExecution);
+                    _data.AddWebsiteExecution(_currentJob.CrawlInfo.WebsiteRecordId, _currentJob.WebsiteExecution);
                         
                     _logger.LogDebug("{CurrentThreadManagedThreadId}: job added to database ({JobId})",
                         Thread.CurrentThread.ManagedThreadId, _currentJob.JobId);
