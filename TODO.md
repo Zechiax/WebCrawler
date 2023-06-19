@@ -53,9 +53,9 @@
 1. zkusit pri vice datech tu simulaci neauktualizovat a pockat az se nejak ustali ten graf do finalni pozice
 
 ## MILAN
-✅ 1. domimplementovani delete / update recordu na controlleru
+1. ✅ domimplementovani delete / update recordu na controlleru
 
-✅ 1. dat validaci nekam jinam, ne do controlleru - navic, spis neni treba imo
+1. ✅ dat validaci nekam jinam, ne do controlleru - navic, spis neni treba imo
 
 1. filtrace a hledani - presne to co ma skoda na strankach - nic vin a nic min
 	* inactive / active filtrovani - jenom nejaky switch
@@ -65,9 +65,9 @@
 1. zkusit pri vice datech tu simulaci neauktualizovat a pockat az se nejak ustali ten graf do finalni pozice
 	* merge()
 
-1. graf se po dokonceni nemusi ulozit ke spravnemu website recordu + proc jsou outgoingWebsites vzdy prazdne pri /Records ?
-	* poslat do PeriodicExecutionManager.EnqueForCrawl(...) record id, treba skrze CrawlInfo (+CrawlInfo.RecordId)
-	* pak Crawler pri ukladani do databaze ma na ruce RecordId
-	* oni totiz ty jobId se resetuji po kazde co se resetuje server
+1. ✅ graf se po dokonceni nemusi ulozit ke spravnemu website recordu + proc jsou outgoingWebsites vzdy prazdne pri /Records ?
+	* ✅ poslat do PeriodicExecutionManager.EnqueForCrawl(...) record id, treba skrze CrawlInfo (+CrawlInfo.RecordId)
+	* ✅ pak Crawler pri ukladani do databaze ma na ruce RecordId
+	* ✅ oni totiz ty jobId se resetuji po kazde co se resetuje server
 
 # DEADLINE: 19.06.
