@@ -24,7 +24,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public void EnqueueForCrawl(CrawlInfo crawlInfo, ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (JobExists(jobId))
         {
             throw new ArgumentException("No duplicate job ids allowed");
         }
@@ -37,7 +37,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public WebsiteGraphSnapshot GetLiveGraph(ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (!JobExists(jobId))
         {
             throw JobIdInvalidException(jobId);
         }
@@ -54,7 +54,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public async Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (!JobExists(jobId))
         {
             throw JobIdInvalidException(jobId);
         }
@@ -66,7 +66,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public void WaitForExecutionToFinish(ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (!JobExists(jobId))
         {
             throw JobIdInvalidException(jobId);
         }
@@ -84,7 +84,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public async Task<bool> ResetJobAsync(ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (!JobExists(jobId))
         {
             throw JobIdInvalidException(jobId);
         }
@@ -109,7 +109,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public async Task<bool> StopExecutionAsync(ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (!JobExists(jobId))
         {
             throw JobIdInvalidException(jobId);
         }
@@ -135,7 +135,7 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public JobStatus GetJobStatus(ulong jobId)
     {
-        if (!IsValid(jobId))
+        if (!JobExists(jobId))
         {
             throw JobIdInvalidException(jobId);
         }
@@ -143,9 +143,14 @@ public class ExecutionManagerService : IExecutionManagerService
         return jobs[jobId].JobStatus;
     }
 
-    public bool IsValid(ulong jobId)
+    /// <summary>
+    /// Returns true if the job with that ID exists
+    /// </summary>
+    /// <param name="jobId"></param>
+    /// <returns></returns>
+    public bool JobExists(ulong jobId)
     {
-        return !jobs.ContainsKey(jobId);
+        return jobs.ContainsKey(jobId);
     }
 
     private JobIdInvalidException JobIdInvalidException(ulong jobId)

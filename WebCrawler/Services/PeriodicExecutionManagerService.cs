@@ -73,7 +73,7 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
 
     public bool IsValid(ulong jobId)
     {
-        return executionManager.IsValid(jobId);
+        return executionManager.JobExists(jobId);
     }
 
     private async Task<bool> RemovePeriodicJob(ulong jobId)
