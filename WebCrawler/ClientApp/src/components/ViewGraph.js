@@ -229,7 +229,7 @@ class ViewGraphInternal extends Component {
 
       for (const node of graphJson.Graph) {
         // if regex doesn't match is orange
-        const color = new RegExp(recordForGraph.crawlInfo.regexPattern).test(
+        const color = new RegExp(recordForGraph.crawlInfoData.regexPattern).test(
           node.Url
         )
           ? ViewGraphInternal.stringToColour(recordForGraph.label)
@@ -240,7 +240,7 @@ class ViewGraphInternal extends Component {
         // present but this one is newer
         if (alreadyPresentNode) {
           if (
-            Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
+            Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started) >
             alreadyPresentNode.started
           ) {
             console.log(alreadyPresentNode);
@@ -249,7 +249,7 @@ class ViewGraphInternal extends Component {
             alreadyPresentNode.title = node.Title;
             alreadyPresentNode.crawlTime = node.CrawlTime;
             alreadyPresentNode.started = Date.parse(
-              recordForGraph.crawlInfo.lastExecution.started
+              recordForGraph.crawlInfoData.lastExecutionData.started
             );
 
             alreadyPresentNode.color = color;
@@ -261,7 +261,7 @@ class ViewGraphInternal extends Component {
             url: node.Url,
             title: node.Title,
             crawlTime: node.CrawlTime,
-            started: Date.parse(recordForGraph.crawlInfo.lastExecution.started),
+            started: Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started),
             inWhichRecords: [
               { label: recordForGraph.label, id: recordForGraph.id },
             ],
