@@ -19,7 +19,6 @@ public class DataService : IDataService
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-        
         _logger.LogInformation("Migrating database...");
         await context.Database.MigrateAsync();
         _logger.LogInformation("Migration complete");

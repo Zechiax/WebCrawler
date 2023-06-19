@@ -13,8 +13,7 @@ class CrawlerManager
 
         for (int index = 0; index < config.CrawlersCount; index++)
         {
-            var logger = services.GetRequiredService<ILogger<Crawler>>();
-            crawlers[index] = new Crawler(logger, dataService, toCrawlQueue, (IWebsiteProvider)Activator.CreateInstance(config.TWebsiteProvider)!);
+            crawlers[index] = new Crawler(services.GetRequiredService<ILogger<Crawler>>(), dataService, toCrawlQueue, (IWebsiteProvider)Activator.CreateInstance(config.TWebsiteProvider)!);
         }
     }
 
