@@ -5,7 +5,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import { MaterialReactTable } from "material-react-table";
 
 // Material UI Imports
-import { Box, Button, ListItemIcon, MenuItem, Typography } from "@mui/material";
+import {Box, Button, ListItemIcon, MenuItem, Typography} from "@mui/material";
 
 // Icons Imports
 import { Delete, Edit } from "@mui/icons-material";
@@ -33,29 +33,30 @@ const Records = () => {
         header: "Name",
         size: 250,
       },
-      {
-        accessorKey: "isActive",
-        header: "Status",
-        size: 150,
-        Cell: ({ cell }) => (
-          <Box
-            component="span"
-            sx={(theme) => ({
-              backgroundColor:
-                cell.getValue() === true
-                  ? theme.palette.success.dark
-                  : theme.palette.error.dark,
-              borderRadius: "0.25rem",
-              color: "#fff",
-              maxWidth: "9ch",
-              p: "0.25rem",
-            })}
-          >
-            {cell.getValue() === true ? "Active" : "Inactive"}
-          </Box>
-        ),
-      },
-      {
+        {
+            accessorFn: (row) => row.isActive ? 'true' : 'false',
+            header: "Status",
+            size: 150,
+            filterVariant: 'checkbox',
+            Cell: ({ cell }) => (
+                <Box
+                    component="span"
+                    sx={(theme) => ({
+                        backgroundColor:
+                            cell.getValue() === 'true'
+                                ? theme.palette.success.dark
+                                : theme.palette.error.dark,
+                        borderRadius: "0.25rem",
+                        color: "#fff",
+                        maxWidth: "9ch",
+                        p: "0.25rem",
+                    })}
+                >
+                    {cell.getValue() === 'true' ? "Active" : "Inactive"}
+                </Box>
+            ),
+        },
+        {
         accessorKey: "created",
         id: "creationDate",
         header: "Created",
@@ -74,7 +75,7 @@ const Records = () => {
       enableGrouping
       enableRowActions
       enableRowSelection
-      initialState={{ showColumnFilters: false }}
+      initialState={{ showColumnFilters: true }}
       positionToolbarAlertBanner="bottom"
       renderDetailPanel={({ row }) => (
         <Box>
