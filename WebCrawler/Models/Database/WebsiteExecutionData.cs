@@ -8,6 +8,5 @@ public class WebsiteExecutionData
     public int Id { get; set; }
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
-    public string WebsiteGraphSnapshotJson { get; set; } = null!;
-    public WebsiteExecutionData() {}
+    public string? WebsiteGraphSnapshotJson { get; set; }
 }

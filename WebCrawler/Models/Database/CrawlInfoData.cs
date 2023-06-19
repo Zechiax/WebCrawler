@@ -12,8 +12,8 @@ public record CrawlInfoData
     public string EntryUrl { get; init; } = null!;
     public string RegexPattern { get; init; } = ".*";
     public TimeSpan Periodicity { get; init; }
-    public WebsiteExecutionData? LastExecution { get; set; }
-    public int WebsiteRecordId { get; set; }
+    public WebsiteExecutionData? LastExecutionData { get; set; }
+    public int WebsiteRecordDataId { get; set; }
 
     /// <summary>
     /// Constructor for EF Core

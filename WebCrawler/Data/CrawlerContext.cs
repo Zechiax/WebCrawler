@@ -10,7 +10,7 @@ public class CrawlerContext : DbContext
     public DbSet<WebsiteRecordData> WebsiteRecords { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
     public DbSet<WebsiteExecutionData> Executions { get; set; } = null!;
-    public DbSet<CrawlInfo> CrawlInfos { get; set; } = null!;
+    public DbSet<CrawlInfoData> CrawlInfos { get; set; } = null!;
     
     public CrawlerContext(DbContextOptions<CrawlerContext> options) : base(options)
     {
@@ -19,9 +19,9 @@ public class CrawlerContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<WebsiteRecordData>()
-            .HasOne(e => e.CrawlInfo)
+            .HasOne(e => e.CrawlInfoData)
             .WithOne()
-            .HasForeignKey<CrawlInfo>(c => c.WebsiteRecordId) 
+            .HasForeignKey<CrawlInfoData>(c => c.WebsiteRecordDataId) 
             .IsRequired();
 
         modelBuilder.Entity<WebsiteRecordData>()
@@ -30,19 +30,19 @@ public class CrawlerContext : DbContext
             .UsingEntity<Dictionary<string, object>>(
                 "TagWebsiteRecord",
                 r => r.HasOne<Tag>().WithMany().HasForeignKey("TagsId").OnDelete(DeleteBehavior.Cascade),
-                l => l.HasOne<WebsiteRecordData>().WithMany().HasForeignKey("WebsiteRecordsId").OnDelete(DeleteBehavior.Cascade)
+                l => l.HasOne<WebsiteRecordData>().WithMany().HasForeignKey("WebsiteRecordsDataId").OnDelete(DeleteBehavior.Cascade)
             );
 
-        modelBuilder.Entity<CrawlInfo>()
+        modelBuilder.Entity<CrawlInfoData>()
             .Property(e => e.RegexPattern)
             .HasDefaultValue(".*");
     
         modelBuilder.Ignore<WebsiteExecutionData>(); // Add this line
 
-        modelBuilder.Entity<CrawlInfo>()
-            .HasOne(e => e.LastExecution)
+        modelBuilder.Entity<CrawlInfoData>()
+            .HasOne(e => e.LastExecutionData)
             .WithOne()
-            .HasForeignKey<WebsiteExecutionData>("CrawlInfoId");
+            .HasForeignKey<WebsiteExecutionData>("CrawlInfoDataId");
     }
 
 
