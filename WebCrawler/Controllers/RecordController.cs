@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
@@ -120,12 +119,16 @@ public class RecordController : OurControllerBase
 
     [HttpPatch]
     [Route("{id:int}")]
-    public IActionResult UpdateRecord(int id, [FromBody] WebsiteRecord record)
+    public async Task<IActionResult> UpdateRecord(int id, [FromBody] WebsiteRecord record)
     {
         try
         {
-            _dataService.UpdateWebsiteRecord(id, record).Wait();
+            await _dataService.UpdateWebsiteRecord(id, record);
             return Ok();
+        }
+        catch (EntryNotFoundException e)
+        {
+            return NotFound(e.Message);
         }
         catch
         {
@@ -227,16 +230,20 @@ public class RecordController : OurControllerBase
 
     [HttpDelete]
     [Route("{id:int}")]
-    public IActionResult DeleteRecord(int id)
+    public async Task<IActionResult> DeleteRecord(int id)
     {
         try
         {
-            _dataService.DeleteWebsiteRecord(id).Wait();
+            await _dataService.DeleteWebsiteRecord(id);
             return Ok();
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
         }
         catch
         {
-            return StatusCode(InternalErrorCode);
+            return StatusCode(InternalErrorCode);   
         }
     }
 
