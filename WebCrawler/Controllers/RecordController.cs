@@ -69,7 +69,7 @@ public class RecordController : OurControllerBase
             _executionManager.EnqueueForPeriodicCrawl(crawlInfo, (ulong)returnedRecord.Id);
         }
 
-        return Ok(websiteRecord.Id);
+        return Ok(id);
     }
 
     [HttpPatch]
@@ -95,33 +95,31 @@ public class RecordController : OurControllerBase
     [Route("livegraph/domains/{id:int}")]
     public IActionResult LiveGraphDomains(int id)
     {
-        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
+        string? graphJson = GetLiveGraphJson(id);
 
-        if(graph is null)
+        if(graphJson is null)
         {
             return StatusCode(BadRequestCode, "There is no graph");
         }
-
-        string jsonGraph = WebsiteGraphSnapshot.JsonConverterToDomainView.Serialize(graph.Value);
-        return Ok(jsonGraph);
+        
+        return Ok(graphJson);
     }
 
     [HttpGet]
     [Route("livegraph/websites/{id:int}")]
     public IActionResult LiveGraphWebsites(int id)
     {
-        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
+        string? graphJson = GetLiveGraphJson(id);
 
-        if(graph is null)
+        if(graphJson is null)
         {
             return StatusCode(BadRequestCode, "There is no graph");
         }
-
-        string jsonGraph = WebsiteGraphSnapshot.JsonConverter.Serialize(graph.Value);
-        return Ok(jsonGraph);
+        
+        return Ok(graphJson);
     }
 
-    private WebsiteGraphSnapshot? GetLiveGraph(int id)
+    private string? GetLiveGraphJson(int id)
     {
         if(!TryGetWebsiteRecord(id, out WebsiteRecordData? record))
         {
@@ -133,11 +131,11 @@ public class RecordController : OurControllerBase
         try
         {
             WebsiteGraphSnapshot graph = _executionManager.GetLiveGraph(jobId);
-            return graph;
+            return WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
         }
         catch
         {
-            return null;
+            return record.CrawlInfoData.LastExecutionData?.WebsiteGraphSnapshotJson;
         }
     }
 
