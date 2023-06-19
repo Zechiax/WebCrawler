@@ -160,16 +160,22 @@ const Records = () => {
             renderTopToolbarCustomActions={({table}) => {
                 const handleDeactivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
-                        alert("deactivating " + row.getValue("name"));
+                        fetch(`record/stop/${row.original.id}`, {
+                            method: 'POST',
+                        });
                         return null;
                     });
+                    window.location.reload();
                 };
 
                 const handleActivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
-                        alert("activating " + row.getValue("name"));
+                        fetch(`record/run/${row.original.id}`, {
+                            method: 'POST',
+                        });
                         return null;
                     });
+                    window.location.reload();
                 };
 
                 const handleViewGraph = () => {
@@ -179,8 +185,6 @@ const Records = () => {
                         selectedGraphsIds.push(row.original.id);
                         return null;
                     });
-
-                    alert("viewing graph for " + selectedGraphsIds);
 
                     navigate('/Graph', {state: {ids: selectedGraphsIds}});
                 };

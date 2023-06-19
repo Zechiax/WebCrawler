@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
-import { NavLink } from "react-router-dom";
 import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 import PaginatedView from "./PaginatedView";
 
@@ -15,12 +12,14 @@ export class Home extends Component {
 
     this.state = {
       isCreateWebsiteRecordModalShown: false,
-      selectedGraphsIds: [6, 7, 8], // TODO
     };
   }
 
-  onCreateWebsiteRecordModalClose = () =>
-    this.setState({ isCreateWebsiteRecordModalShown: false });
+    onCreateWebsiteRecordModalClose = () => {
+        this.setState({ isCreateWebsiteRecordModalShown: false });
+        window.location.reload();
+    }
+
 
   render() {
     return (
