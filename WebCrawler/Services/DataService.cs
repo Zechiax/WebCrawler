@@ -62,14 +62,16 @@ public class DataService : IDataService
         return record;
     }
 
-    public async Task AddWebsiteRecord(WebsiteRecord websiteRecord)
+    public async Task<int> AddWebsiteRecord(WebsiteRecord websiteRecord)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        context.WebsiteRecords.Add(websiteRecord);
+        var record = await context.WebsiteRecords.AddAsync(websiteRecord);
         
         await context.SaveChangesAsync();
+        
+        return record.Entity.Id;
     }
 
     public async Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord)

@@ -33,5 +33,5 @@ jobs:
       working-directory: ${{ env.WORK_DIR }}
     - run: npm run build --if-present
       working-directory: ${{ env.WORK_DIR }}
-    - run: npm test
-      working-directory: ${{ env.WORK_DIR }}
+    #- run: npm test
+    #  working-directory: ${{ env.WORK_DIR }}

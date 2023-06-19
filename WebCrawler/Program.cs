@@ -1,4 +1,5 @@
 using System.Reflection;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using WebCrawler.Data;
 using WebCrawler.Interfaces;
@@ -44,6 +45,8 @@ builder.Services.AddMvcCore(options =>
 {
     options.InputFormatters.Insert(0, new JsonFromBodyFormatter());
 });
+
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 var app = builder.Build();
 

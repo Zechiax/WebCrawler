@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
+using FluentValidation;
+using FluentValidation.Results;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
+using WebCrawler.Models.Exceptions;
 
 namespace WebCrawler.Controllers;
 
@@ -11,10 +13,12 @@ public class RecordController : OurControllerBase
 {
     private readonly IDataService _dataService;
     private readonly IPeriodicExecutionManagerService _executionManager;
+    private readonly IValidator<CreateRecordRequestDto> _recordValidator;
 
-    public RecordController(IDataService dataService, IPeriodicExecutionManagerService executionManager) {
+    public RecordController(IValidator<CreateRecordRequestDto> recordValidator,IDataService dataService, IPeriodicExecutionManagerService executionManager) {
         _dataService = dataService;
         _executionManager = executionManager;
+        _recordValidator = recordValidator;
     }
 
     [HttpGet]
@@ -30,101 +34,45 @@ public class RecordController : OurControllerBase
     }
 
     [HttpPost]
-    public IActionResult CreateRecord([FromBody] string jsonRaw)
+    public IActionResult CreateRecord([FromBody] CreateRecordRequestDto record)
     {
-        if (string.IsNullOrEmpty(jsonRaw))
+        ValidationResult result = _recordValidator.Validate(record);
+        
+        if (!result.IsValid)
         {
-            return StatusCode(BadRequestCode);
+            return BadRequest(JsonConvert.SerializeObject(result.Errors));
         }
-
-        var jsonObjScheme = new
+        
+        var websiteRecord = new WebsiteRecord
         {
-            Label = default(string),
-            Url = default(string),
-            Regex = default(string),
-            Periodicity = default(string),
-            IsActive = default(string),
-            Tags = default(string?[]) 
+            Label = record.Label,
+            IsActive = record.IsActive,
+            Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList(),
+            CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromMinutes(record.Periodicity))
         };
 
-        try
+        _dataService.AddWebsiteRecord(websiteRecord).Wait();
+        
+        if (websiteRecord.IsActive)
         {
-            var jsonObj = JsonConvert.DeserializeAnonymousType(jsonRaw, jsonObjScheme)!;
-
-            if (string.IsNullOrWhiteSpace(jsonObj.Label) || jsonObj.Label.Length > 30 || jsonObj.Label.Length == 0)
-            {
-                return StatusCode(BadRequestCode, "Label is invalid.");
-            }
-
-            if (jsonObj.IsActive is not null && jsonObj.IsActive != "on")
-            {
-                return StatusCode(BadRequestCode, "IsActive is invalid.");
-            }
-
-            if (string.IsNullOrWhiteSpace(jsonObj.Url) || !Uri.TryCreate(jsonObj.Url, UriKind.Absolute, out var uriResult) && uriResult?.Scheme == Uri.UriSchemeHttp)
-            {
-                return StatusCode(BadRequestCode, "Url is invalid.");
-            }
-
-            if (string.IsNullOrWhiteSpace(jsonObj.Periodicity) || jsonObj.Periodicity.Length > 15)
-            {
-                return StatusCode(BadRequestCode, "Periodicity is invalid");
-            }
-
-            if (string.IsNullOrWhiteSpace(jsonObj.Regex))
-            {
-                return StatusCode(BadRequestCode, "Regex is invalid.");
-            }
-
-            try
-            {
-                Regex.Match("", jsonObj.Regex);
-            }
-            catch (ArgumentException)
-            {
-                return StatusCode(BadRequestCode, "Regex is invalid.");
-            }
-
-            if (jsonObj.Tags is null || jsonObj.Tags.Length >= 50)
-            {
-                return StatusCode(BadRequestCode, "Tags are invalid.");
-            }
-
-            if (jsonObj.Tags.Any(tag => tag is null || tag.Length > 30) || (jsonObj.Tags.ToHashSet().Count != jsonObj.Tags.Length))
-            {
-                return StatusCode(BadRequestCode, "Tags are invalid.");
-            }
-
-            WebsiteRecord record = new(); 
-            record.Created = DateTime.UtcNow;
-
-            record.Label = jsonObj.Label;
-            record.IsActive = jsonObj.IsActive == "on";
-            record.Tags = jsonObj.Tags.Select(tagName => new Tag(tagName!)).ToList();
-            record.CrawlInfo = new CrawlInfo(jsonObj.Url, jsonObj.Regex, TimeSpan.FromMinutes(int.Parse(jsonObj.Periodicity)));
-
-            if (record.IsActive)
-            {
-                record.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(record.CrawlInfo);
-            }
-
-            _dataService.AddWebsiteRecord(record!).Wait();
-            return Ok(record.Id);
+            websiteRecord.CrawlInfo.JobId = _executionManager.EnqueueForPeriodicCrawl(websiteRecord.CrawlInfo);
         }
-        catch
-        {
-            return StatusCode(BadRequestCode, "Something went wrong.");
-        }
+
+        return Ok(websiteRecord.Id);
     }
 
     [HttpPatch]
     [Route("{id:int}")]
-    public IActionResult UpdateRecord(int id, [FromBody] WebsiteRecord record)
+    public async Task<IActionResult> UpdateRecord(int id, [FromBody] WebsiteRecord record)
     {
         try
         {
-            _dataService.UpdateWebsiteRecord(id, record).Wait();
+            await _dataService.UpdateWebsiteRecord(id, record);
             return Ok();
+        }
+        catch (EntryNotFoundException e)
+        {
+            return NotFound(e.Message);
         }
         catch
         {
@@ -226,16 +174,20 @@ public class RecordController : OurControllerBase
 
     [HttpDelete]
     [Route("{id:int}")]
-    public IActionResult DeleteRecord(int id)
+    public async Task<IActionResult> DeleteRecord(int id)
     {
         try
         {
-            _dataService.DeleteWebsiteRecord(id).Wait();
+            await _dataService.DeleteWebsiteRecord(id);
             return Ok();
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
         }
         catch
         {
-            return StatusCode(InternalErrorCode);
+            return StatusCode(InternalErrorCode);   
         }
     }
 
@@ -248,7 +200,7 @@ public class RecordController : OurControllerBase
             record = _dataService.GetWebsiteRecord(id).Result;
             return true;
         }
-        catch (KeyNotFoundException)
+        catch (EntryNotFoundException)
         {
             return false;
         }
