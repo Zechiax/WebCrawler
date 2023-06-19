@@ -129,11 +129,17 @@ const Records = () => {
                     </Typography>
                 </Box>
             )}
-            renderRowActionMenuItems={({closeMenu}) => [
+            renderRowActionMenuItems={({closeMenu, row}) => [
                 <MenuItem
                     key={0}
                     onClick={() => {
-                        // Delete logic...
+                        const confirmed = window.confirm('Are you sure you want to delete this record?');
+                        if (confirmed) {
+                            fetch(`record/${row.original.id}`, {
+                                method: 'DELETE',
+                            });
+                            console.log(row.original.id);
+                        }
                         closeMenu();
                     }}
                     sx={{m: 0}}
@@ -189,6 +195,19 @@ const Records = () => {
                     navigate('/Graph', {state: {ids: selectedGraphsIds}});
                 };
 
+                const handleDelete = () => {
+                    const confirmed = window.confirm('Are you sure you want to delete this record?');
+                    if (confirmed) {
+                        table.getSelectedRowModel().flatRows.map((row) => {
+                            fetch(`record/${row.original.id}`, {
+                                method: 'DELETE',
+                            });
+                            return null;
+                        });
+                        window.location.reload();
+                    }
+                };
+
                 return (
                     <div style={{display: "flex", gap: "0.5rem"}}>
                         <Button
@@ -214,6 +233,20 @@ const Records = () => {
                             variant="contained"
                         >
                             View Graph
+                        </Button>
+                        <Button
+                            disabled={!table.getIsSomeRowsSelected()}
+                            onClick={handleDelete}
+                            variant="contained"
+                            color="error"
+                            sx={{
+                                color: 'red',
+                                borderColor: 'red',
+                                backgroundColor: 'white',
+                            }}
+                        >
+                            Delete
+                            <Delete />
                         </Button>
                     </div>
                 );
