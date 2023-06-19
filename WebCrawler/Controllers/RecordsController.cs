@@ -3,9 +3,7 @@ using WebCrawler.Interfaces;
 
 namespace WebCrawler.Controllers;
 
-[ApiController]
-[Route("[controller]")]
-public class RecordsController : OurController
+public class RecordsController : OurControllerBase
 {
     private readonly IDataService _dataService;
     public RecordsController(IDataService dataService)

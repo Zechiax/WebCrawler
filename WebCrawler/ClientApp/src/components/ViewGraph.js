@@ -2,6 +2,10 @@ import React, { Component } from "react";
 import { useLocation } from "react-router";
 import Button from "react-bootstrap/Button";
 import * as d3 from "d3";
+import Modal from "react-bootstrap/Modal";
+import ListGroup from "react-bootstrap/ListGroup";
+import { Label } from "reactstrap";
+import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 
 export const ViewGraph = (props) => {
   const location = useLocation();
@@ -19,20 +23,30 @@ class ViewGraphInternal extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      graphsIds: [...props.ids],
       nodes: [],
       links: [],
-      loading: true,
       isWebsitesView: false,
       isLiveView: false,
       currentlySelectedNodeInfo: [],
+      nodeInfo: {
+        show: false,
+        title: null,
+        url: null,
+        crawlTime: null,
+        records: [],
+      },
+      createNewWebsiteRecord: {
+        show: false,
+      },
     };
   }
 
   renderGraph(graph) {
     const nodes = graph.nodes.map((node) => Object.create(node));
     const links = graph.links.map((link) => Object.create(link));
-    this.setState({ nodes: nodes });
-    this.setState({ links: links });
+
+    const self = this;
 
     const nodeInfo = d3.select(".content .nodeInfo");
 
@@ -51,12 +65,10 @@ class ViewGraphInternal extends Component {
       .force("charge", d3.forceManyBody().strength(-5))
       .force(
         "center",
-        d3
-          .forceCenter(
-            350, //TODO - calculate center somehow from svg dimension
-            350
-          )
-          .strength(150)
+        d3.forceCenter(
+          350, //TODO - calculate center somehow from svg dimension
+          350
+        )
       );
 
     // TODO: Attempt to implement dragging, but doesn't work for some reason
@@ -112,14 +124,17 @@ class ViewGraphInternal extends Component {
         return d.color;
       })
       .on("click", function (e, d, i) {
-        nodeInfo.selectAll("ul").remove();
-        svg
-          .selectAll("circle")
-          .filter(function () {
-            return d3.select(this).attr("fill") === "red";
-          })
-          .attr("fill", d.color);
-
+        self.setState({
+          nodeInfo: {
+            show: true,
+            title: d.title,
+            url: d.url,
+            crawlTime: d.crawlTime,
+            records: d.inWhichRecords,
+          },
+        });
+      })
+      .on("mouseover", function (e, d, i) {
         nodeInfo
           .append("div")
           .style("font-size", "12px")
@@ -131,9 +146,20 @@ class ViewGraphInternal extends Component {
           .append("li")
           .text("Crawl time: " + d.crawlTime)
           .append("li")
-          .text(d.inWhichGraphs.map((graphId) => graphId));
+          .text(
+            d.inWhichRecords.map((record) => `${record.label}(${record.id})`)
+          );
 
         d3.select(this).attr("fill", "red");
+      })
+      .on("mouseout", function (e, d, i) {
+        nodeInfo.selectAll("ul").remove();
+        svg
+          .selectAll("circle")
+          .filter(function () {
+            return d3.select(this).attr("fill") === "red";
+          })
+          .attr("fill", d.color);
       });
 
     simulation.nodes(nodes).on("tick", () => {
@@ -156,33 +182,23 @@ class ViewGraphInternal extends Component {
   }
 
   componentDidMount() {
-    this.fetchAndRerenderGraph();
+    this.fetchAndRerenderGraph("Record/livegraph/domains/");
   }
 
-  fetchAndRerenderGraph() {
-    this.setState({ loading: true });
-    this.getGraphAsync()
-      .then((graph) => this.renderGraph(graph))
-      .then(this.setState({ loading: false }));
+  fetchAndRerenderGraph(urlbase) {
+    console.log(urlbase);
+    this.getGraphAsync(urlbase).then((graph) => this.renderGraph(graph));
   }
 
-  async getGraphAsync() {
-    let urlBase = "";
-
-    if (this.state.isWebsitesView) {
-      urlBase = "/Record/livegraph/websites/";
-    } else {
-      urlBase = "/Record/livegraph/domains/";
-    }
-
-    console.log(urlBase);
+  async getGraphAsync(urlbase) {
+    console.log(urlbase);
 
     const graphsJson = [];
 
-    console.log(this.props.ids);
+    console.log(this.state.graphsIds);
 
-    for (const id of this.props.ids) {
-      const response = await fetch(urlBase + id);
+    for (const id of this.state.graphsIds) {
+      const response = await fetch(urlbase + id);
 
       if (response.ok) {
         const graphJson = await response.json();
@@ -239,14 +255,16 @@ class ViewGraphInternal extends Component {
             alreadyPresentNode.color = color;
           }
 
-          alreadyPresentNode.inWhichGraphs.push(recordForGraph.label);
+          alreadyPresentNode.inWhichRecords.push(recordForGraph.label);
         } else {
           graph.nodes.push({
             url: node.Url,
             title: node.Title,
             crawlTime: node.CrawlTime,
             started: Date.parse(recordForGraph.crawlInfo.lastExecution.started),
-            inWhichGraphs: [recordForGraph.label],
+            inWhichRecords: [
+              { label: recordForGraph.label, id: recordForGraph.id },
+            ],
             color: color,
           });
         }
@@ -255,12 +273,13 @@ class ViewGraphInternal extends Component {
           graph.links.push({
             source: node.Url,
             target: neighbourUrl,
-            forWhichGraph: recordForGraph.label,
           });
         }
       }
     }
 
+    console.log("converted graph for d3");
+    console.log(graph);
     return graph;
   }
 
@@ -278,7 +297,7 @@ class ViewGraphInternal extends Component {
     return colour;
   }
 
-  updateGraph() {
+  updateGraph(urlbase) {
     // TODO: attempt for live update instead of rererending the whole graph all the time - not working
     /*     this.setState((state, props) => ({
       nodes: [
@@ -306,7 +325,7 @@ class ViewGraphInternal extends Component {
     // */
 
     this.deleteGraph();
-    this.fetchAndRerenderGraph();
+    this.fetchAndRerenderGraph(urlbase);
   }
 
   deleteGraph() {
@@ -315,87 +334,199 @@ class ViewGraphInternal extends Component {
   }
 
   render() {
-    let loading = "";
-    if (this.state.loading) {
-      loading = (
-        <p>
-          <em>Loading ...</em>
-        </p>
-      );
-    }
-
     return (
-      <div className="content">
-        <div
-          className="nodeInfo"
-          style={{
-            position: "absolute",
-            zIndex: 1,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "85vw",
-          }}
-        >
-          <Button
+      <>
+        <div className="content">
+          <div
+            className="nodeInfo"
             style={{
-              width: "130px",
+              position: "absolute",
+              zIndex: 1,
             }}
-            variant="primary"
-            onClick={(e) => {
-              this.setState((state, props) => ({
-                isWebsitesView: !state.isWebsitesView,
-              }));
-
-              this.deleteGraph();
-              this.fetchAndRerenderGraph();
-            }}
-          >
-            {this.state.isWebsitesView ? "Websites view" : "Domains view"}
-          </Button>
-          <Button
-            style={{
-              marginTop: "10px",
-              width: "130px",
-            }}
-            variant="primary"
-            onClick={(e) => {
-              this.setState((state, props) => ({
-                isLiveView: !state.isLiveView,
-              }));
-            }}
-          >
-            {this.state.isLiveView ? "Live view" : "Static view"}
-          </Button>
-        </div>
-        {!this.state.isLiveView ? (
+          />
           <div
             style={{
-              position: "fixed",
+              position: "absolute",
               left: "85vw",
-              bottom: "2vw",
+            }}
+          >
+            <Button
+              style={{
+                width: "130px",
+              }}
+              variant="primary"
+              onClick={() => {
+                this.setState((oldState, props) => {
+                  let state = {
+                    ...oldState,
+                  };
+
+                  state.isWebsitesView = !oldState.isWebsitesView;
+                  return state;
+                });
+
+                this.deleteGraph();
+                const urlbase = this.state.isWebsitesView
+                  ? "/Record/livegraph/domains/"
+                  : "/Record/livegraph/websites/";
+                this.fetchAndRerenderGraph(urlbase);
+              }}
+            >
+              {this.state.isWebsitesView ? "Websites view" : "Domains view"}
+            </Button>
+            <Button
+              style={{
+                marginTop: "10px",
+                width: "130px",
+              }}
+              variant="primary"
+              onClick={() => {
+                this.setState((oldState, props) => {
+                  let state = {
+                    ...oldState,
+                  };
+
+                  state.isLiveView = !oldState.isLiveView;
+                  return state;
+                });
+              }}
+            >
+              {this.state.isLiveView ? "Live view" : "Static view"}
+            </Button>
+          </div>
+          {!this.state.isLiveView ? (
+            <div
+              style={{
+                position: "fixed",
+                left: "85vw",
+                bottom: "2vw",
+              }}
+            >
+              <Button
+                onClick={() => {
+                  const urlbase = !this.state.isWebsitesView
+                    ? "/Record/livegraph/domains/"
+                    : "/Record/livegraph/websites/";
+                  this.updateGraph(urlbase);
+                }}
+              >
+                Update Graph
+              </Button>
+            </div>
+          ) : (
+            <div></div>
+          )}
+          <svg
+            style={{
+              zIndex: 0,
+            }}
+          ></svg>
+        </div>
+
+        <Modal
+          show={this.state.nodeInfo.show}
+          onHide={() => {
+            this.setState((oldState, props) => {
+              let state = {
+                ...oldState,
+              };
+
+              state.nodeInfo = {
+                show: false,
+              };
+
+              return state;
+            });
+          }}
+          size="lg"
+          centered
+        >
+          <Modal.Header closeButton>Node Info</Modal.Header>
+          <ListGroup
+            style={{
+              margin: 10,
+            }}
+          >
+            <ListGroup.Item>title: {this.state.nodeInfo.title}</ListGroup.Item>
+            <ListGroup.Item>url: {this.state.nodeInfo.url}</ListGroup.Item>
+            <ListGroup.Item>
+              crawl time: {this.state.nodeInfo.crawlTime}
+            </ListGroup.Item>
+            <Label
+              style={{
+                marginTop: "20px",
+                marginLeft: "16px",
+              }}
+            >
+              Website records
+            </Label>
+            <ListGroup>
+              {this.state.nodeInfo.records?.map((record, i) => {
+                return (
+                  // TODO: add arrow that will reveal more info about website record - component from home.js table
+                  // HOW: we have id, so just fetch the record from server and bind it to the props
+                  <ListGroup.Item
+                    key={i}
+                    variant="light"
+                  >{`${record.label}(${record.id})`}</ListGroup.Item>
+                );
+              })}
+            </ListGroup>
+          </ListGroup>
+          <div
+            style={{
+              margin: 10,
             }}
           >
             <Button
               onClick={() => {
-                this.updateGraph();
+                this.setState((oldState, props) => {
+                  let state = {
+                    ...oldState,
+                  };
+
+                  state.createNewWebsiteRecord = {
+                    show: true,
+                  };
+
+                  return state;
+                });
+              }}
+              variant="primary"
+              style={{
+                fontSize: 12,
+                width: 300,
               }}
             >
-              Update Graph
+              Create new website record from this node
             </Button>
           </div>
-        ) : (
-          <div></div>
-        )}
-        {loading}
-        <svg
-          style={{
-            zIndex: 0,
+        </Modal>
+
+        <CreateWebsiteRecordModalWindow
+          show={this.state.createNewWebsiteRecord.show}
+          passCreatedRecordId={(id) => {
+            this.setState((oldState, props) => ({
+              graphsIds: [...oldState.graphsIds, id],
+            }));
           }}
-        ></svg>
-      </div>
+          urlPresetValue={this.state.nodeInfo.url}
+          labelPresetValue={this.state.nodeInfo.title}
+          onClose={() =>
+            this.setState((oldState, props) => {
+              let state = {
+                ...oldState,
+              };
+
+              state.createNewWebsiteRecord = {
+                show: false,
+              };
+
+              return state;
+            })
+          }
+        />
+      </>
     );
   }
 }

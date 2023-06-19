@@ -15,7 +15,7 @@ export class Home extends Component {
 
     this.state = {
       isCreateWebsiteRecordModalShown: false,
-      selectedGraphsIds: [23, 24], // TODO
+      selectedGraphsIds: [6, 7, 8], // TODO
     };
   }
 
@@ -63,6 +63,9 @@ export class Home extends Component {
 
         <CreateWebsiteRecordModalWindow
           show={this.state.isCreateWebsiteRecordModalShown}
+          urlPresetValue="https://cs.wikipedia.org/wiki/Hlavn%C3%AD_strana"
+          labelPresetValue="Wikipedie"
+          passCreatedRecordId={(id) => {}}
           onClose={this.onCreateWebsiteRecordModalClose}
         />
       </>

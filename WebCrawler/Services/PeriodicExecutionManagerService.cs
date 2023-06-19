@@ -26,10 +26,7 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
     {
         ulong jobId;
 
-        lock (executionManager)
-        {
-            jobId = executionManager.EnqueueForCrawl(crawlInfo);
-        }
+        jobId = executionManager.EnqueueForCrawl(crawlInfo);
 
         periodicJobs[jobId] = new PeriodicWebsiteExecutionJob(
             crawlInfo.Periodicity,
@@ -47,42 +44,27 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
 
     public Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)
     {
-        lock (executionManager)
-        {
-            return executionManager.GetFullGraphAsync(jobId);
-        }
+        return executionManager.GetFullGraphAsync(jobId);
     }
 
     public WebsiteGraphSnapshot GetLiveGraph(ulong jobId)
     {
-        lock (executionManager)
-        {
-            return executionManager.GetLiveGraph(jobId);
-        }
+        return executionManager.GetLiveGraph(jobId);
     }
 
     public JobStatus GetJobStatus(ulong jobId)
     {
-        lock (executionManager)
-        {
-            return executionManager.GetJobStatus(jobId);
-        }
+        return executionManager.GetJobStatus(jobId);
     }
 
     public Task<bool> StopCurrentExecutionAsync(ulong jobId)
     {
-        lock (executionManager)
-        {
-            return executionManager.StopExecutionAsync(jobId);
-        }
+        return executionManager.StopExecutionAsync(jobId);
     }
 
-    public bool StopPeriodicExecutionAsync(ulong jobId)
+    public bool StopPeriodicExecution(ulong jobId)
     {
-        lock (executionManager)
-        {
-            _ = executionManager.StopExecutionAsync(jobId).Result;
-        }
+        _ = executionManager.StopExecutionAsync(jobId).Result;
 
         bool wasPeriodicJobStopped = RemovePeriodicJob(jobId).Result;
         return wasPeriodicJobStopped;
@@ -90,10 +72,7 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
 
     public void WaitForExecutionToFinish(ulong jobId)
     {
-        lock (executionManager)
-        {
-            executionManager.WaitForExecutionToFinish(jobId);
-        }
+        executionManager.WaitForExecutionToFinish(jobId);
     }
 
     public bool IsValid(ulong jobId)
