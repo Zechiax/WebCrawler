@@ -167,7 +167,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
         const options = {
             physics: {
-                stabilization: true,
+                stabilization: false,
                 barnesHut: {
                     gravitationalConstant: -80000,
                     springConstant: 0.001,
@@ -201,7 +201,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
             },
-            height: "1000px"
+            height: "100%"
         };
 
         // initialize your network!
@@ -223,7 +223,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
     }
 
     render() {
-        return <div ref={this.graphRef} style={{height: "1000px"}} />;
+        return <div ref={this.graphRef} className="full-height" />;
     }
 }
 
