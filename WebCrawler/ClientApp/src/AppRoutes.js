@@ -1,5 +1,5 @@
 import { Home } from "./components/Home";
-import { ViewGraph } from "./components/ViewGraph";
+import ViewGraphNG from "./components/ViewGraphNG";
 
 const AppRoutes = [
   {
@@ -8,7 +8,7 @@ const AppRoutes = [
   },
   {
     path: "/Graph",
-    element: <ViewGraph />,
+    element: <ViewGraphNG />,
   },
 ];
 
