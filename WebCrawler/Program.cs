@@ -24,6 +24,7 @@ builder.Services.AddSwaggerGen(options =>
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .WriteTo.Console()
+    .WriteTo.Debug()
     .WriteTo.Async(a => a.File("logs/log.txt", rollingInterval: RollingInterval.Day))
     .CreateLogger();
 
