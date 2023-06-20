@@ -40,7 +40,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 nodes: [],
                 edges: []
             },
-            graphsIds: [10, 11]
+            graphsIds: [6]
         };
     }
 
@@ -173,7 +173,8 @@ class ViewGraphNG extends React.Component<{}, IState> {
             edges: {
                 smooth: false,
                 color: {
-                    inherit: true
+                    color: "#E6E5E6",
+                    inherit: false
                 }
             },
             nodes: {
