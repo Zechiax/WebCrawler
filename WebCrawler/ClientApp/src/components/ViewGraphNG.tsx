@@ -2,32 +2,134 @@ import React from 'react';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 
 interface INode {
-    id: number;
+    id: string;
     label: string;
+    color: string;
+    started?: string;
+    fixed?: {
+        x: boolean,
+        y: boolean
+    };
 }
 
 interface IEdge {
     id: string;
-    from: number;
-    to: number;
+    from: string;
+    to: string;
 }
 
-class ViewGraphNG extends React.Component {
+interface IGraphData {
+    nodes: INode[];
+    edges: IEdge[];
+}
+
+interface IState {
+    graphData: IGraphData;
+    graphsIds: number[];
+}
+
+
+class ViewGraphNG extends React.Component<{}, IState> {
     private graphRef = React.createRef<HTMLDivElement>();
+    private network?: Network;
+
+    constructor(props: {}) {
+        super(props);
+        this.state = {
+            graphData: {
+                nodes: [],
+                edges: []
+            },
+            graphsIds: [9]
+        };
+    }
+
 
     componentDidMount() {
+        this.getGraphAsync("Record/livegraph/domains/");
+    }
+
+    componentDidUpdate(prevProps: {}, prevState: IState) {
+        if (prevState.graphData !== this.state.graphData) {
+            this.renderGraph();
+        }
+    }
+
+    async getGraphAsync(urlbase: string) {
+        const graphsJson = [];
+
+        for (const id of this.state.graphsIds) {
+            const response = await fetch(urlbase + id);
+
+            if (response.ok) {
+                const graphJson = await response.json();
+                graphJson["websiteRecordId"] = id;
+                graphsJson.push(graphJson);
+            }
+        }
+
+        const graphData = await this.convertGraphsJsonToVisJsonAsync(graphsJson);
+        this.setState({graphData});
+    }
+
+    async convertGraphsJsonToVisJsonAsync(graphsJson: any[]): Promise<IGraphData> {
+        const graphData: IGraphData = {
+            nodes: [],
+            edges: []
+        };
+
+        for (const graphJson of graphsJson) {
+            console.log("Fetching record for graph: " + graphJson.websiteRecordId);
+            const recordForGraph = await (
+                await fetch(`/Record/${graphJson.websiteRecordId}`)
+            ).json();
+
+            for (const node of graphJson.Graph) {
+                const color = new RegExp(recordForGraph.crawlInfoData.regexPattern).test(node.Url)
+                    ? "orange"//this.stringToColour(recordForGraph.label)
+                    : "orange";
+
+                const alreadyPresentNode = graphData.nodes.find((n) => n.id === node.Url);
+
+                if (alreadyPresentNode) {
+                    if (
+                        Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started) >
+                        Date.parse(alreadyPresentNode.started)
+                    ) {
+                        alreadyPresentNode.label = node.Title;
+                        alreadyPresentNode.color = color;
+                    }
+                } else {
+                    graphData.nodes.push({
+                        id: node.Url,
+                        label: node.Title,
+                        color: color,
+                        started: recordForGraph.crawlInfoData.lastExecutionData.started,
+                        //fixed: { x: true, y: true } // This node will be static
+                    });
+                }
+
+                for (const neighbourUrl of node.Neighbours) {
+                    // We generate random ids for the edges
+                    const id = Math.random().toString(36).substr(2, 9);
+                    graphData.edges.push({
+                        id: `${id}`,
+                        from: node.Url,
+                        to: neighbourUrl,
+                    });
+                }
+            }
+        }
+
+        return graphData;
+    }
+
+    renderGraph() {
         // create an array with nodes
-        const nodes = new DataSet<INode>([
-            {id: 1, label: 'Node 1'},
-            {id: 2, label: 'Node 2'},
-            {id: 3, label: 'Node 3'}
-        ]);
+        const nodes = new DataSet<INode>(this.state.graphData.nodes);
 
         // create an array with edges
-        const edges = new DataSet<IEdge>([
-            {id: '1to2', from: 1, to: 2},
-            {id: '2to3', from: 2, to: 3}
-        ]);
+        const edges = new DataSet<IEdge>(this.state.graphData.edges);
 
         // provide the data in the vis format
         const data = {
@@ -36,17 +138,35 @@ class ViewGraphNG extends React.Component {
         };
 
         const options = {
+            physics: {
+                solver: 'repulsion',
+                repulsion: {
+                    centralGravity: 0.0,
+                    springLength: 220,
+                    springConstant: 0.05,
+                    nodeDistance: 100,
+                    damping: 0.09
+                },
+                stabilization: {
+                    enabled: true,
+                    iterations: 50,
+                    //updateInterval: 50,
+                    onlyDynamicEdges: false,
+                    fit: true
+                }
+            },
             layout: {
                 hierarchical: false
             },
             edges: {
+                smooth: false,
                 color: "#000000"
             },
             height: "1000px"
         };
 
         // initialize your network!
-        new Network(this.graphRef.current!, data, options);
+        this.network = new Network(this.graphRef.current!, data, options);
     }
 
     render() {
