@@ -36,7 +36,7 @@ public interface IPeriodicExecutionManagerService
     /// <summary>
     /// Returns whether this <see cref="IExecutionManagerService"/> keeps track of job with <paramref name="jobId"/>.
     /// </summary>
-    bool IsValid(ulong jobId);
+    bool JobExists(ulong jobId);
 
     /// <summary>
     /// Stops the execution of the job in current period.

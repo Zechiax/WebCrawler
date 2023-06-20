@@ -6,6 +6,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
+using WebCrawler.Models.Database;
 using WebCrawler.Models.Exceptions;
 
 namespace WebCrawler.Controllers;
@@ -33,6 +34,16 @@ public class RecordController : OurControllerBase
         if (!TryGetWebsiteRecord(id, out WebsiteRecordData? record))
         {
             return StatusCode(InternalErrorCode);
+        }
+        
+        // BUG: Currently, client side needs an website execution to not be null, so we'll just return an empty one
+        if (record.CrawlInfoData.LastExecutionData is null)
+        {
+            record.CrawlInfoData.LastExecutionData = new WebsiteExecutionData()
+            {
+                Started = DateTime.Now,
+                Finished = DateTime.Now,
+            };
         }
 
         return Ok(record);
@@ -76,25 +87,25 @@ public class RecordController : OurControllerBase
     [Route("{id:int}")]
     public async Task<IActionResult> UpdateRecord(int id, [FromBody] CreateRecordRequestDto record)
     {
-        if (!TryGetWebsiteRecord(id, out WebsiteRecordData? websiteRecordData))
-        {
-            return StatusCode(InternalErrorCode);
-        }
-
-        ulong? jobId = websiteRecordData!.CrawlInfoData.JobId;
-        if (!(jobId is null))
-        {
-            _executionManager.StopPeriodicExecution(websiteRecordData.CrawlInfoData.JobId!.Value);
-        }
-
-        var websiteRecord = _mapper.Map<WebsiteRecord>(websiteRecordData);
-
         ValidationResult result = await _recordValidator.ValidateAsync(record);
 
         if (!result.IsValid)
         {
             return BadRequest(JsonConvert.SerializeObject(result.Errors));
         }
+
+        if (!TryGetWebsiteRecord(id, out WebsiteRecordData? websiteRecordData))
+        {
+            return StatusCode(InternalErrorCode);
+        }
+
+        var jobId = (ulong)id;
+        if (_executionManager.JobExists(jobId))
+        {
+            _executionManager.StopPeriodicExecution(jobId);
+        }
+
+        var websiteRecord = _mapper.Map<WebsiteRecord>(websiteRecordData);
 
         websiteRecord.Label = record.Label;
         websiteRecord.IsActive = record.IsActive;
@@ -103,9 +114,13 @@ public class RecordController : OurControllerBase
 
         await _dataService.UpdateWebsiteRecord(id, websiteRecord);
 
+        var returnedRecord = await _dataService.GetWebsiteRecordData(id);
+
+        var crawlInfo = _mapper.Map<CrawlInfo>(returnedRecord.CrawlInfoData);
+
         if (websiteRecord.IsActive)
         {
-            _executionManager.EnqueueForPeriodicCrawl(websiteRecord.CrawlInfo, (ulong)id);
+            _executionManager.EnqueueForPeriodicCrawl(crawlInfo, jobId);
         }
 
         return Ok();
