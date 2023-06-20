@@ -40,7 +40,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 nodes: [],
                 edges: []
             },
-            graphsIds: [9]
+            graphsIds: [10, 11]
         };
     }
 
@@ -86,7 +86,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
             for (const node of graphJson.Graph) {
                 const color = new RegExp(recordForGraph.crawlInfoData.regexPattern).test(node.Url)
-                    ? "orange"//this.stringToColour(recordForGraph.label)
+                    ? this.stringToColour(recordForGraph.label)
                     : "orange";
 
                 const alreadyPresentNode = graphData.nodes.find((n) => n.id === node.Url);
@@ -122,6 +122,27 @@ class ViewGraphNG extends React.Component<{}, IState> {
         }
 
         return graphData;
+    }
+
+    stringToColour = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            // tslint:disable-next-line:no-bitwise
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        let colour = '#';
+        for (let i = 0; i < 3; i++) {
+            // tslint:disable-next-line:no-bitwise
+            const value = (hash >> (i * 8)) & 0xFF;
+            colour += ('00' + value.toString(16)).substr(-2);
+        }
+        return colour;
+    }
+
+    componentWillUnmount() {
+        if (this.network) {
+            this.network.destroy();
+        }
     }
 
     renderGraph() {
