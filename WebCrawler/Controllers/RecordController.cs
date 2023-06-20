@@ -6,6 +6,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using WebCrawler.Interfaces;
 using WebCrawler.Models;
+using WebCrawler.Models.Database;
 using WebCrawler.Models.Exceptions;
 
 namespace WebCrawler.Controllers;
@@ -33,6 +34,16 @@ public class RecordController : OurControllerBase
         if (!TryGetWebsiteRecord(id, out WebsiteRecordData? record))
         {
             return StatusCode(InternalErrorCode);
+        }
+        
+        // BUG: Currently, client side needs an website execution to not be null, so we'll just return an empty one
+        if (record.CrawlInfoData.LastExecutionData is null)
+        {
+            record.CrawlInfoData.LastExecutionData = new WebsiteExecutionData()
+            {
+                Started = DateTime.Now,
+                Finished = DateTime.Now,
+            };
         }
 
         return Ok(record);
