@@ -1,5 +1,7 @@
 import React from 'react';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
+import './ViewGraphNG.css';
+
 
 interface INode {
     id: string;
@@ -11,6 +13,7 @@ interface INode {
         y: boolean
     },
     value?: number;
+    title?: string | HTMLElement;
 }
 
 interface IEdge {
@@ -92,6 +95,8 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
                 const alreadyPresentNode = graphData.nodes.find((n) => n.id === node.Url);
 
+                let element = node.Url;
+
                 if (alreadyPresentNode) {
                     if (
                         Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started) >
@@ -99,6 +104,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                     ) {
                         alreadyPresentNode.label = node.Title;
                         alreadyPresentNode.color = color;
+                        alreadyPresentNode.title = element;
                     }
                 } else {
                     graphData.nodes.push({
@@ -106,7 +112,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                         label: node.Title,
                         color: color,
                         started: recordForGraph.crawlInfoData.lastExecutionData.started,
-                        //fixed: { x: true, y: true } // This node will be static
+                        title: element
                     });
                 }
 
@@ -161,7 +167,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
         const options = {
             physics: {
-                stabilization: false,
+                stabilization: true,
                 barnesHut: {
                     gravitationalConstant: -80000,
                     springConstant: 0.001,
@@ -169,6 +175,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 },
             },
             layout: {
+                improvedLayout: false,
                 hierarchical: false
             },
             edges: {
@@ -190,6 +197,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 },
             },
             interaction: {
+                hover: true,
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
             },
