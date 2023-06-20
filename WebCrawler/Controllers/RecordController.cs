@@ -74,21 +74,41 @@ public class RecordController : OurControllerBase
 
     [HttpPatch]
     [Route("{id:int}")]
-    public async Task<IActionResult> UpdateRecord(int id, [FromBody] WebsiteRecord record)
+    public async Task<IActionResult> UpdateRecord(int id, [FromBody] CreateRecordRequestDto record)
     {
-        try
-        {
-            await _dataService.UpdateWebsiteRecord(id, record);
-            return Ok();
-        }
-        catch (EntryNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch
+        if (!TryGetWebsiteRecord(id, out WebsiteRecordData? websiteRecordData))
         {
             return StatusCode(InternalErrorCode);
         }
+
+        ulong? jobId = websiteRecordData!.CrawlInfoData.JobId;
+        if (!(jobId is null))
+        {
+            _executionManager.StopPeriodicExecution(websiteRecordData.CrawlInfoData.JobId!.Value);
+        }
+
+        var websiteRecord = _mapper.Map<WebsiteRecord>(websiteRecordData);
+
+        ValidationResult result = await _recordValidator.ValidateAsync(record);
+
+        if (!result.IsValid)
+        {
+            return BadRequest(JsonConvert.SerializeObject(result.Errors));
+        }
+
+        websiteRecord.Label = record.Label;
+        websiteRecord.IsActive = record.IsActive;
+        websiteRecord.Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList();
+        websiteRecord.CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromMinutes(record.Periodicity));
+
+        await _dataService.UpdateWebsiteRecord(id, websiteRecord);
+
+        if (websiteRecord.IsActive)
+        {
+            _executionManager.EnqueueForPeriodicCrawl(websiteRecord.CrawlInfo, (ulong)id);
+        }
+
+        return Ok();
     }
 
     [HttpGet]
