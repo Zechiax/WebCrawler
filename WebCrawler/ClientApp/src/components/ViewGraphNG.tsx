@@ -9,7 +9,8 @@ interface INode {
     fixed?: {
         x: boolean,
         y: boolean
-    };
+    },
+    value?: number;
 }
 
 interface IEdge {
@@ -180,8 +181,8 @@ class ViewGraphNG extends React.Component<{}, IState> {
             nodes: {
                 shape: "dot",
                 scaling: {
-                    min: 10,
-                    max: 30,
+                    min: 30,
+                    max: 100,
                 },
                 font: {
                     size: 12,
@@ -197,6 +198,20 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
         // initialize your network!
         this.network = new Network(this.graphRef.current!, data, options);
+
+        //Adjust node size based on the number of connected edges
+        // const nodeDegrees = new Map<string, number>();
+        // nodes.forEach((node: INode) => {
+        //     nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
+        // });
+        //
+        // nodes.forEach((node: INode) => {
+        //     const degree = nodeDegrees.get(node.id);
+        //     if(degree !== undefined) {
+        //         node.value = degree;
+        //         nodes.update(node);
+        //     }
+        // });
     }
 
     render() {
