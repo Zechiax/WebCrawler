@@ -160,28 +160,36 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
         const options = {
             physics: {
-                solver: 'repulsion',
-                repulsion: {
-                    centralGravity: 0.0,
-                    springLength: 220,
-                    springConstant: 0.05,
-                    nodeDistance: 100,
-                    damping: 0.09
+                stabilization: false,
+                barnesHut: {
+                    gravitationalConstant: -80000,
+                    springConstant: 0.001,
+                    springLength: 200,
                 },
-                stabilization: {
-                    enabled: true,
-                    iterations: 50,
-                    //updateInterval: 50,
-                    onlyDynamicEdges: false,
-                    fit: true
-                }
             },
             layout: {
                 hierarchical: false
             },
             edges: {
                 smooth: false,
-                color: "#000000"
+                color: {
+                    inherit: true
+                }
+            },
+            nodes: {
+                shape: "dot",
+                scaling: {
+                    min: 10,
+                    max: 30,
+                },
+                font: {
+                    size: 12,
+                    face: "Tahoma",
+                },
+            },
+            interaction: {
+                tooltipDelay: 200,
+                hideEdgesOnDrag: true,
             },
             height: "1000px"
         };
