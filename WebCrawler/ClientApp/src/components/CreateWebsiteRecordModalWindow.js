@@ -16,8 +16,10 @@ export class CreateWebsiteRecordModalWindow extends Component {
             submitBadRequest: false,
             submitOtherError: false,
             cantAddTagError: false,
-            tags: [],
+            tags: this.props.isEditing ? this.props.tagsPresetValue : [],
         };
+        console.log(this.props.tagsPresetValue);
+        console.log(this.state.tags);
     }
 
     handleSubmit = async (event) => {
@@ -37,9 +39,17 @@ export class CreateWebsiteRecordModalWindow extends Component {
         console.log(formData);
 
         try {
-            const response = await fetch("/Record", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
+            let url = "/record";
+            let method = "POST";
+
+            if (this.props.isEditing) {
+                url = `/record/${this.props.recordId}`;
+                method = "PATCH";
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
 
@@ -77,6 +87,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
     };
 
     render() {
+        const buttonLabel = this.props.isEditing ? "Save" : "Create";
         return (
             <>
                 <Modal
@@ -193,7 +204,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                                     type="text"
                                     required
                                     placeholder="Regex"
-                                    defaultValue=".*"
+                                    defaultValue={this.props.regexPresetValue}
                                 />
                                 <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
                                 <Form.Control.Feedback type="invalid">
@@ -213,7 +224,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                                     required
                                     type="number"
                                     placeholder="Periodicity in minutes"
-                                    defaultValue="10"
+                                    defaultValue={this.props.periodicityPresetValue}
                                 />
                                 <Form.Text id="periodicity help" muted>
                                     In minutes. The page will be crawled periodically counting
@@ -266,6 +277,8 @@ export class CreateWebsiteRecordModalWindow extends Component {
                                     style={{fontSize: 14}}
                                 >
                                     {this.state.tags.map((tag) => {
+                                        console.log(this.state.tags);
+
                                         return <li className="list-group-item flex-fill">{tag}</li>;
                                     })}
                                 </ul>
@@ -277,7 +290,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                                     name="isActive"
                                     type="checkbox"
                                     label="Is active"
-                                    defaultChecked
+                                    defaultChecked={this.props.isActivePresetValue}
                                 />
                                 <Form.Text id="isActive help" muted>
                                     No crawling at all is performed if inactive.
@@ -290,7 +303,7 @@ export class CreateWebsiteRecordModalWindow extends Component {
                             Close
                         </Button>
                         <Button type="submit" form="form" variant="success">
-                            Create
+                            {buttonLabel}
                         </Button>
                     </Modal.Footer>
                 </Modal>

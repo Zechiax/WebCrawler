@@ -13,7 +13,7 @@ import {Delete, Edit} from "@mui/icons-material";
 
 import Chip from "@mui/material/Chip";
 
-const Records = () => {
+const Records = ({ showEditModalWindow }) => {
     const [data, setData] = useState([]);
     const navigate = useNavigate();
 
@@ -152,8 +152,20 @@ const Records = () => {
                 <MenuItem
                     key={1}
                     onClick={() => {
-                        // Edit logic...
                         closeMenu();
+                        var divided = row.original.crawlInfo.periodicity.split(':');
+                        var periodicity = (+divided[0]) * 60 + (+divided[1]);
+                        const context = {
+                            id: row.original.id,
+                            name: row.original.label,
+                            isActive: row.original.isActive,
+                            tags: row.original.tags,
+                            periodicity: periodicity, //TODO: fix periodicity
+                            regexPattern: row.original.crawlInfo.regexPattern,
+                            entryUrl: row.original.crawlInfo.entryUrl,
+                            isEditing: true,
+                        };
+                        showEditModalWindow(context);
                     }}
                     sx={{m: 0}}
                 >

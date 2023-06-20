@@ -11,7 +11,17 @@ export class Home extends Component {
     super(props);
 
     this.state = {
-      isCreateWebsiteRecordModalShown: false,
+        isCreateWebsiteRecordModalShown: false,
+        modalWindowContext: {
+            id: 0,
+            name: "",
+            isActive: true,
+            tags: [],
+            periodicity: 10,
+            regexPattern: ".*",
+            entryUrl: "",
+            isEditing: false
+        }
     };
   }
 
@@ -20,13 +30,22 @@ export class Home extends Component {
         window.location.reload();
     }
 
+    handleEditWebsiteRecord = (context) => {
+        this.setState({
+            isCreateWebsiteRecordModalShown: true,
+            modalWindowContext: context
+        });
+        this.state.modalWindowContext.tags = context.tags;
+        console.log(this.state.modalWindowContext.tags);
+    }
+
 
   render() {
     return (
       <>
         <Container fluid="md" style={{ display: 'flex', flexDirection: 'column'}}>
             <div style={{ flex: '1', marginBottom: '1rem' }}>
-                <PaginatedView />
+                    <PaginatedView showEditModalWindow={ this.handleEditWebsiteRecord } />
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -42,11 +61,17 @@ export class Home extends Component {
         </Container>
 
         <CreateWebsiteRecordModalWindow
-          show={this.state.isCreateWebsiteRecordModalShown}
-          urlPresetValue="https://cs.wikipedia.org/wiki/Hlavn%C3%AD_strana"
-          labelPresetValue="Wikipedie"
-          passCreatedRecordId={(id) => {}}
-          onClose={this.onCreateWebsiteRecordModalClose}
+            show={this.state.isCreateWebsiteRecordModalShown}
+            urlPresetValue={this.state.modalWindowContext.entryUrl}
+            labelPresetValue={this.state.modalWindowContext.name}
+            isActivePresetValue={this.state.modalWindowContext.isActive}
+            tagsPresetValue={this.state.modalWindowContext.tags}
+            periodicityPresetValue={this.state.modalWindowContext.periodicity}
+            regexPresetValue={this.state.modalWindowContext.regexPattern}
+            recordId={this.state.modalWindowContext.id}
+            isEditing={this.state.modalWindowContext.isEditing}
+            passCreatedRecordId={(id) => { }}
+            onClose={this.onCreateWebsiteRecordModalClose}
         />
       </>
     );
