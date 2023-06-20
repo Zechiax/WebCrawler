@@ -53,13 +53,11 @@ public class ExecutionManagerTests
             toCrawl.Add(new CrawlInfo("http://www.wiki.com/brouci", "http://www.wiki.com/*", TimeSpan.Zero));
         }
 
-
-        List<ulong> jobIds = new();
-        for(int i = 0; i < jobsCount; ++i )
+        var jobIds = Enumerable.Range(0, jobsCount).ToList();
+        foreach (int i in jobIds)
         {
-            jobIds.Add(manager.EnqueueForCrawl(toCrawl[i]));
+            manager.EnqueueForCrawl(toCrawl[i], (ulong)i);
         }
-
 
         foreach(ulong jobId in jobIds)
         {
@@ -92,28 +90,29 @@ public class ExecutionManagerTests
             toCrawl.Add(new CrawlInfo("http://www.wiki.com/brouci", "http://www.wiki.com/*", TimeSpan.Zero));
         }
 
-        List<ulong> jobIds = new();
+        List<int> jobIds = Enumerable.Range(0, jobsCount).ToList();
         for (int i = 0; i < jobsCount; ++i)
         {
-            jobIds.Add(manager.EnqueueForCrawl(toCrawl[i]));
+            manager.EnqueueForCrawl(toCrawl[i], (ulong)jobIds[i]);
         }
 
         for (int i = 0; i < jobsCount; ++i)
         {
-            ulong jobId = jobIds[i];
+            ulong jobId = (ulong)jobIds[i];
 
             bool wasStoppedSuccessfuly = manager.StopExecutionAsync(jobId).Result;
         }
 
         jobIds.Clear();
+        jobIds = Enumerable.Range(0, jobsCount).ToList();
         for (int i = 0; i < jobsCount; ++i)
         {
-            jobIds.Add(manager.EnqueueForCrawl(toCrawl[i]));
+            manager.EnqueueForCrawl(toCrawl[i], (ulong)jobIds[i]);
         }
 
         for (int i = 0; i < jobIds.Count; i++)
         {
-            ulong jobId = jobIds[i];
+            ulong jobId = (ulong)jobIds[i];
 
             string actual = manager.GetFullGraphAsync(jobId).Result.GetStringRepresentation();
             Assert.That(actual, Is.EqualTo(expected), $"{jobId}/{jobsCount}");

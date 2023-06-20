@@ -11,7 +11,7 @@ public interface IPeriodicExecutionManagerService
     /// The job is done periodically according to <see cref="CrawlInfo.Periodicity"/>. 
     /// Returns jobId, which can be later use to query the job information.
     /// </summary>
-    ulong EnqueueForPeriodicCrawl(CrawlInfo crawlInfo);
+    void EnqueueForPeriodicCrawl(CrawlInfo crawlInfo, ulong jobId);
 
     /// <summary>
     /// Returns full graph, after the underlying executor finishes crawling on it's own.

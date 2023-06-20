@@ -22,11 +22,9 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
         executionManager = new ExecutionManagerService(services, Config);
     }
 
-    public ulong EnqueueForPeriodicCrawl(CrawlInfo crawlInfo)
+    public void EnqueueForPeriodicCrawl(CrawlInfo crawlInfo, ulong jobId)
     {
-        ulong jobId;
-
-        jobId = executionManager.EnqueueForCrawl(crawlInfo);
+        executionManager.EnqueueForCrawl(crawlInfo, jobId);
 
         periodicJobs[jobId] = new PeriodicWebsiteExecutionJob(
             crawlInfo.Periodicity,
@@ -38,8 +36,6 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
                 }
             }
         );
-
-        return jobId;
     }
 
     public Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)

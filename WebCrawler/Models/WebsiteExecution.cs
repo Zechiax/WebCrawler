@@ -4,8 +4,6 @@ namespace WebCrawler.Models;
 
 public class WebsiteExecution
 {
-    [Key]
-    public int Id { get; set; }
     public DateTime? Started { get; set; }
     public DateTime? Finished { get; set; }
     public WebsiteGraph? WebsiteGraph { get; set; }

@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using WebCrawler.Data;
 using WebCrawler.Interfaces;
+using WebCrawler.Models.Database;
 using WebCrawler.Models.Exceptions;
 
 namespace WebCrawler.Models;
@@ -9,8 +11,10 @@ public class DataService : IDataService
 {
     private readonly ILogger<DataService> _logger;
     private readonly IServiceProvider _serviceProvider;
-    public DataService(ILogger<DataService> logger, IServiceProvider serviceProvider)
+    private readonly IMapper _mapper;
+    public DataService(IMapper mapper, ILogger<DataService> logger, IServiceProvider serviceProvider)
     {
+        _mapper = mapper;
         _serviceProvider = serviceProvider;
         _logger = logger;
     }
@@ -30,35 +34,39 @@ public class DataService : IDataService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        return await context.WebsiteRecords
+        var recordsDataList = await context.WebsiteRecords
             .AsNoTracking()
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
             // Also if there is an execution, we want to include it too
-            .Include(wr => wr.CrawlInfo)
+            .Include(wr => wr.CrawlInfoData)
             // We should be able to suppress nullable warning, as EF Core should handle that
-            .ThenInclude(wr => wr.LastExecution)
+            .ThenInclude(wr => wr.LastExecutionData)
             .ToListAsync();
+
+        var records = _mapper.Map<IEnumerable<WebsiteRecord>>(recordsDataList);
+
+        return records;
     }
 
-    public async Task<WebsiteRecord> GetWebsiteRecord(int id)
+    public async Task<WebsiteRecordData> GetWebsiteRecordData(int id)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        WebsiteRecord? record = await context.WebsiteRecords
+        WebsiteRecordData? recordData = await context.WebsiteRecords
             .AsNoTracking()
             // We want all the tags for each website record
             .Include(wr => wr.Tags)
             // Also if there is an execution, we want to include it too
-            .Include(wr => wr.CrawlInfo)
-            .ThenInclude(wr => wr.LastExecution)
+            .Include(wr => wr.CrawlInfoData)
+            .ThenInclude(wr => wr.LastExecutionData)
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
-        if (record is null)
+        if (recordData is null)
             throw new KeyNotFoundException($"Website record with id {id} not found.");
-        
-        return record;
+
+        return recordData;
     }
 
     public async Task<int> AddWebsiteRecord(WebsiteRecord websiteRecord)
@@ -66,33 +74,40 @@ public class DataService : IDataService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        var record = await context.WebsiteRecords.AddAsync(websiteRecord);
+        var crawlInfoData = _mapper.Map<CrawlInfoData>(websiteRecord.CrawlInfo);
+        var recordData = _mapper.Map<WebsiteRecordData>(websiteRecord);
         
+        recordData.CrawlInfoData = crawlInfoData;
+
+        var record = await context.WebsiteRecords.AddAsync(recordData);
+
         await context.SaveChangesAsync();
         
         return record.Entity.Id;
     }
 
-    public async Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecord)
+    public async Task UpdateWebsiteRecord(int id, WebsiteRecord updatedWebsiteRecordData)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        WebsiteRecord? record = await context.WebsiteRecords
-            .Include(wr => wr.CrawlInfo)
-            .ThenInclude(wr => wr.LastExecution)
+        WebsiteRecordData? record = await context.WebsiteRecords
+            .Include(wr => wr.CrawlInfoData)
+            .ThenInclude(wr => wr.LastExecutionData)
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
             throw new EntryNotFoundException($"Website record with id {id} not found.");
 
-        WebsiteExecution? execution = record.CrawlInfo.LastExecution;
+        WebsiteExecutionData? execution = record.CrawlInfoData.LastExecutionData;
         
-        context.Entry(record).CurrentValues.SetValues(updatedWebsiteRecord);
+        var recordFromData = _mapper.Map<WebsiteRecord>(updatedWebsiteRecordData);
+        
+        context.Entry(record).CurrentValues.SetValues(recordFromData);
         
         // In case the execution was not null, we want to keep it
         if (execution is not null)
-            record.CrawlInfo.LastExecution = execution;
+            record.CrawlInfoData.LastExecutionData = execution;
 
         await context.SaveChangesAsync();
     }
@@ -102,7 +117,7 @@ public class DataService : IDataService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
         
-        WebsiteRecord? record = await context.WebsiteRecords
+        WebsiteRecordData? record = await context.WebsiteRecords
             .FirstOrDefaultAsync(wr => wr.Id == id);
         
         if (record is null)
@@ -113,36 +128,22 @@ public class DataService : IDataService
         await context.SaveChangesAsync();
     }
 
-    public async Task AddWebsiteExecution(ulong jobId, WebsiteExecution websiteExecution)
+    public async Task AddWebsiteExecution(int recordId, WebsiteExecution websiteExecution)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-        
-        CrawlInfo? record = await context.CrawlInfos
-            .FirstOrDefaultAsync(wr => wr.JobId == jobId);
-        
+
+        CrawlInfoData? record = await context.CrawlInfos
+            .FirstOrDefaultAsync(wr => wr.WebsiteRecordDataId == recordId);
+
         if (record is null)
-            throw new EntryNotFoundException($"Website record with job id {jobId} not found.");
+            throw new EntryNotFoundException($"Website record with job id {recordId} not found.");
+
+        var executionData = _mapper.Map<WebsiteExecutionData>(websiteExecution);
         
-        record.LastExecution = websiteExecution;
-        
+        record.LastExecutionData = executionData;
+
         await context.SaveChangesAsync();
     }
 
-    public async Task UpdateJobId(int websiteRecordId, ulong? jobId)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-        
-        WebsiteRecord? record = await context.WebsiteRecords
-            .Include(wr => wr.CrawlInfo)
-            .FirstOrDefaultAsync(wr => wr.Id == websiteRecordId);
-        
-        if (record is null)
-            throw new EntryNotFoundException("Website record with id {websiteRecordId} not found.");
-        
-        record.CrawlInfo.JobId = jobId;
-        
-        await context.SaveChangesAsync();
-    }
 }
