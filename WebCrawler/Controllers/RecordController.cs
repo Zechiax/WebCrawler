@@ -106,13 +106,14 @@ public class RecordController : OurControllerBase
     [Route("livegraph/domains/{id:int}")]
     public IActionResult LiveGraphDomains(int id)
     {
-        string? graphJson = GetLiveGraphJson(id);
+        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
 
-        if(graphJson is null)
+        if(graph is null)
         {
             return StatusCode(BadRequestCode, "There is no graph");
         }
-        
+
+        string graphJson = WebsiteGraphSnapshot.JsonConverterToDomainView.Serialize(graph.Value);
         return Ok(graphJson);
     }
 
@@ -120,17 +121,18 @@ public class RecordController : OurControllerBase
     [Route("livegraph/websites/{id:int}")]
     public IActionResult LiveGraphWebsites(int id)
     {
-        string? graphJson = GetLiveGraphJson(id);
+        WebsiteGraphSnapshot? graph = GetLiveGraph(id);
 
-        if(graphJson is null)
+        if(graph is null)
         {
             return StatusCode(BadRequestCode, "There is no graph");
         }
         
+        string graphJson = WebsiteGraphSnapshot.JsonConverter.Serialize(graph.Value);
         return Ok(graphJson);
     }
 
-    private string? GetLiveGraphJson(int id)
+    private WebsiteGraphSnapshot? GetLiveGraph(int id)
     {
         if(!TryGetWebsiteRecord(id, out WebsiteRecordData? record))
         {
@@ -142,11 +144,11 @@ public class RecordController : OurControllerBase
         try
         {
             WebsiteGraphSnapshot graph = _executionManager.GetLiveGraph(jobId);
-            return WebsiteGraphSnapshot.JsonConverter.Serialize(graph);
+            return graph; 
         }
         catch
         {
-            return record.CrawlInfoData.LastExecutionData?.WebsiteGraphSnapshotJson;
+            return null; 
         }
     }
 
