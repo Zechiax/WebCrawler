@@ -14,6 +14,7 @@ interface INode {
     },
     value?: number;
     title?: string | HTMLElement;
+    mass?: number;
 }
 
 interface IEdge {
@@ -167,12 +168,17 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
         const options = {
             physics: {
-                stabilization: false,
+                stabilization: {
+                    enabled: true,
+                    iterations: 400
+                },
                 barnesHut: {
                     gravitationalConstant: -80000,
                     springConstant: 0.001,
                     springLength: 200,
                 },
+                timestep: 2.5,
+                adaptiveTimestep: true
             },
             layout: {
                 improvedLayout: false,
@@ -188,8 +194,8 @@ class ViewGraphNG extends React.Component<{}, IState> {
             nodes: {
                 shape: "dot",
                 scaling: {
-                    min: 30,
-                    max: 100,
+                    min: 100,
+                    max: 500,
                 },
                 font: {
                     size: 12,
@@ -209,18 +215,19 @@ class ViewGraphNG extends React.Component<{}, IState> {
         this.network = new Network(this.graphRef.current!, data, options);
 
         //Adjust node size based on the number of connected edges
-        // const nodeDegrees = new Map<string, number>();
-        // nodes.forEach((node: INode) => {
-        //     nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
-        // });
-        //
-        // nodes.forEach((node: INode) => {
-        //     const degree = nodeDegrees.get(node.id);
-        //     if(degree !== undefined) {
-        //         node.value = degree;
-        //         nodes.update(node);
-        //     }
-        // });
+        const nodeDegrees = new Map<string, number>();
+        nodes.forEach((node: INode) => {
+            nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
+        });
+
+        nodes.forEach((node: INode) => {
+            const degree = nodeDegrees.get(node.id);
+            if(degree !== undefined) {
+                node.value = degree;
+                node.mass = degree;
+                nodes.update(node);
+            }
+        });
     }
 
     render() {
