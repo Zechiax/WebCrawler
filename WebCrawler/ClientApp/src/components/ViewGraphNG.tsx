@@ -1,6 +1,7 @@
 import React from 'react';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import './ViewGraphNG.css';
+import { ProgressBar } from 'react-bootstrap';
 
 
 interface INode {
@@ -31,6 +32,7 @@ interface IGraphData {
 interface IState {
     graphData: IGraphData;
     graphsIds: number[];
+    stabilizationProgress: number;
 }
 
 
@@ -45,7 +47,8 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 nodes: [],
                 edges: []
             },
-            graphsIds: [6]
+            graphsIds: [9, 7],
+            stabilizationProgress: 0
         };
     }
 
@@ -170,7 +173,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
             physics: {
                 stabilization: {
                     enabled: true,
-                    iterations: 400
+                    iterations: 1000
                 },
                 barnesHut: {
                     gravitationalConstant: -80000,
@@ -215,23 +218,37 @@ class ViewGraphNG extends React.Component<{}, IState> {
         this.network = new Network(this.graphRef.current!, data, options);
 
         //Adjust node size based on the number of connected edges
-        const nodeDegrees = new Map<string, number>();
-        nodes.forEach((node: INode) => {
-            nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
-        });
+        // const nodeDegrees = new Map<string, number>();
+        // nodes.forEach((node: INode) => {
+        //     nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
+        // });
+        //
+        // nodes.forEach((node: INode) => {
+        //     const degree = nodeDegrees.get(node.id);
+        //     if(degree !== undefined) {
+        //         node.value = degree;
+        //         node.mass = degree;
+        //         nodes.update(node);
+        //     }
+        // });
 
-        nodes.forEach((node: INode) => {
-            const degree = nodeDegrees.get(node.id);
-            if(degree !== undefined) {
-                node.value = degree;
-                node.mass = degree;
-                nodes.update(node);
-            }
+        this.network.on("stabilizationProgress", (params) => {
+            this.setState({stabilizationProgress: params.iterations / params.total * 100});
+        });
+        
+        this.network.on("stabilizationIterationsDone", () => {
+            this.setState({stabilizationProgress: 100});
+            this.network!.fit();
         });
     }
 
     render() {
-        return <div ref={this.graphRef} className="full-height" />;
+        return (
+            <div>
+                <div ref={this.graphRef} className="full-height" />
+                <ProgressBar now={this.state.stabilizationProgress} />
+            </div>
+        );
     }
 }
 
