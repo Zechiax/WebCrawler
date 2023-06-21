@@ -70,4 +70,28 @@
 	* ✅ pak Crawler pri ukladani do databaze ma na ruce RecordId
 	* ✅ oni totiz ty jobId se resetuji po kazde co se resetuje server
 
+# TODO
+1. filtrovani podle tagu
+
+## Milan
+1. nekaskaduje nam delete record na serveru :(
+1. vlakno worker job - udelat vypocet grafu na pozadi
+1. Pohrat si s fyzikou grafu
+1. live graf update
+1. Progress bar
+
+## Pepa
+1. select all neukaze activate / deactivate atd ...
+	* tlacitko nahore vypada jako zdroj vsech problemu
+1. Cudlik na run immideatly vedle view graph napravo
+1. tagy chybi v tom formulari pokud dam edit na record
+1. update tabulky ne tak ze se refreshnou vsechna data ale jenom se prida ten created
+	* fetch GetRecord(id)
+
+## Tomas
+1. pridat endpoint pro pepu na run immidietly
+1. zpravit to jak se vyhazuje vyjimka
+1. delete na edit formular na tags v tom seznamu
+	
+
 # DEADLINE: 19.06.
