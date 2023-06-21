@@ -200,6 +200,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 hover: true,
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
+                hideEdgesOnZoom: true,
             },
             height: "100%"
         };
