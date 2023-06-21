@@ -223,7 +223,7 @@ public class RecordController : OurControllerBase
             await _dataService.DeleteWebsiteRecord(id);
             return Ok();
         }
-        catch (KeyNotFoundException e)
+        catch (EntryNotFoundException e)
         {
             return NotFound(e.Message);
         }
