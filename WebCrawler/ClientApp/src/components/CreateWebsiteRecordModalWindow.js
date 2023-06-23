@@ -6,6 +6,8 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Alert from "react-bootstrap/Alert";
+import { Delete} from "@mui/icons-material";
+import Chip from "@mui/material/Chip";
 
 export class CreateWebsiteRecordModalWindow extends Component {
     constructor(props) {
@@ -16,11 +18,33 @@ export class CreateWebsiteRecordModalWindow extends Component {
             submitBadRequest: false,
             submitOtherError: false,
             cantAddTagError: false,
-            tags: this.props.isEditing ? this.props.tagsPresetValue : [],
+            tags: [],
         };
-        console.log(this.props.tagsPresetValue);
-        console.log(this.state.tags);
     }
+
+    componentDidMount() {
+        this.mounted = true;
+        this.updateTagsState();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.mounted && prevProps.tagsPresetValue !== this.props.tagsPresetValue) {
+            this.updateTagsState();
+        }
+    }
+
+    componentWillUnmount() {
+        this.mounted = false;
+    }
+
+    updateTagsState = () => {
+        const tags = this.props.tagsPresetValue ? this.props.tagsPresetValue.map(tag => tag.name) : [];
+        this.setState({
+            tags: tags,
+        });
+    };
+
+
 
     handleSubmit = async (event) => {
         event.preventDefault();
@@ -84,6 +108,15 @@ export class CreateWebsiteRecordModalWindow extends Component {
     resetForm = (form) => {
         form.reset();
         this.setState({validated: false, tags: []});
+    };
+
+    handleDeleteTag = (index, event) => {
+        event.preventDefault();
+        this.setState((prevState) => {
+            const tags = [...prevState.tags];
+            tags.splice(index, 1);
+            return { tags };
+        });
     };
 
     render() {
@@ -272,15 +305,29 @@ export class CreateWebsiteRecordModalWindow extends Component {
                                     Tags can help to organize and filter website records. Is
                                     optional.
                                 </Form.Text>
-                                <ul
-                                    className="list-group list-group-vertical"
-                                    style={{fontSize: 14}}
-                                >
-                                    {this.state.tags.map((tag) => {
-                                        console.log(this.state.tags);
-
-                                        return <li className="list-group-item flex-fill">{tag}</li>;
-                                    })}
+                                <ul className="list-group list-group-vertical" style={{ fontSize: 14 }}>
+                                    {this.state.tags.map((tag, index) => (
+                                        <li className="list-group-item flex-fill d-flex justify-content-between" key={index}>
+                                            <Chip
+                                                label={tag}
+                                                variant="outlined"
+                                                sx={{
+                                                    margin: "0.2rem",
+                                                    color: "purple",
+                                                    borderColor: "purple",
+                                                    fontWeight: "bold",
+                                                }}
+                                            />
+                                            <span className="float-right">
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger ml-2"
+                                                    onClick={(event) => this.handleDeleteTag(index, event)}
+                                                >
+                                                    <Delete />
+                                                </button>
+                                            </span>
+                                        </li>
+                                    ))}
                                 </ul>
                             </Form.Group>
 

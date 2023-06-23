@@ -33,10 +33,11 @@ export class Home extends Component {
     handleEditWebsiteRecord = (context) => {
         this.setState({
             isCreateWebsiteRecordModalShown: true,
-            modalWindowContext: context
+            modalWindowContext: {
+                ...context,
+                tags: [...context.tags],
+            }
         });
-        this.state.modalWindowContext.tags = context.tags;
-        console.log(this.state.modalWindowContext.tags);
     }
 
 
@@ -65,7 +66,7 @@ export class Home extends Component {
             urlPresetValue={this.state.modalWindowContext.entryUrl}
             labelPresetValue={this.state.modalWindowContext.name}
             isActivePresetValue={this.state.modalWindowContext.isActive}
-            tagsPresetValue={this.state.modalWindowContext.tags}
+            tagsPresetValue={[...this.state.modalWindowContext.tags]}
             periodicityPresetValue={this.state.modalWindowContext.periodicity}
             regexPresetValue={this.state.modalWindowContext.regexPattern}
             recordId={this.state.modalWindowContext.id}

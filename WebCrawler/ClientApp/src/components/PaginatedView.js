@@ -62,9 +62,70 @@ const Records = ({ showEditModalWindow }) => {
                 accessorKey: "created",
                 id: "creationDate",
                 header: "Created",
-                size: 250,
+                size: 100,
                 Cell: ({cell}) => new Date(cell.getValue()).toLocaleDateString(),
             },
+            {
+                accessorKey: "tags",
+                id: "tags",
+                header: "Tags",
+                size: 300,
+                filterVariant: 'text',
+                Cell: ({ cell }) => {
+                    const tags = cell.getValue();
+                    const maxDisplayedLength = 20;
+                    const maxDisplayedTags = 3;
+                    let displayedTags = [];
+                    let hiddenTagsCount = 0;
+                    let displayedLength = 0;
+                    let displayedTagsCount = 0;
+
+                    tags.forEach((tag) => {
+                        const tagLength = tag.name.length;
+
+                        if (displayedLength + tagLength <= maxDisplayedLength && displayedTagsCount < maxDisplayedTags) {
+                            displayedTags.push(tag);
+                            displayedLength += tagLength;
+                            displayedTagsCount++;
+                        } else {
+                            hiddenTagsCount++;
+                        }
+                    });
+
+                    return (
+                        <div>
+                            {displayedTags.map((tag) => (
+                                <Chip
+                                    key={tag.id}
+                                    label={tag.name}
+                                    variant="outlined"
+                                    sx={{
+                                        mx: "0.2rem",
+                                        my: 0,
+                                        color: "purple",
+                                        borderColor: "purple",
+                                        fontWeight: "bold",
+                                    }}
+                                />
+                            ))}
+                            {hiddenTagsCount > 0 && (
+                                <Chip
+                                    label={`+${hiddenTagsCount}`}
+                                    variant="outlined"
+                                    sx={{
+                                        mx: "0.2rem",
+                                        my: 0,
+                                        color: "purple",
+                                        borderColor: "purple",
+                                        fontWeight: "bold",
+                                    }}
+                                />
+                            )}
+                        </div>
+                    );
+                }
+
+            }
         ],
         []
     );
@@ -79,56 +140,78 @@ const Records = ({ showEditModalWindow }) => {
             enableRowSelection
             initialState={{showColumnFilters: true}}
             positionToolbarAlertBanner="bottom"
-            renderDetailPanel={({row}) => (
-                <Box>
-                    <Typography variant="body1">
-                        <strong>ID:</strong> {row.original.id}
-                    </Typography>
-                    <Typography variant="body1">
-                        <strong>Exact creation time:</strong>{" "}
-                        {new Date(row.original.created).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body1">
-                        <strong>Tags: </strong>
-                        {row.original.tags.map((tag) => (
-                            <Chip
-                                key={tag.id}
-                                label={tag.name}
-                                variant="outlined"
-                                sx={{
-                                    margin: "0.2rem",
-                                    color: "purple",
-                                    borderColor: "purple",
-                                    fontWeight: "bold",
-                                }}
-                            />
-                        ))}
-                    </Typography>
-                    <Typography variant="body1">
-                        <strong>Crawl Info:</strong>
+            renderDetailPanel={({ row }) => {
+                const handleRunNow = () => {
+                    console.log("Run now clicked for id: " + row.original.id);
+                };
+                return (
+                    <Box>
+                        <Typography variant="body1">
+                            <strong>ID:</strong> {row.original.id}
+                        </Typography>
+                        <Typography variant="body1">
+                            <strong>Exact creation time:</strong>{" "}
+                            {new Date(row.original.created).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body1">
+                            <strong>Tags: </strong>
+                        </Typography>
+                        <div>
+                            {row.original.tags.map((tag) => (
+                                <Chip
+                                    key={tag.id}
+                                    label={tag.name}
+                                    variant="outlined"
+                                    sx={{
+                                        margin: "0.2rem",
+                                        color: "purple",
+                                        borderColor: "purple",
+                                        fontWeight: "bold",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <Typography variant="body1">
+                            <strong>Crawl Info:</strong>
+                        </Typography>
                         <ul>
                             <li>
-                                <strong>Entry URL: </strong>
-                                <a
-                                    href={row.original.crawlInfo.entryUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    {row.original.crawlInfo.entryUrl}
-                                </a>
+                                <Typography variant="body1">
+                                    <strong>Entry URL: </strong>
+                                    <a
+                                        href={row.original.crawlInfo.entryUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {row.original.crawlInfo.entryUrl}
+                                    </a>
+                                </Typography>
                             </li>
                             <li>
-                                <strong>Regex Pattern:</strong>{" "}
-                                {row.original.crawlInfo.regexPattern}
+                                <Typography variant="body1">
+                                    <strong>Regex Pattern:</strong>{" "}
+                                    {row.original.crawlInfo.regexPattern}
+                                </Typography>
                             </li>
                             <li>
-                                <strong>Periodicity:</strong>{" "}
-                                {row.original.crawlInfo.periodicity}
+                                <Typography variant="body1">
+                                    <strong>Periodicity:</strong>{" "}
+                                    {row.original.crawlInfo.periodicity}
+                                </Typography>
                             </li>
                         </ul>
-                    </Typography>
-                </Box>
-            )}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleRunNow}
+                            >
+                                Run Now
+                            </Button>
+                        </div>
+                    </Box>
+                );
+            }}
             renderRowActionMenuItems={({closeMenu, row}) => [
                 <MenuItem
                     key={0}
@@ -224,7 +307,7 @@ const Records = ({ showEditModalWindow }) => {
                     <div style={{display: "flex", gap: "0.5rem"}}>
                         <Button
                             color="error"
-                            disabled={!table.getIsSomeRowsSelected()}
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
                             onClick={handleDeactivate}
                             variant="contained"
                         >
@@ -232,7 +315,7 @@ const Records = ({ showEditModalWindow }) => {
                         </Button>
                         <Button
                             color="success"
-                            disabled={!table.getIsSomeRowsSelected()}
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
                             onClick={handleActivate}
                             variant="contained"
                         >
@@ -240,14 +323,14 @@ const Records = ({ showEditModalWindow }) => {
                         </Button>
                         <Button
                             color="primary"
-                            disabled={!table.getIsSomeRowsSelected()}
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
                             onClick={handleViewGraph}
                             variant="contained"
                         >
                             View Graph
                         </Button>
                         <Button
-                            disabled={!table.getIsSomeRowsSelected()}
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
                             onClick={handleDelete}
                             variant="contained"
                             color="error"
