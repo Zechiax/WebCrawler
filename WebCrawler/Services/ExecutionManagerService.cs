@@ -24,11 +24,6 @@ public class ExecutionManagerService : IExecutionManagerService
 
     public void EnqueueForCrawl(CrawlInfo crawlInfo, ulong jobId)
     {
-        if (JobExists(jobId))
-        {
-            throw new ArgumentException("No duplicate job ids allowed");
-        }
-        
         WebsiteExecutionJob job = new(crawlInfo, jobId);
         jobs[jobId] = job;
 
@@ -117,14 +112,14 @@ public class ExecutionManagerService : IExecutionManagerService
         WebsiteExecutionJob job = jobs[jobId];
         lock(job)
         {
-            if(job.JobStatus == JobStatus.WaitingInQueue)
+            if(job.JobStatus is JobStatus.WaitingInQueue)
             {
                 Monitor.Wait(job);
                 return true;
             }
 
             // already stopped
-            if(job.JobStatus == JobStatus.Stopped)
+            if(job.JobStatus is JobStatus.Stopped or JobStatus.Finished)
             {
                 return false;
             }

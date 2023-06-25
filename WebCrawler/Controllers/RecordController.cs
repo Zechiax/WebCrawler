@@ -177,6 +177,26 @@ public class RecordController : OurControllerBase
     }
 
     [HttpPost]
+    [Route("rerun/{id:int}")]
+    public IActionResult RerunExecutionOnRecord(int id)
+    {
+        if(!TryGetWebsiteRecord(id, out WebsiteRecordData? record))
+        {
+            return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
+        }
+        
+        var crawlInfo = _mapper.Map<CrawlInfo>(record!.CrawlInfoData);
+
+        ulong jobId = (ulong)crawlInfo.WebsiteRecordId;
+        if (_executionManager.JobExists(jobId))
+        {
+            _executionManager.ResetJobAsync(jobId);
+        }
+
+        return Ok();
+    }
+
+    [HttpPost]
     [Route("run/{id:int}")]
     public IActionResult RunExecutionOnRecord(int id)
     {
@@ -186,7 +206,7 @@ public class RecordController : OurControllerBase
         }
         
         var crawlInfo = _mapper.Map<CrawlInfo>(record!.CrawlInfoData);
-        
+
         _executionManager.EnqueueForPeriodicCrawl(crawlInfo, (ulong)crawlInfo.WebsiteRecordId);
         return Ok();
     }
@@ -222,7 +242,17 @@ public class RecordController : OurControllerBase
     {
         try
         {
+            if(TryGetWebsiteRecord(id, out WebsiteRecordData? record))
+            {
+                ulong? jobId = record!.CrawlInfoData.JobId;
+                if(jobId is not null)
+                {
+                    _executionManager.StopPeriodicExecution(record.CrawlInfoData.JobId!.Value);
+                }
+            }
+
             await _dataService.DeleteWebsiteRecord(id);
+
             return Ok();
         }
         catch (EntryNotFoundException e)
@@ -241,6 +271,7 @@ public class RecordController : OurControllerBase
 
         try
         {
+
             record = _dataService.GetWebsiteRecordData(id).Result;
             return true;
         }

@@ -41,11 +41,16 @@ record class PeriodicWebsiteExecutionJob
     {
         using PeriodicTimer timer = new(periodicity);
 
-        while (!ct.IsCancellationRequested && await timer.WaitForNextTickAsync(ct))
+        try
         {
-            job.Invoke();
+            while (!ct.IsCancellationRequested && await timer.WaitForNextTickAsync(ct))
+            {
+                job.Invoke();
+            }
         }
-
-        ct.ThrowIfCancellationRequested();
+        catch (OperationCanceledException)
+        {
+            return;
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using WebCrawler.Interfaces;
+﻿using System.Dynamic;
+using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using WebCrawler.Models.Exceptions;
 
@@ -36,6 +37,16 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
                 }
             }
         );
+    }
+
+    public async Task<bool> ResetJobAsync(ulong jobId)
+    {
+        if (executionManager.JobExists(jobId))
+        {
+            return await executionManager.ResetJobAsync(jobId);
+        }
+
+        return false; 
     }
 
     public Task<WebsiteGraphSnapshot> GetFullGraphAsync(ulong jobId)

@@ -63,4 +63,6 @@ public interface IPeriodicExecutionManagerService
     /// After the job is finished, the job (with the graph) is stored in the <see cref="IExecutionManagerService"/> for later use.
     /// </summary>
     void WaitForExecutionToFinish(ulong jobId);
+
+    Task<bool> ResetJobAsync(ulong jobId);
 }
