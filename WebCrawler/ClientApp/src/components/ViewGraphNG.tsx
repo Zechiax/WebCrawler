@@ -1,7 +1,15 @@
 import React from "react";
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
+import { useLocation } from "react-router";
 import "./ViewGraphNG.css";
 //import { ProgressBar } from 'react-bootstrap';
+
+export const ViewGraphNG = (props: any) => {
+  const location = useLocation();
+  return (
+    <ViewGraphNGInternal graphsIds={location.state.graphsIds} {...props} />
+  );
+};
 
 interface INode {
   id: string;
@@ -34,18 +42,21 @@ interface IState {
   stabilizationProgress: number;
 }
 
-class ViewGraphNG extends React.Component<{}, IState> {
+class ViewGraphNGInternal extends React.Component<
+  { graphsIds: number[] },
+  IState
+> {
   private graphRef = React.createRef<HTMLDivElement>();
   private network?: Network;
 
-  constructor(props: {}) {
+  constructor(props: { graphsIds: [] }) {
     super(props);
     this.state = {
       graphData: {
         nodes: [],
         edges: [],
       },
-      graphsIds: [16], //TODO
+      graphsIds: [...this.props.graphsIds],
       stabilizationProgress: 0,
     };
   }
