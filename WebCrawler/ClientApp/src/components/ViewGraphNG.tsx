@@ -47,7 +47,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
                 nodes: [],
                 edges: []
             },
-            graphsIds: [9, 7],
+            graphsIds: [6,8],
             stabilizationProgress: 0
         };
     }
@@ -218,19 +218,19 @@ class ViewGraphNG extends React.Component<{}, IState> {
         this.network = new Network(this.graphRef.current!, data, options);
 
         //Adjust node size based on the number of connected edges
-        // const nodeDegrees = new Map<string, number>();
-        // nodes.forEach((node: INode) => {
-        //     nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
-        // });
-        //
-        // nodes.forEach((node: INode) => {
-        //     const degree = nodeDegrees.get(node.id);
-        //     if(degree !== undefined) {
-        //         node.value = degree;
-        //         node.mass = degree;
-        //         nodes.update(node);
-        //     }
-        // });
+        const nodeDegrees = new Map<string, number>();
+        nodes.forEach((node: INode) => {
+            nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
+        });
+
+        nodes.forEach((node: INode) => {
+            const degree = nodeDegrees.get(node.id);
+            if(degree !== undefined) {
+                node.value = degree;
+                node.mass = degree;
+                nodes.update(node);
+            }
+        });
 
         this.network.on("stabilizationProgress", (params) => {
             this.setState({stabilizationProgress: params.iterations / params.total * 100});
@@ -244,10 +244,7 @@ class ViewGraphNG extends React.Component<{}, IState> {
 
     render() {
         return (
-            <div>
-                <div ref={this.graphRef} className="full-height" />
-                <ProgressBar now={this.state.stabilizationProgress} />
-            </div>
+            <div ref={this.graphRef} className="full-height" />
         );
     }
 }
