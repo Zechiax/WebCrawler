@@ -1,7 +1,7 @@
 import React from 'react';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import './ViewGraphNG.css';
-import { ProgressBar } from 'react-bootstrap';
+//import { ProgressBar } from 'react-bootstrap';
 
 
 interface INode {
