@@ -1,4 +1,5 @@
-import React, {useMemo, useEffect, useState} from "react";
+import React, { useMemo, useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 // MRT Imports
 // import MaterialReactTable from 'material-react-table'; // default import deprecated
@@ -12,8 +13,9 @@ import {Delete, Edit} from "@mui/icons-material";
 
 import Chip from "@mui/material/Chip";
 
-const Records = () => {
+const Records = ({ showEditModalWindow }) => {
     const [data, setData] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,9 +62,70 @@ const Records = () => {
                 accessorKey: "created",
                 id: "creationDate",
                 header: "Created",
-                size: 250,
+                size: 100,
                 Cell: ({cell}) => new Date(cell.getValue()).toLocaleDateString(),
             },
+            {
+                accessorKey: "tags",
+                id: "tags",
+                header: "Tags",
+                size: 300,
+                filterVariant: 'text',
+                Cell: ({ cell }) => {
+                    const tags = cell.getValue();
+                    const maxDisplayedLength = 20;
+                    const maxDisplayedTags = 3;
+                    let displayedTags = [];
+                    let hiddenTagsCount = 0;
+                    let displayedLength = 0;
+                    let displayedTagsCount = 0;
+
+                    tags.forEach((tag) => {
+                        const tagLength = tag.name.length;
+
+                        if (displayedLength + tagLength <= maxDisplayedLength && displayedTagsCount < maxDisplayedTags) {
+                            displayedTags.push(tag);
+                            displayedLength += tagLength;
+                            displayedTagsCount++;
+                        } else {
+                            hiddenTagsCount++;
+                        }
+                    });
+
+                    return (
+                        <div>
+                            {displayedTags.map((tag) => (
+                                <Chip
+                                    key={tag.id}
+                                    label={tag.name}
+                                    variant="outlined"
+                                    sx={{
+                                        mx: "0.2rem",
+                                        my: 0,
+                                        color: "purple",
+                                        borderColor: "purple",
+                                        fontWeight: "bold",
+                                    }}
+                                />
+                            ))}
+                            {hiddenTagsCount > 0 && (
+                                <Chip
+                                    label={`+${hiddenTagsCount}`}
+                                    variant="outlined"
+                                    sx={{
+                                        mx: "0.2rem",
+                                        my: 0,
+                                        color: "purple",
+                                        borderColor: "purple",
+                                        fontWeight: "bold",
+                                    }}
+                                />
+                            )}
+                        </div>
+                    );
+                }
+
+            }
         ],
         []
     );
@@ -77,61 +140,89 @@ const Records = () => {
             enableRowSelection
             initialState={{showColumnFilters: true}}
             positionToolbarAlertBanner="bottom"
-            renderDetailPanel={({row}) => (
-                <Box>
-                    <Typography variant="body1">
-                        <strong>ID:</strong> {row.original.id}
-                    </Typography>
-                    <Typography variant="body1">
-                        <strong>Exact creation time:</strong>{" "}
-                        {new Date(row.original.created).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body1">
-                        <strong>Tags: </strong>
-                        {row.original.tags.map((tag) => (
-                            <Chip
-                                key={tag.id}
-                                label={tag.name}
-                                variant="outlined"
-                                sx={{
-                                    margin: "0.2rem",
-                                    color: "purple",
-                                    borderColor: "purple",
-                                    fontWeight: "bold",
-                                }}
-                            />
-                        ))}
-                    </Typography>
-                    <Typography variant="body1">
-                        <strong>Crawl Info:</strong>
+            renderDetailPanel={({ row }) => {
+                const handleRunNow = () => {
+                    console.log("Run now clicked for id: " + row.original.id);
+                };
+                return (
+                    <Box>
+                        <Typography variant="body1">
+                            <strong>ID:</strong> {row.original.id}
+                        </Typography>
+                        <Typography variant="body1">
+                            <strong>Exact creation time:</strong>{" "}
+                            {new Date(row.original.created).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body1">
+                            <strong>Tags: </strong>
+                        </Typography>
+                        <div>
+                            {row.original.tags.map((tag) => (
+                                <Chip
+                                    key={tag.id}
+                                    label={tag.name}
+                                    variant="outlined"
+                                    sx={{
+                                        margin: "0.2rem",
+                                        color: "purple",
+                                        borderColor: "purple",
+                                        fontWeight: "bold",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <Typography variant="body1">
+                            <strong>Crawl Info:</strong>
+                        </Typography>
                         <ul>
                             <li>
-                                <strong>Entry URL: </strong>
-                                <a
-                                    href={row.original.crawlInfo.entryUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    {row.original.crawlInfo.entryUrl}
-                                </a>
+                                <Typography variant="body1">
+                                    <strong>Entry URL: </strong>
+                                    <a
+                                        href={row.original.crawlInfo.entryUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {row.original.crawlInfo.entryUrl}
+                                    </a>
+                                </Typography>
                             </li>
                             <li>
-                                <strong>Regex Pattern:</strong>{" "}
-                                {row.original.crawlInfo.regexPattern}
+                                <Typography variant="body1">
+                                    <strong>Regex Pattern:</strong>{" "}
+                                    {row.original.crawlInfo.regexPattern}
+                                </Typography>
                             </li>
                             <li>
-                                <strong>Periodicity:</strong>{" "}
-                                {row.original.crawlInfo.periodicity}
+                                <Typography variant="body1">
+                                    <strong>Periodicity:</strong>{" "}
+                                    {row.original.crawlInfo.periodicity}
+                                </Typography>
                             </li>
                         </ul>
-                    </Typography>
-                </Box>
-            )}
-            renderRowActionMenuItems={({closeMenu}) => [
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleRunNow}
+                            >
+                                Run Now
+                            </Button>
+                        </div>
+                    </Box>
+                );
+            }}
+            renderRowActionMenuItems={({closeMenu, row}) => [
                 <MenuItem
                     key={0}
                     onClick={() => {
-                        // Delete logic...
+                        const confirmed = window.confirm('Are you sure you want to delete this record?');
+                        if (confirmed) {
+                            fetch(`record/${row.original.id}`, {
+                                method: 'DELETE',
+                            });
+                            console.log(row.original.id);
+                        }
                         closeMenu();
                     }}
                     sx={{m: 0}}
@@ -144,8 +235,20 @@ const Records = () => {
                 <MenuItem
                     key={1}
                     onClick={() => {
-                        // Edit logic...
                         closeMenu();
+                        var divided = row.original.crawlInfo.periodicity.split(':');
+                        var periodicity = (+divided[0]) * 60 + (+divided[1]);
+                        const context = {
+                            id: row.original.id,
+                            name: row.original.label,
+                            isActive: row.original.isActive,
+                            tags: row.original.tags,
+                            periodicity: periodicity, //TODO: fix periodicity
+                            regexPattern: row.original.crawlInfo.regexPattern,
+                            entryUrl: row.original.crawlInfo.entryUrl,
+                            isEditing: true,
+                        };
+                        showEditModalWindow(context);
                     }}
                     sx={{m: 0}}
                 >
@@ -158,23 +261,53 @@ const Records = () => {
             renderTopToolbarCustomActions={({table}) => {
                 const handleDeactivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
-                        alert("deactivating " + row.getValue("name"));
+                        fetch(`record/stop/${row.original.id}`, {
+                            method: 'POST',
+                        });
                         return null;
                     });
+                    window.location.reload();
                 };
 
                 const handleActivate = () => {
                     table.getSelectedRowModel().flatRows.map((row) => {
-                        alert("activating " + row.getValue("name"));
+                        fetch(`record/run/${row.original.id}`, {
+                            method: 'POST',
+                        });
                         return null;
                     });
+                    window.location.reload();
+                };
+
+                const handleViewGraph = () => {
+                    let selectedGraphsIds = [];
+
+                    table.getSelectedRowModel().flatRows.map((row) => {
+                        selectedGraphsIds.push(row.original.id);
+                        return null;
+                    });
+
+                    navigate('/Graph', {state: {ids: selectedGraphsIds}});
+                };
+
+                const handleDelete = () => {
+                    const confirmed = window.confirm('Are you sure you want to delete this record?');
+                    if (confirmed) {
+                        table.getSelectedRowModel().flatRows.map((row) => {
+                            fetch(`record/${row.original.id}`, {
+                                method: 'DELETE',
+                            });
+                            return null;
+                        });
+                        window.location.reload();
+                    }
                 };
 
                 return (
                     <div style={{display: "flex", gap: "0.5rem"}}>
                         <Button
                             color="error"
-                            disabled={!table.getIsSomeRowsSelected()}
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
                             onClick={handleDeactivate}
                             variant="contained"
                         >
@@ -182,11 +315,33 @@ const Records = () => {
                         </Button>
                         <Button
                             color="success"
-                            disabled={!table.getIsSomeRowsSelected()}
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
                             onClick={handleActivate}
                             variant="contained"
                         >
                             Activate
+                        </Button>
+                        <Button
+                            color="primary"
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
+                            onClick={handleViewGraph}
+                            variant="contained"
+                        >
+                            View Graph
+                        </Button>
+                        <Button
+                            disabled={!(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())}
+                            onClick={handleDelete}
+                            variant="contained"
+                            color="error"
+                            sx={{
+                                color: 'red',
+                                borderColor: 'red',
+                                backgroundColor: 'white',
+                            }}
+                        >
+                            Delete
+                            <Delete />
                         </Button>
                     </div>
                 );

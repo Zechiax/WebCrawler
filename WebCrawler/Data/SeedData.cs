@@ -49,6 +49,10 @@ public static class SeedData
                 {
                     new Tag()
                     {
+                        Name = "Extreamly long tag name to see what happens"
+                    },
+                    new Tag()
+                    {
                         Name = "Social Media"
                     },
                     new Tag()
@@ -76,6 +80,18 @@ public static class SeedData
                     new Tag()
                     {
                         Name = "Amazon"
+                    },
+                    new Tag()
+                    {
+                        Name = "Shopping"
+                    },
+                    new Tag()
+                    {
+                        Name = "Books"
+                    },
+                    new Tag()
+                    {
+                        Name = "Electronics"
                     }
                 },
                 Created = DateTime.Now - TimeSpan.FromDays(2) - TimeSpan.FromHours(3),
@@ -128,6 +144,38 @@ public static class SeedData
                     new Tag()
                     {
                         Name = "StackOverflow"
+                    },
+                    new Tag()
+                    {
+                        Name = "C#"
+                    },
+                    new Tag()
+                    {
+                        Name = "Java"
+                    },
+                    new Tag()
+                    {
+                        Name = "Python"
+                    },
+                    new Tag()
+                    {
+                        Name = "C++"
+                    },
+                    new Tag()
+                    {
+                        Name = "C"
+                    },
+                    new Tag()
+                    {
+                        Name = "JavaScript"
+                    },
+                    new Tag()
+                    {
+                        Name = "PHP"
+                    },
+                    new Tag()
+                    {
+                        Name = "Go"
                     }
                 },
                 Label = "StackOverflow",

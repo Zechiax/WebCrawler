@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
-import { NavLink } from "react-router-dom";
 import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
 import PaginatedView from "./PaginatedView";
 
@@ -14,59 +11,68 @@ export class Home extends Component {
     super(props);
 
     this.state = {
-      isCreateWebsiteRecordModalShown: false,
-      selectedGraphsIds: [6, 7, 8], // TODO
+        isCreateWebsiteRecordModalShown: false,
+        modalWindowContext: {
+            id: 0,
+            name: "",
+            isActive: true,
+            tags: [],
+            periodicity: 10,
+            regexPattern: ".*",
+            entryUrl: "",
+            isEditing: false
+        }
     };
   }
 
-  onCreateWebsiteRecordModalClose = () =>
-    this.setState({ isCreateWebsiteRecordModalShown: false });
+    onCreateWebsiteRecordModalClose = () => {
+        this.setState({ isCreateWebsiteRecordModalShown: false });
+        window.location.reload();
+    }
+
+    handleEditWebsiteRecord = (context) => {
+        this.setState({
+            isCreateWebsiteRecordModalShown: true,
+            modalWindowContext: {
+                ...context,
+                tags: [...context.tags],
+            }
+        });
+    }
+
 
   render() {
     return (
       <>
-        <Container fluid="md">
-          <Row>
-            <PaginatedView />
-          </Row>
-          <Row
-            style={{
-              marginTop: "30px",
-              marginBottom: "15px",
-              marginLeft: "0px",
-            }}
-          >
-            <Stack direction="horizontal" gap={3}>
-              <Button
-                variant="primary"
-                onClick={() =>
-                  this.setState({ isCreateWebsiteRecordModalShown: true })
-                }
-              >
-                Create new website record
-              </Button>
+        <Container fluid="md" style={{ display: 'flex', flexDirection: 'column'}}>
+            <div style={{ flex: '1', marginBottom: '1rem' }}>
+                    <PaginatedView showEditModalWindow={ this.handleEditWebsiteRecord } />
+            </div>
 
-              <NavLink
-                state={{ ids: this.state.selectedGraphsIds }}
-                to="/Graph"
-              >
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
-                  variant="primary"
-                  disabled={this.state.selectedGraphsIds.length === 0}
+                    variant="primary"
+                    onClick={() =>
+                        this.setState({ isCreateWebsiteRecordModalShown: true })
+                    }
                 >
-                  View Graph
+                    Create new website record
                 </Button>
-              </NavLink>
-            </Stack>
-          </Row>
+            </div>
         </Container>
 
         <CreateWebsiteRecordModalWindow
-          show={this.state.isCreateWebsiteRecordModalShown}
-          urlPresetValue="https://cs.wikipedia.org/wiki/Hlavn%C3%AD_strana"
-          labelPresetValue="Wikipedie"
-          passCreatedRecordId={(id) => {}}
-          onClose={this.onCreateWebsiteRecordModalClose}
+            show={this.state.isCreateWebsiteRecordModalShown}
+            urlPresetValue={this.state.modalWindowContext.entryUrl}
+            labelPresetValue={this.state.modalWindowContext.name}
+            isActivePresetValue={this.state.modalWindowContext.isActive}
+            tagsPresetValue={[...this.state.modalWindowContext.tags]}
+            periodicityPresetValue={this.state.modalWindowContext.periodicity}
+            regexPresetValue={this.state.modalWindowContext.regexPattern}
+            recordId={this.state.modalWindowContext.id}
+            isEditing={this.state.modalWindowContext.isEditing}
+            passCreatedRecordId={(id) => { }}
+            onClose={this.onCreateWebsiteRecordModalClose}
         />
       </>
     );

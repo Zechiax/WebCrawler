@@ -85,21 +85,45 @@ public class RecordController : OurControllerBase
 
     [HttpPatch]
     [Route("{id:int}")]
-    public async Task<IActionResult> UpdateRecord(int id, [FromBody] WebsiteRecord record)
+    public async Task<IActionResult> UpdateRecord(int id, [FromBody] CreateRecordRequestDto record)
     {
-        try
+        ValidationResult result = await _recordValidator.ValidateAsync(record);
+
+        if (!result.IsValid)
         {
-            await _dataService.UpdateWebsiteRecord(id, record);
-            return Ok();
+            return BadRequest(JsonConvert.SerializeObject(result.Errors));
         }
-        catch (EntryNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch
+
+        if (!TryGetWebsiteRecord(id, out WebsiteRecordData? websiteRecordData))
         {
             return StatusCode(InternalErrorCode);
         }
+
+        var jobId = (ulong)id;
+        if (_executionManager.JobExists(jobId))
+        {
+            _executionManager.StopPeriodicExecution(jobId);
+        }
+
+        var websiteRecord = _mapper.Map<WebsiteRecord>(websiteRecordData);
+
+        websiteRecord.Label = record.Label;
+        websiteRecord.IsActive = record.IsActive;
+        websiteRecord.Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList();
+        websiteRecord.CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromMinutes(record.Periodicity));
+
+        await _dataService.UpdateWebsiteRecord(id, websiteRecord);
+
+        var returnedRecord = await _dataService.GetWebsiteRecordData(id);
+
+        var crawlInfo = _mapper.Map<CrawlInfo>(returnedRecord.CrawlInfoData);
+
+        if (websiteRecord.IsActive)
+        {
+            _executionManager.EnqueueForPeriodicCrawl(crawlInfo, jobId);
+        }
+
+        return Ok();
     }
 
     [HttpGet]
@@ -201,7 +225,7 @@ public class RecordController : OurControllerBase
             await _dataService.DeleteWebsiteRecord(id);
             return Ok();
         }
-        catch (KeyNotFoundException e)
+        catch (EntryNotFoundException e)
         {
             return NotFound(e.Message);
         }

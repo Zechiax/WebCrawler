@@ -71,7 +71,7 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
         executionManager.WaitForExecutionToFinish(jobId);
     }
 
-    public bool IsValid(ulong jobId)
+    public bool JobExists(ulong jobId)
     {
         return executionManager.JobExists(jobId);
     }
