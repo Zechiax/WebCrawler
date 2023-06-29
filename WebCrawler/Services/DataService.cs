@@ -90,27 +90,46 @@ public class DataService : IDataService
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-        
+    
         WebsiteRecordData? record = await context.WebsiteRecords
             .Include(wr => wr.CrawlInfoData)
             .ThenInclude(wr => wr.LastExecutionData)
+            .Include(wr => wr.Tags) // Include the existing tags
             .FirstOrDefaultAsync(wr => wr.Id == id);
-        
+    
         if (record is null)
             throw new EntryNotFoundException($"Website record with id {id} not found.");
 
         WebsiteExecutionData? execution = record.CrawlInfoData.LastExecutionData;
-        
+    
         var recordFromData = _mapper.Map<WebsiteRecord>(updatedWebsiteRecordData);
-        
+    
+        // Clear the existing tags and add the new tags
+        record.Tags.Clear();
+        foreach (var tag in recordFromData.Tags)
+        {
+            var existingTag = await context.Tags.SingleOrDefaultAsync(t => t.Name == tag.Name);
+            if (existingTag != null)
+            {
+                // If the tag already exists in the database, use it
+                record.Tags.Add(existingTag);
+            }
+            else
+            {
+                // If the tag doesn't exist, create a new one
+                record.Tags.Add(tag);
+            }
+        }
+
         context.Entry(record).CurrentValues.SetValues(recordFromData);
-        
+    
         // In case the execution was not null, we want to keep it
         if (execution is not null)
             record.CrawlInfoData.LastExecutionData = execution;
 
         await context.SaveChangesAsync();
     }
+
 
     public async Task DeleteWebsiteRecord(int id)
     { 
