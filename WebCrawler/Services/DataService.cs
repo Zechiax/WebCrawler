@@ -174,4 +174,43 @@ public class DataService : IDataService
         await context.SaveChangesAsync();
     }
 
+    public async Task<bool?> ActivateWebsiteRecord(int id)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        WebsiteRecordData? record = await context.WebsiteRecords
+            .FirstOrDefaultAsync(wr => wr.Id == id);
+        
+        if (record is null)
+            throw new EntryNotFoundException($"Website record with id {id} not found.");
+        
+        var active = record.IsActive;
+        
+        record.IsActive = true;
+        
+        await context.SaveChangesAsync();
+        
+        return active;
+    }
+
+    public async Task<bool?> DeactivateWebsiteRecord(int id)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        WebsiteRecordData? record = await context.WebsiteRecords
+            .FirstOrDefaultAsync(wr => wr.Id == id);
+        
+        if (record is null)
+            throw new EntryNotFoundException($"Website record with id {id} not found.");
+        
+        var active = record.IsActive;
+        
+        record.IsActive = false;
+        
+        await context.SaveChangesAsync();
+        
+        return active;
+    }
 }
