@@ -7,11 +7,13 @@
 ### Milan
 * View graph na recordu ktery nema graf spadne (show sad face on graph view)
 * select a activate/deactivate nefunguje (chyba v databazi)
+* chybi implementace live view grafu na pozadi nejakym job thread
+	* idealne jenom nalepovat nodes a edges a ne ho cely renderovat znovu - tahat cela data ze serveru nevadi
+
+#### Done
 * validace regex
 * Delete hazi vyjimku - asi to kaskadovani stale?
 * edit needituje
-* chybi implementace live view grafu na pozadi nejakym job thread
-	* idealne jenom nalepovat nodes a edges a ne ho cely renderovat znovu - tahat cela data ze serveru nevadi
 
 ### Pepa
 * nefunguje search na tags
