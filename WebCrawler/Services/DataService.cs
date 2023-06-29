@@ -135,17 +135,26 @@ public class DataService : IDataService
     { 
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
-        
+    
         WebsiteRecordData? record = await context.WebsiteRecords
+            .Include(wr => wr.CrawlInfoData)
+            .ThenInclude(wr => wr.LastExecutionData)
+            .Include(wr => wr.Tags)
             .FirstOrDefaultAsync(wr => wr.Id == id);
-        
+    
         if (record is null)
             throw new EntryNotFoundException($"Website record with id {id} not found.");
-        
+    
+        context.Tags.RemoveRange(record.Tags);
+        if (record.CrawlInfoData.LastExecutionData != null)
+            context.Executions.Remove(record.CrawlInfoData.LastExecutionData);
+        context.CrawlInfos.Remove(record.CrawlInfoData);
+
         context.WebsiteRecords.Remove(record);
-        
+    
         await context.SaveChangesAsync();
     }
+
 
     public async Task AddWebsiteExecution(int recordId, WebsiteExecution websiteExecution)
     {
