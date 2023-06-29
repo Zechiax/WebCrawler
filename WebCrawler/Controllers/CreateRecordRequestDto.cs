@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentValidation;
 
 namespace WebCrawler.Controllers;
@@ -24,5 +25,20 @@ public class CreateRecordRequestDtoValidator : AbstractValidator<CreateRecordReq
         RuleFor(x => x.Tags).Must(x => x.Count < 50);
         // Not tag can be null or empty
         RuleForEach(x => x.Tags).NotEmpty().MaximumLength(30);
+        // We need to check if the regex is valid, aka if it can be compiled
+        RuleFor(x => x.Regex).Must(x =>
+        {
+            try
+            {
+                // ReSharper disable once ObjectCreationAsStatement
+                new Regex(x);
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+        });
+        
     }
 }
