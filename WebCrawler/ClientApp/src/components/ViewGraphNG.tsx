@@ -284,7 +284,8 @@ class ViewGraphNGInternal extends React.Component<
   render() {
     if (this.state.errorMessage) {
       return (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }} className="alert alert-danger">
+          // Possible style style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+          <div  className="alert alert-danger">
             <strong>{this.state.errorMessage}</strong>
           </div>
       );
