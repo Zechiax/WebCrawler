@@ -40,6 +40,7 @@ interface IState {
   graphData: IGraphData;
   graphsIds: number[];
   stabilizationProgress: number;
+  errorMessage?: string;
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -58,6 +59,7 @@ class ViewGraphNGInternal extends React.Component<
       },
       graphsIds: [...this.props.graphsIds],
       stabilizationProgress: 0,
+      errorMessage: undefined,
     };
   }
 
@@ -82,11 +84,21 @@ class ViewGraphNGInternal extends React.Component<
         const graphJson = await response.json();
         graphJson["websiteRecordId"] = id;
         graphsJson.push(graphJson);
+      } else {
+        console.log("Error fetching graph: " + id);
+        this.showErrorMessage();
+        return;
       }
     }
 
     const graphData = await this.convertGraphsJsonToVisJsonAsync(graphsJson);
     this.setState({ graphData });
+  }
+
+  showErrorMessage() {
+    this.setState({
+      errorMessage: "The graph for this record could not be fetched. Please try again later.",
+    });
   }
 
   async convertGraphsJsonToVisJsonAsync(
@@ -99,9 +111,19 @@ class ViewGraphNGInternal extends React.Component<
 
     for (const graphJson of graphsJson) {
       console.log("Fetching record for graph: " + graphJson.websiteRecordId);
-      const recordForGraph = await (
+      const recordForGraphResponse = await (
         await fetch(`/Record/${graphJson.websiteRecordId}`)
-      ).json();
+      );
+
+      if (!recordForGraphResponse.ok) {
+        console.log(
+          "Error fetching record for graph: " + graphJson.websiteRecordId
+        );
+        this.showErrorMessage();
+        return;
+      }
+
+      const recordForGraph = await recordForGraphResponse.json();
 
       for (const node of graphJson.Graph) {
         const color = new RegExp(
@@ -260,8 +282,18 @@ class ViewGraphNGInternal extends React.Component<
   }
 
   render() {
+    if (this.state.errorMessage) {
+      return (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }} className="alert alert-danger">
+            <strong>{this.state.errorMessage}</strong>
+          </div>
+      );
+    }
+
     return <div ref={this.graphRef} className="full-height" />;
   }
+
+
 }
 
 export default ViewGraphNG;
