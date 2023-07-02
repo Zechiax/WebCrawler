@@ -32,8 +32,8 @@ interface IEdge {
 }
 
 interface IGraphData {
-  nodes: INode[];
-  edges: IEdge[];
+  nodes: DataSet<INode>;
+  edges: DataSet<IEdge>;
 }
 
 interface IState {
@@ -41,6 +41,7 @@ interface IState {
   graphsIds: number[];
   stabilizationProgress: number;
   errorMessage?: string;
+  dataUrl?: string;
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -54,22 +55,29 @@ class ViewGraphNGInternal extends React.Component<
     super(props);
     this.state = {
       graphData: {
-        nodes: [],
-        edges: [],
+        nodes: new DataSet<INode>([]),
+        edges: new DataSet<IEdge>([]),
       },
       graphsIds: [...this.props.graphsIds],
       stabilizationProgress: 0,
       errorMessage: undefined,
+      dataUrl: undefined,
     };
+
+    this.setState(
+        {
+          dataUrl: `/Record/livegraph/domains/`,
+        }
+    )
   }
 
   componentDidMount() {
-    this.getGraphAsync("Record/livegraph/domains/");
+    this.getGraphAsync(this.state.dataUrl).then(() => this.firstRender());
   }
 
   componentDidUpdate(prevProps: {}, prevState: IState) {
     if (prevState.graphData !== this.state.graphData) {
-      this.renderGraph();
+      this.firstRender();
     }
   }
 
@@ -104,10 +112,7 @@ class ViewGraphNGInternal extends React.Component<
   async convertGraphsJsonToVisJsonAsync(
     graphsJson: any[]
   ): Promise<IGraphData> {
-    const graphData: IGraphData = {
-      nodes: [],
-      edges: [],
-    };
+    const graphData: IGraphData = this.state.graphData;
 
     for (const graphJson of graphsJson) {
       console.log("Fetching record for graph: " + graphJson.websiteRecordId);
@@ -132,23 +137,23 @@ class ViewGraphNGInternal extends React.Component<
           ? this.stringToColour(recordForGraph.label)
           : "orange";
 
-        const alreadyPresentNode = graphData.nodes.find(
-          (n) => n.id === node.Url
-        );
+        const alreadyPresentNode = graphData.nodes.get(node.Url);
 
         let element = node.Url;
 
         if (alreadyPresentNode) {
+          const presentNode = alreadyPresentNode[0];
+
           if (
             Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started) >
-            Date.parse(alreadyPresentNode.started)
+            Date.parse(presentNode.started)
           ) {
-            alreadyPresentNode.label = node.Title;
-            alreadyPresentNode.color = color;
-            alreadyPresentNode.title = element;
+            presentNode.label = node.Title;
+            presentNode.color = color;
+            presentNode.title = element;
           }
         } else {
-          graphData.nodes.push({
+          graphData.nodes.add({
             id: node.Url,
             label: node.Title,
             color: color,
@@ -160,7 +165,7 @@ class ViewGraphNGInternal extends React.Component<
         for (const neighbourUrl of node.Neighbours) {
           // We generate random ids for the edges
           const id = Math.random().toString(36).substr(2, 9);
-          graphData.edges.push({
+          graphData.edges.add({
             id: `${id}`,
             from: node.Url,
             to: neighbourUrl,
@@ -168,6 +173,8 @@ class ViewGraphNGInternal extends React.Component<
         }
       }
     }
+
+    console.log(graphData);
 
     return graphData;
   }
@@ -193,18 +200,9 @@ class ViewGraphNGInternal extends React.Component<
     }
   }
 
-  renderGraph() {
-    // create an array with nodes
-    const nodes = new DataSet<INode>(this.state.graphData.nodes);
+  firstRender() {
 
-    // create an array with edges
-    const edges = new DataSet<IEdge>(this.state.graphData.edges);
-
-    // provide the data in the vis format
-    const data = {
-      nodes: nodes,
-      edges: edges,
-    };
+    console.log("firstRender");
 
     const options = {
       physics: {
@@ -252,7 +250,9 @@ class ViewGraphNGInternal extends React.Component<
     };
 
     // initialize your network!
-    this.network = new Network(this.graphRef.current!, data, options);
+    this.network = new Network(this.graphRef.current!, this.state.graphData, options);
+
+    const nodes = this.state.graphData.nodes;
 
     //Adjust node size based on the number of connected edges
     const nodeDegrees = new Map<string, number>();

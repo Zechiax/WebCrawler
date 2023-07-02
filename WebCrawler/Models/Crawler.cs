@@ -101,7 +101,7 @@ public class Crawler
 
                 // NOTE: Executor to pass test. DefferedLimited for debugging on client recommended.
                 //executor = new DeferredLimitedExecutor(TimeSpan.Zero, 500, _currentJob, _websiteProvider);
-                executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(5), 1000, _currentJob, _websiteProvider);
+                executor = new DeferredLimitedExecutor(TimeSpan.FromSeconds(1), 1000, _currentJob, _websiteProvider);
                 //executor = new Executor(_currentJob, _websiteProvider);
             }
 
