@@ -37,7 +37,6 @@ interface IGraphData {
 }
 
 interface IState {
-  graphData: IGraphData;
   graphsIds: number[];
   stabilizationProgress: number;
   errorMessage?: string;
@@ -49,14 +48,12 @@ class ViewGraphNGInternal extends React.Component<
 > {
   private graphRef = React.createRef<HTMLDivElement>();
   private network?: Network;
+  private nodes = new DataSet<INode>();
+  private edges = new DataSet<IEdge>();
 
   constructor(props: { graphsIds: [] }) {
     super(props);
     this.state = {
-      graphData: {
-        nodes: [],
-        edges: [],
-      },
       graphsIds: [...this.props.graphsIds],
       stabilizationProgress: 0,
       errorMessage: undefined,
@@ -64,13 +61,15 @@ class ViewGraphNGInternal extends React.Component<
   }
 
   componentDidMount() {
-    this.getGraphAsync("Record/livegraph/domains/");
+    this.getGraphAsync("Record/livegraph/domains/").then(r => {
+      this.initializeGraph();
+    });
   }
 
   componentDidUpdate(prevProps: {}, prevState: IState) {
-    if (prevState.graphData !== this.state.graphData) {
-      this.renderGraph();
-    }
+    // if (prevState.graphData !== this.state.graphData) {
+    //   this.renderGraph();
+    // }
   }
 
   async getGraphAsync(urlbase: string) {
@@ -92,7 +91,9 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     const graphData = await this.convertGraphsJsonToVisJsonAsync(graphsJson);
-    this.setState({ graphData });
+
+    this.nodes.update(graphData.nodes);
+    this.edges.update(graphData.edges);
   }
 
   showErrorMessage() {
@@ -193,17 +194,11 @@ class ViewGraphNGInternal extends React.Component<
     }
   }
 
-  renderGraph() {
-    // create an array with nodes
-    const nodes = new DataSet<INode>(this.state.graphData.nodes);
-
-    // create an array with edges
-    const edges = new DataSet<IEdge>(this.state.graphData.edges);
-
+  initializeGraph() {
     // provide the data in the vis format
     const data = {
-      nodes: nodes,
-      edges: edges,
+      nodes: this.nodes,
+      edges: this.edges,
     };
 
     const options = {
@@ -219,6 +214,7 @@ class ViewGraphNGInternal extends React.Component<
         },
         timestep: 2.5,
         adaptiveTimestep: true,
+        seed: 1337,
       },
       layout: {
         improvedLayout: false,
@@ -256,16 +252,16 @@ class ViewGraphNGInternal extends React.Component<
 
     //Adjust node size based on the number of connected edges
     const nodeDegrees = new Map<string, number>();
-    nodes.forEach((node: INode) => {
+    this.nodes.forEach((node: INode) => {
       nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
     });
 
-    nodes.forEach((node: INode) => {
+    this.nodes.forEach((node: INode) => {
       const degree = nodeDegrees.get(node.id);
       if (degree !== undefined) {
         node.value = degree;
         node.mass = degree;
-        nodes.update(node);
+        this.nodes.update(node);
       }
     });
 
