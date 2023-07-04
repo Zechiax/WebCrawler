@@ -162,10 +162,19 @@ public class DataService : IDataService
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
 
         CrawlInfoData? record = await context.CrawlInfos
+            .Include(wr => wr.LastExecutionData)
             .FirstOrDefaultAsync(wr => wr.WebsiteRecordDataId == recordId);
 
         if (record is null)
             throw new EntryNotFoundException($"Website record with job id {recordId} not found.");
+        
+        // We have to remove the existing execution, if there is one
+        if (record.LastExecutionData != null)
+        {
+            context.Executions.Remove(record.LastExecutionData);
+            await context.SaveChangesAsync();
+        }
+
 
         var executionData = _mapper.Map<WebsiteExecutionData>(websiteExecution);
         
