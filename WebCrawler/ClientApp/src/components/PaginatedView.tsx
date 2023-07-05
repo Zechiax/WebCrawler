@@ -314,7 +314,7 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
                         });
                         return null;
                     });
-                    window.location.reload();
+                    //window.location.reload();
                 };
 
                 const handleActivate = () => {
@@ -324,7 +324,7 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
                         });
                         return null;
                     });
-                    window.location.reload();
+                    //window.location.reload();
                 };
 
                 const handleViewGraph = () => {
@@ -349,7 +349,7 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
                             });
                             return null;
                         });
-                        window.location.reload();
+                        //window.location.reload();
                     }
                 };
 
