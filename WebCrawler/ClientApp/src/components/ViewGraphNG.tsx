@@ -325,17 +325,14 @@ class ViewGraphNGInternal extends React.Component<
     // We show progress bar if the graph is not yet stabilized
     if (this.state.stabilizationProgress < 100) {
       return (
+            // We use bootstrap progress bar
             <div className="progress">
-                <div
-                    className="progress-bar progress-bar-striped active"
-                    role="progressbar"
-                    aria-valuenow={this.state.stabilizationProgress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    style={{ width: `${this.state.stabilizationProgress}%` }}
-                >
-                    {this.state.stabilizationProgress}%
-                </div>
+              <ProgressBar
+                  striped
+                  variant="info"
+                  now={this.state.stabilizationProgress}
+                  label={`${this.state.stabilizationProgress}%`}
+                />
             </div>
         );
     }
