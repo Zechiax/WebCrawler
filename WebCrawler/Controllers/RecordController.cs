@@ -123,7 +123,7 @@ public class RecordController : OurControllerBase
             _executionManager.EnqueueForPeriodicCrawl(crawlInfo, jobId);
         }
 
-        return Ok();
+        return Ok(id);
     }
 
     [HttpGet]

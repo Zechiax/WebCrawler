@@ -36,20 +36,45 @@ interface Tag {
     name: string;
 }
 
-const Records: React.FC<{ showEditModalWindow: Function }> = ({
-    showEditModalWindow,
+const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandler: Function }> = ({
+    showEditModalWindow, registerDataUpdateHandler,
 }) => {
     const [data, setData] = useState<WebsiteRecord[]>([]);
     const navigate = useNavigate();
+
+    const addNewRecord = async (id: Number) => {
+        let response = await fetch(`record/${id}`);
+        let record = await response.json() as WebsiteRecord;
+
+        console.log(record);
+
+        let found = false;
+        data.forEach((row) => {
+            if (row.id === id) {
+                row = record;
+                found = true;
+            }
+        });
+
+        if (!found) {
+            setData([...data, record]);
+            console.log("New record added with id: " + id);
+        } else {
+            setData([...data]);
+            console.log("Record updated with id: " + id);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
             const response = await fetch("records");
             const recordsData = await response.json();
             setData(recordsData);
+            console.log(recordsData);
         };
 
         fetchData();
+        registerDataUpdateHandler(addNewRecord);
     }, []);
 
     const columns: MRT_ColumnDef<WebsiteRecord>[] = useMemo(
@@ -177,16 +202,15 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
             columns={columns}
             data={data}
             enableColumnFilterModes
-
             enableGrouping
             enableRowActions
             enableRowSelection
             initialState={{ showColumnFilters: true }}
             positionToolbarAlertBanner="bottom"
             renderDetailPanel={({ row }) => {
-                const handleRunNow = () => {
+                const handleRunNow = async () => {
                     console.log("Run now clicked for id: " + row.original.id);
-                    fetch(`record/rerun/${row.original.id}`, {
+                    await fetch(`record/rerun/${row.original.id}`, {
                         method: "POST",
                     });
                 };
@@ -261,15 +285,22 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
             renderRowActionMenuItems={({ closeMenu, row }) => [
                 <MenuItem
                     key={0}
-                    onClick={() => {
+                    onClick={async () => {
                         const confirmed = window.confirm(
                             "Are you sure you want to delete this record?"
                         );
                         if (confirmed) {
-                            fetch(`record/${row.original.id}`, {
+                            let response = await fetch(`record/${row.original.id}`, {
                                 method: "DELETE",
                             });
-                            console.log(row.original.id);
+
+                            if (response.status === 200) {
+                                data.splice(row.index, 1);
+                                setData([...data]);
+                                console.log("Record with id: " + row.original.id + " deleted");
+                            } else {
+                                console.log("Record with id: " + row.original.id + " could not be deleted. Status code: " + response.status);
+                            }
                         }
                         closeMenu();
                     }}
@@ -291,7 +322,7 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
                             name: row.original.label,
                             isActive: row.original.isActive,
                             tags: row.original.tags,
-                            periodicity: periodicity, //TODO: fix periodicity
+                            periodicity: periodicity, //TODO: fix periodicity //TODD: find out what this TODO is about
                             regexPattern: row.original.crawlInfo.regexPattern,
                             entryUrl: row.original.crawlInfo.entryUrl,
                             isEditing: true,
@@ -308,23 +339,59 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
             ]}
             renderTopToolbarCustomActions={({ table }) => {
                 const handleDeactivate = () => {
-                    table.getSelectedRowModel().flatRows.map((row) => {
-                        fetch(`record/stop/${row.original.id}`, {
+                    table.getSelectedRowModel().flatRows.map(async (row) => {
+                        console.log("Deactivating record with id: " + row.original.id);
+
+                        let response = await fetch(`record/stop/${row.original.id}`, {
                             method: "POST",
                         });
+
+                        if (response.status === 200) {
+                            console.log("Record with id: " + row.original.id + " deactivated");
+                            response = await fetch(`record/${row.original.id}`, {
+                                method: "GET",
+                            });
+                            let newRecord = await response.json();
+                            data.forEach((record) => {
+                                if (record.id === newRecord.id) {
+                                    record.isActive = newRecord.isActive;
+                                }
+                            });
+                            setData([...data]);
+                        } else {
+                            console.log("Record with id: " + row.original.id + " could not be deactivated");
+                        }
+
                         return null;
                     });
-                    window.location.reload();
                 };
 
                 const handleActivate = () => {
-                    table.getSelectedRowModel().flatRows.map((row) => {
-                        fetch(`record/run/${row.original.id}`, {
+                    table.getSelectedRowModel().flatRows.forEach(async (row) => {
+                        console.log("Activating record with id: " + row.original.id);
+
+                        let response = await fetch(`record/run/${row.original.id}`, {
                             method: "POST",
                         });
+
+                        if (response.status === 200) {
+                            console.log("Record with id: " + row.original.id + " activated");
+                            response = await fetch(`record/${row.original.id}`, {
+                                method: "GET",
+                            });
+                            let newRecord = await response.json();
+                            data.forEach((record) => {
+                                if (record.id === newRecord.id) {
+                                    record.isActive = newRecord.isActive;
+                                }
+                            });
+                            setData([...data]);
+                        } else {
+                            console.log("Record with id: " + row.original.id + " failed to activate. Status code: " + response.status);
+                        }
+
                         return null;
                     });
-                    window.location.reload();
                 };
 
                 const handleViewGraph = () => {
@@ -343,13 +410,21 @@ const Records: React.FC<{ showEditModalWindow: Function }> = ({
                         "Are you sure you want to delete this record?"
                     );
                     if (confirmed) {
-                        table.getSelectedRowModel().flatRows.map((row) => {
-                            fetch(`record/${row.original.id}`, {
+                        table.getSelectedRowModel().flatRows.map(async (row) => {
+                            let response = await fetch(`record/${row.original.id}`, {
                                 method: "DELETE",
                             });
+
+                            if (response.status === 200) {
+                                data.splice(row.index, 1);
+                                setData([...data]);
+                                console.log("Record with id: " + row.original.id + " deleted");
+                            } else {
+                                console.log("Record with id: " + row.original.id + " could not be deleted. Status code: " + response.status);
+                            }
+
                             return null;
                         });
-                        window.location.reload();
                     }
                 };
 
