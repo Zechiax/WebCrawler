@@ -323,26 +323,27 @@ class ViewGraphNGInternal extends React.Component<
   }
 
   render() {
-    // We show progress bar if the graph is not yet stabilized
-    if (this.state.stabilizationProgress < 100) {
-      return (
-            // We use bootstrap progress bar
-            <div className="progress">
-              <ProgressBar
-                  striped
-                  variant="info"
-                  now={this.state.stabilizationProgress}
-                  label={`${this.state.stabilizationProgress}%`}
-                />
-            </div>
-        );
-    }
 
     if (this.state.errorMessage) {
       return (
           // Possible style style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
           <div  className="alert alert-danger">
             <strong>{this.state.errorMessage}</strong>
+          </div>
+      );
+    }
+
+    // We show progress bar if the graph is not yet stabilized
+    if (this.state.stabilizationProgress < 100) {
+      return (
+          // We use bootstrap progress bar
+          <div className="progress">
+            <ProgressBar
+                striped
+                variant="info"
+                now={this.state.stabilizationProgress}
+                label={`${this.state.stabilizationProgress}%`}
+            />
           </div>
       );
     }
