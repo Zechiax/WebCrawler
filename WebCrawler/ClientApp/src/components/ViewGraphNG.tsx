@@ -40,6 +40,7 @@ interface IState {
   graphsIds: number[];
   stabilizationProgress: number;
   errorMessage?: string;
+  intervalId?: NodeJS.Timeout;
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -57,22 +58,37 @@ class ViewGraphNGInternal extends React.Component<
       graphsIds: [...this.props.graphsIds],
       stabilizationProgress: 0,
       errorMessage: undefined,
+      intervalId: undefined,
     };
   }
 
   componentDidMount() {
-    this.getGraphAsync("Record/livegraph/domains/").then(r => {
-      this.initializeGraph();
+    console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
+    this.updateGraphAsync("Record/livegraph/domains/").then(r => {
+      console.log("Graph data loaded");
+      if (!this.state.errorMessage) {
+        this.initializeGraph();
+        console.log("Graph initialized");
+      }
     });
+
+    console.log("Starting periodic graph update");
+    // Start the interval timer to update the graph every 5 seconds
+    const intervalId = setInterval(async () => {
+      await this.updateGraphAsync("Record/livegraph/domains/");
+    }, 5000);
+
+    // Store the intervalId in the state
+    this.setState({ intervalId });
   }
 
   componentDidUpdate(prevProps: {}, prevState: IState) {
-    // if (prevState.graphData !== this.state.graphData) {
-    //   this.renderGraph();
-    // }
+      // if (prevState.graphData !== this.state.graphData) {
+      //   this.renderGraph();
+      // }
   }
 
-  async getGraphAsync(urlbase: string) {
+  async updateGraphAsync(urlbase: string) {
     console.log(this.state.graphsIds);
     const graphsJson = [];
 
@@ -97,6 +113,7 @@ class ViewGraphNGInternal extends React.Component<
   }
 
   showErrorMessage() {
+    console.log("Showing error message");
     this.setState({
       errorMessage: "The graph for this record could not be fetched. Please try again later.",
     });
@@ -159,8 +176,8 @@ class ViewGraphNGInternal extends React.Component<
         }
 
         for (const neighbourUrl of node.Neighbours) {
-          // We generate random ids for the edges
-          const id = Math.random().toString(36).substr(2, 9);
+          // Ids are from url to url
+          const id = `${node.Url} -> ${neighbourUrl}`;
           graphData.edges.push({
             id: `${id}`,
             from: node.Url,
@@ -192,6 +209,10 @@ class ViewGraphNGInternal extends React.Component<
     if (this.network) {
       this.network.destroy();
     }
+
+    if (this.state.intervalId) {
+      clearInterval(this.state.intervalId);
+    }
   }
 
   initializeGraph() {
@@ -214,7 +235,6 @@ class ViewGraphNGInternal extends React.Component<
         },
         timestep: 2.5,
         adaptiveTimestep: true,
-        seed: 1337,
       },
       layout: {
         improvedLayout: false,
@@ -275,6 +295,11 @@ class ViewGraphNGInternal extends React.Component<
       this.setState({ stabilizationProgress: 100 });
       this.network!.fit();
     });
+
+    this.network.on("click", (params) => {
+
+    });
+
   }
 
   render() {
@@ -287,7 +312,16 @@ class ViewGraphNGInternal extends React.Component<
       );
     }
 
-    return <div ref={this.graphRef} className="full-height" />;
+    return (
+        <>
+          <button onClick={async () => {
+            await this.updateGraphAsync('Record/livegraph/domains/');
+          }}
+          >Test
+          </button>
+          <div ref={this.graphRef} className="full-height"/>
+        </>
+    );
   }
 
 
