@@ -145,7 +145,7 @@ class ViewGraphNGInternal extends React.Component<
 
       for (const node of graphJson.Graph) {
         const color = new RegExp(
-          recordForGraph.crawlInfoData.regexPattern
+          recordForGraph.crawlInfo.regexPattern
         ).test(node.Url)
           ? this.stringToColour(recordForGraph.label)
           : "orange";
@@ -158,7 +158,7 @@ class ViewGraphNGInternal extends React.Component<
 
         if (alreadyPresentNode) {
           if (
-            Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started) >
+            Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
             Date.parse(alreadyPresentNode.started)
           ) {
             alreadyPresentNode.label = node.Title;
@@ -170,7 +170,7 @@ class ViewGraphNGInternal extends React.Component<
             id: node.Url,
             label: node.Title,
             color: color,
-            started: recordForGraph.crawlInfoData.lastExecutionData.started,
+            started: recordForGraph.crawlInfo.lastExecution.started,
             title: element,
           });
         }
