@@ -49,7 +49,7 @@ public class DataService : IDataService
         return records;
     }
 
-    public async Task<WebsiteRecordData> GetWebsiteRecordData(int id)
+    public async Task<WebsiteRecord> GetWebsiteRecordData(int id)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
@@ -66,7 +66,9 @@ public class DataService : IDataService
         if (recordData is null)
             throw new KeyNotFoundException($"Website record with id {id} not found.");
 
-        return recordData;
+        var record = _mapper.Map<WebsiteRecord>(recordData);
+        
+        return record;
     }
 
     public async Task<int> AddWebsiteRecord(WebsiteRecord websiteRecord)
