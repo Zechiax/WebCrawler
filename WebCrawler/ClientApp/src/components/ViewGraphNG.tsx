@@ -41,6 +41,7 @@ interface IState {
   stabilizationProgress: number;
   errorMessage?: string;
   intervalId?: NodeJS.Timeout;
+  liveGraphUrlBase: string;
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -59,12 +60,13 @@ class ViewGraphNGInternal extends React.Component<
       stabilizationProgress: 0,
       errorMessage: undefined,
       intervalId: undefined,
+      liveGraphUrlBase: "Record/livegraph/domains/",
     };
   }
 
   componentDidMount() {
     console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
-    this.updateGraphAsync("Record/livegraph/domains/").then(r => {
+    this.updateGraphAsync().then(r => {
       console.log("Graph data loaded");
       if (!this.state.errorMessage) {
         this.initializeGraph();
@@ -83,12 +85,12 @@ class ViewGraphNGInternal extends React.Component<
       // }
   }
 
-  async updateGraphAsync(urlbase: string) {
+  async updateGraphAsync() {
     console.log(this.state.graphsIds);
     const graphsJson = [];
 
     for (const id of this.state.graphsIds) {
-      const response = await fetch(urlbase + id);
+      const response = await fetch(this.state.liveGraphUrlBase + id);
 
       if (response.ok) {
         const graphJson = await response.json();
@@ -194,9 +196,8 @@ class ViewGraphNGInternal extends React.Component<
 
   startInterval() {
     console.log("Starting interval");
-    // TODO: Use URL from somewhere else
     const intervalId = setInterval(async () => {
-      await this.updateGraphAsync("Record/livegraph/domains/");
+      await this.updateGraphAsync();
     }, 5000);
 
     // Store the intervalId in the state
@@ -349,7 +350,7 @@ class ViewGraphNGInternal extends React.Component<
     return (
         <>
           <button onClick={async () => {
-            await this.updateGraphAsync('Record/livegraph/domains/');
+            await this.updateGraphAsync();
           }}
           >Test
           </button>
