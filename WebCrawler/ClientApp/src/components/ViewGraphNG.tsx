@@ -2,7 +2,7 @@ import React from "react";
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
 import "./ViewGraphNG.css";
-//import { ProgressBar } from 'react-bootstrap';
+import { ProgressBar } from 'react-bootstrap';
 
 export const ViewGraphNG = (props: any) => {
   const location = useLocation();
@@ -74,12 +74,7 @@ class ViewGraphNGInternal extends React.Component<
 
     console.log("Starting periodic graph update");
     // Start the interval timer to update the graph every 5 seconds
-    const intervalId = setInterval(async () => {
-      await this.updateGraphAsync("Record/livegraph/domains/");
-    }, 5000);
-
-    // Store the intervalId in the state
-    this.setState({ intervalId });
+    this.startInterval();
   }
 
   componentDidUpdate(prevProps: {}, prevState: IState) {
@@ -190,6 +185,32 @@ class ViewGraphNGInternal extends React.Component<
     return graphData;
   }
 
+  removeGraph() {
+    console.log("Removing graph");
+    if (this.network) {
+      this.network.destroy();
+    }
+  }
+
+  startInterval() {
+    console.log("Starting interval");
+    // TODO: Use URL from somewhere else
+    const intervalId = setInterval(async () => {
+      await this.updateGraphAsync("Record/livegraph/domains/");
+    }, 5000);
+
+    // Store the intervalId in the state
+    this.setState({ intervalId });
+  }
+
+    stopInterval() {
+        console.log("Stopping interval");
+        // Clear the interval right before component unmount
+        if (this.state.intervalId) {
+            clearInterval(this.state.intervalId);
+        }
+    }
+
   stringToColour = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -206,13 +227,11 @@ class ViewGraphNGInternal extends React.Component<
   };
 
   componentWillUnmount() {
-    if (this.network) {
-      this.network.destroy();
-    }
+    console.log("Component unmounting, clearing interval");
+    // Clear the interval right before component unmount
+    this.stopInterval();
 
-    if (this.state.intervalId) {
-      clearInterval(this.state.intervalId);
-    }
+    this.removeGraph();
   }
 
   initializeGraph() {
@@ -303,6 +322,24 @@ class ViewGraphNGInternal extends React.Component<
   }
 
   render() {
+    // We show progress bar if the graph is not yet stabilized
+    if (this.state.stabilizationProgress < 100) {
+      return (
+            <div className="progress">
+                <div
+                    className="progress-bar progress-bar-striped active"
+                    role="progressbar"
+                    aria-valuenow={this.state.stabilizationProgress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    style={{ width: `${this.state.stabilizationProgress}%` }}
+                >
+                    {this.state.stabilizationProgress}%
+                </div>
+            </div>
+        );
+    }
+
     if (this.state.errorMessage) {
       return (
           // Possible style style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
