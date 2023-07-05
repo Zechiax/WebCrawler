@@ -220,13 +220,14 @@ public class RecordController : OurControllerBase
             return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
         }
 
-        ulong? jobId = record!.CrawlInfoData.JobId;
-        if(jobId is null)
+        ulong jobId = (ulong) id;
+        
+        if (!_executionManager.JobExists(jobId))
         {
-            return StatusCode(BadRequestCode, $"Can't stop execution for record with given id: {id}, since jobId is not set, meaning there is no active crawler for this website record.");
+            return Ok("Job already stopped.");
         }
-
-        bool didIJustStopped = _executionManager.StopPeriodicExecution(record.CrawlInfoData.JobId!.Value);
+        
+        bool didIJustStopped = _executionManager.StopPeriodicExecution(jobId);
 
         if (!didIJustStopped)
         {
