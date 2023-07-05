@@ -7,7 +7,7 @@ public interface IDataService
     public Task MigrateAsync();
     public Task<IEnumerable<WebsiteRecord>> GetWebsiteRecords();
     
-    public Task<WebsiteRecordData> GetWebsiteRecordData(int id);
+    public Task<WebsiteRecord> GetWebsiteRecordData(int id);
     
     public Task<int> AddWebsiteRecord(WebsiteRecord websiteRecord);
     
