@@ -81,13 +81,17 @@ class ViewGraphNGInternal extends React.Component<
 
     console.log("Starting periodic graph update");
     // Start the interval timer to update the graph every 5 seconds
-    this.startInterval();
+    this.startLiveUpdate();
   }
 
-  componentDidUpdate(prevProps: {}, prevState: IState) {
-      // if (prevState.graphData !== this.state.graphData) {
-      //   this.renderGraph();
-      // }
+  async componentDidUpdate(prevProps: {}, prevState: IState) {
+    if (prevState.liveGraphUrlBase !== this.state.liveGraphUrlBase) {
+      this.removeGraph();
+      this.stopLiveUpdate();
+      await this.updateGraphAsync();
+      this.initializeGraph();
+      this.startLiveUpdate();
+    }
   }
 
   async updateGraphAsync() {
@@ -199,7 +203,7 @@ class ViewGraphNGInternal extends React.Component<
     }
   }
 
-  startInterval() {
+  startLiveUpdate() {
     console.log("Starting interval");
     const intervalId = setInterval(async () => {
       await this.updateGraphAsync();
@@ -209,7 +213,7 @@ class ViewGraphNGInternal extends React.Component<
     this.setState({ intervalId });
   }
 
-    stopInterval() {
+    stopLiveUpdate() {
         console.log("Stopping interval");
         // Clear the interval right before component unmount
         if (this.state.intervalId) {
@@ -235,7 +239,7 @@ class ViewGraphNGInternal extends React.Component<
   componentWillUnmount() {
     console.log("Component unmounting, clearing interval");
     // Clear the interval right before component unmount
-    this.stopInterval();
+    this.stopLiveUpdate();
 
     this.removeGraph();
   }
