@@ -2,7 +2,7 @@ import React from "react";
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
 import "./ViewGraphNG.css";
-import { ProgressBar } from 'react-bootstrap';
+// import { ProgressBar } from 'react-bootstrap';
 
 export const ViewGraphNG = (props: any) => {
   const location = useLocation();
