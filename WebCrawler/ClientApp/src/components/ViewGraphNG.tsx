@@ -213,11 +213,15 @@ class ViewGraphNGInternal extends React.Component<
         }
     }
 
-    startLiveUpdate() {
+    startLiveUpdate(interval : number = 5000) {
+        if (this.state.intervalId) {
+            this.stopLiveUpdate();
+        }
+
         console.log("Starting interval");
         const intervalId = setInterval(async () => {
             await this.updateGraphAsync();
-        }, 5000);
+        }, interval);
 
         // Store the intervalId in the state
         this.setState({intervalId});
@@ -228,6 +232,7 @@ class ViewGraphNGInternal extends React.Component<
         // Clear the interval right before component unmount
         if (this.state.intervalId) {
             clearInterval(this.state.intervalId);
+            this.setState({intervalId: undefined});
         }
     }
 
