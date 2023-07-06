@@ -41,7 +41,12 @@ interface IState {
   stabilizationProgress: number;
   errorMessage?: string;
   intervalId?: NodeJS.Timeout;
-  liveGraphUrlBase: string;
+  liveGraphUrlBase: GraphView;
+}
+
+enum GraphView {
+  Domain ="Record/livegraph/domains/",
+  Website = "Record/livegraph/websites/",
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -60,7 +65,7 @@ class ViewGraphNGInternal extends React.Component<
       stabilizationProgress: 0,
       errorMessage: undefined,
       intervalId: undefined,
-      liveGraphUrlBase: "Record/livegraph/domains/",
+      liveGraphUrlBase: GraphView.Domain,
     };
   }
 
