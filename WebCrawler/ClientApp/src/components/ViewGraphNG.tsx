@@ -349,11 +349,6 @@ class ViewGraphNGInternal extends React.Component<
 
     return (
         <>
-          <button onClick={async () => {
-            await this.updateGraphAsync();
-          }}
-          >Test
-          </button>
           <div ref={this.graphRef} className="full-height"/>
         </>
     );
