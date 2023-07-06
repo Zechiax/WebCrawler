@@ -12,6 +12,7 @@ export class Home extends Component {
 
     this.state = {
         isCreateWebsiteRecordModalShown: false,
+        dataUpdatehandler: null,
         modalWindowContext: {
             id: 0,
             name: "",
@@ -27,7 +28,6 @@ export class Home extends Component {
 
     onCreateWebsiteRecordModalClose = () => {
         this.setState({ isCreateWebsiteRecordModalShown: false });
-        window.location.reload();
     }
 
     handleEditWebsiteRecord = (context) => {
@@ -40,13 +40,19 @@ export class Home extends Component {
         });
     }
 
+    registerDataUpdateHandler = (handler) => {
+        this.setState({ dataUpdatehandler: handler });
+    }
 
   render() {
     return (
       <>
         <Container fluid="md" style={{ display: 'flex', flexDirection: 'column'}}>
             <div style={{ flex: '1', marginBottom: '1rem' }}>
-                    <PaginatedView showEditModalWindow={ this.handleEditWebsiteRecord } />
+                    <PaginatedView
+                        showEditModalWindow={this.handleEditWebsiteRecord}
+                        registerDataUpdateHandler={this.registerDataUpdateHandler}
+                    />
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -71,7 +77,7 @@ export class Home extends Component {
             regexPresetValue={this.state.modalWindowContext.regexPattern}
             recordId={this.state.modalWindowContext.id}
             isEditing={this.state.modalWindowContext.isEditing}
-            passCreatedRecordId={(id) => { }}
+            passCreatedRecordId={ this.state.dataUpdatehandler }
             onClose={this.onCreateWebsiteRecordModalClose}
         />
       </>
