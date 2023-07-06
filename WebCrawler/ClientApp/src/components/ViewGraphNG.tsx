@@ -7,7 +7,7 @@ import { ProgressBar } from 'react-bootstrap';
 export const ViewGraphNG = (props: any) => {
   const location = useLocation();
   return (
-    <ViewGraphNGInternal graphsIds={location.state.graphsIds} {...props} />
+      <ViewGraphNGInternal graphsIds={location.state.graphsIds} {...props} />
   );
 };
 
@@ -50,8 +50,8 @@ enum GraphView {
 }
 
 class ViewGraphNGInternal extends React.Component<
-  { graphsIds: number[] },
-  IState
+    { graphsIds: number[] },
+    IState
 > {
   private graphRef = React.createRef<HTMLDivElement>();
   private network?: Network;
@@ -69,9 +69,9 @@ class ViewGraphNGInternal extends React.Component<
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
-    this.updateGraphAsync().then(r => {
+    await this.updateGraphAsync().then(r => {
       console.log("Graph data loaded");
       if (!this.state.errorMessage) {
         this.initializeGraph();
@@ -126,7 +126,7 @@ class ViewGraphNGInternal extends React.Component<
   }
 
   async convertGraphsJsonToVisJsonAsync(
-    graphsJson: any[]
+      graphsJson: any[]
   ): Promise<IGraphData> {
     const graphData: IGraphData = {
       nodes: [],
@@ -136,12 +136,12 @@ class ViewGraphNGInternal extends React.Component<
     for (const graphJson of graphsJson) {
       console.log("Fetching record for graph: " + graphJson.websiteRecordId);
       const recordForGraphResponse = await (
-        await fetch(`/Record/${graphJson.websiteRecordId}`)
+          await fetch(`/Record/${graphJson.websiteRecordId}`)
       );
 
       if (!recordForGraphResponse.ok) {
         console.log(
-          "Error fetching record for graph: " + graphJson.websiteRecordId
+            "Error fetching record for graph: " + graphJson.websiteRecordId
         );
         this.showErrorMessage();
         return;
@@ -151,25 +151,33 @@ class ViewGraphNGInternal extends React.Component<
 
       for (const node of graphJson.Graph) {
         const color = new RegExp(
-          recordForGraph.crawlInfo.regexPattern
+            recordForGraph.crawlInfo.regexPattern
         ).test(node.Url)
-          ? this.stringToColour(recordForGraph.label)
-          : "orange";
+            ? this.stringToColour(recordForGraph.label)
+            : "orange";
 
         const alreadyPresentNode = graphData.nodes.find(
-          (n) => n.id === node.Url
+            (n) => n.id === node.Url
         );
 
         let element = node.Url;
 
+        let numberOfNeighbours = node.Neighbours.length;
+
+        if (numberOfNeighbours <= 0) {
+          numberOfNeighbours = 1;
+        }
+
         if (alreadyPresentNode) {
           if (
-            Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
-            Date.parse(alreadyPresentNode.started)
+              Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
+              Date.parse(alreadyPresentNode.started)
           ) {
             alreadyPresentNode.label = node.Title;
             alreadyPresentNode.color = color;
             alreadyPresentNode.title = element;
+            alreadyPresentNode.value = numberOfNeighbours;
+            alreadyPresentNode.mass = numberOfNeighbours;
           }
         } else {
           graphData.nodes.push({
@@ -178,6 +186,8 @@ class ViewGraphNGInternal extends React.Component<
             color: color,
             started: recordForGraph.crawlInfo.lastExecution.started,
             title: element,
+            value: numberOfNeighbours,
+            mass: numberOfNeighbours,
           });
         }
 
@@ -213,13 +223,13 @@ class ViewGraphNGInternal extends React.Component<
     this.setState({ intervalId });
   }
 
-    stopLiveUpdate() {
-        console.log("Stopping interval");
-        // Clear the interval right before component unmount
-        if (this.state.intervalId) {
-            clearInterval(this.state.intervalId);
-        }
+  stopLiveUpdate() {
+    console.log("Stopping interval");
+    // Clear the interval right before component unmount
+    if (this.state.intervalId) {
+      clearInterval(this.state.intervalId);
     }
+  }
 
   stringToColour = (str: string) => {
     let hash = 0;
@@ -297,22 +307,7 @@ class ViewGraphNGInternal extends React.Component<
     };
 
     // initialize your network!
-    this.network = new Network(this.graphRef.current!, data, options);
-
-    //Adjust node size based on the number of connected edges
-    const nodeDegrees = new Map<string, number>();
-    this.nodes.forEach((node: INode) => {
-      nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
-    });
-
-    this.nodes.forEach((node: INode) => {
-      const degree = nodeDegrees.get(node.id);
-      if (degree !== undefined) {
-        node.value = degree;
-        node.mass = degree;
-        this.nodes.update(node);
-      }
-    });
+    this.network = new Network(this.graphRef.current, data, options);
 
     this.network.on("stabilizationProgress", (params) => {
       this.setState({
@@ -324,11 +319,6 @@ class ViewGraphNGInternal extends React.Component<
       this.setState({ stabilizationProgress: 100 });
       this.network!.fit();
     });
-
-    this.network.on("click", (params) => {
-
-    });
-
   }
 
   render() {
@@ -343,19 +333,19 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     // We show progress bar if the graph is not yet stabilized
-    if (this.state.stabilizationProgress < 100) {
-      return (
-          // We use bootstrap progress bar
-          <div className="progress">
-            <ProgressBar
-                striped
-                variant="info"
-                now={this.state.stabilizationProgress}
-                label={`${this.state.stabilizationProgress}%`}
-            />
-          </div>
-      );
-    }
+    // if (this.state.stabilizationProgress < 100) {
+    //   return (
+    //       // We use bootstrap progress bar
+    //       <div className="progress">
+    //         <ProgressBar
+    //             striped
+    //             variant="info"
+    //             now={this.state.stabilizationProgress}
+    //             label={`${this.state.stabilizationProgress}%`}
+    //         />
+    //       </div>
+    //   );
+    // }
 
     return (
         <>
