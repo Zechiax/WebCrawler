@@ -48,21 +48,27 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
 
         console.log(record);
 
-        let found = false;
-        data.forEach((row) => {
-            if (row.id === id) {
-                row = record;
-                found = true;
-            }
-        });
+        setData(prevData => {
+            let found = false;
+            let newData = prevData.map((row) => {
+                if (row.id === id) {
+                    found = true;
+                    return record;
+                }
+                return row;
+            });
 
-        if (!found) {
-            setData([...data, record]);
-            console.log("New record added with id: " + id);
-        } else {
-            setData([...data]);
-            console.log("Record updated with id: " + id);
-        }
+            if (!found) {
+                newData.push(record);
+                console.log("New record added with id: " + id);
+            } else {
+                console.log("Record updated with id: " + id);
+            }
+
+            console.log(newData);
+
+            return newData;
+        });
     };
 
     useEffect(() => {
@@ -71,11 +77,12 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
             const recordsData = await response.json();
             setData(recordsData);
             console.log(recordsData);
+            registerDataUpdateHandler(addNewRecord);
         };
 
         fetchData();
-        registerDataUpdateHandler(addNewRecord);
-    }, []);
+
+    }, [registerDataUpdateHandler]);
 
     const columns: MRT_ColumnDef<WebsiteRecord>[] = useMemo(
         () => [
@@ -287,7 +294,7 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
                     key={0}
                     onClick={async () => {
                         const confirmed = window.confirm(
-                            "Are you sure you want to delete this record?"
+                            "Are you sure you want to delete record with id " + row.original.id + "?"
                         );
                         if (confirmed) {
                             let response = await fetch(`record/${row.original.id}`, {
@@ -339,7 +346,7 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
             ]}
             renderTopToolbarCustomActions={({ table }) => {
                 const handleDeactivate = () => {
-                    table.getSelectedRowModel().flatRows.map(async (row) => {
+                    table.getSelectedRowModel().flatRows.forEach(async (row) => {
                         console.log("Deactivating record with id: " + row.original.id);
 
                         let response = await fetch(`record/stop/${row.original.id}`, {
@@ -352,17 +359,16 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
                                 method: "GET",
                             });
                             let newRecord = await response.json();
-                            data.forEach((record) => {
+                            let newData = data.map((record) => {
                                 if (record.id === newRecord.id) {
-                                    record.isActive = newRecord.isActive;
+                                    return newRecord;
                                 }
+                                return record;
                             });
-                            setData([...data]);
+                            setData([...newData]);
                         } else {
                             console.log("Record with id: " + row.original.id + " could not be deactivated");
                         }
-
-                        return null;
                     });
                 };
 
@@ -380,17 +386,16 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
                                 method: "GET",
                             });
                             let newRecord = await response.json();
-                            data.forEach((record) => {
+                            let newData = data.map((record) => {
                                 if (record.id === newRecord.id) {
-                                    record.isActive = newRecord.isActive;
+                                    return newRecord;
                                 }
+                                return record;
                             });
-                            setData([...data]);
+                            setData([...newData]);
                         } else {
                             console.log("Record with id: " + row.original.id + " failed to activate. Status code: " + response.status);
                         }
-
-                        return null;
                     });
                 };
 
@@ -407,23 +412,38 @@ const Records: React.FC<{ showEditModalWindow: Function, registerDataUpdateHandl
 
                 const handleDelete = () => {
                     const confirmed = window.confirm(
-                        "Are you sure you want to delete this record?"
+                        "Are you sure you want to delete records with ids: " +
+                        table.getSelectedRowModel().flatRows.map((row) => row.original.id).join(", ") +
+                        "?"
                     );
+
+                    let deletedIndexes: number[] = [];
+                    console.log(table.getSelectedRowModel().flatRows.map((row) => row.original.id));
+
                     if (confirmed) {
-                        table.getSelectedRowModel().flatRows.map(async (row) => {
-                            let response = await fetch(`record/${row.original.id}`, {
+                        let deletions = table.getSelectedRowModel().flatRows.map((row) => {
+                            console.log("Deleting record with id: " + row.original.id);
+                            return fetch(`record/${row.original.id}`, {
                                 method: "DELETE",
+                            }).then((response) => {
+
+                                if (response.status === 200) {
+                                    deletedIndexes.push(row.index);
+                                    console.log("Record with id: " + row.original.id + " deleted");
+                                } else {
+                                    console.log("Record with id: " + row.original.id + " could not be deleted. Status code: " + response.status);
+                                }
+
+                                row.toggleSelected();
+                            })
+                        });
+
+                        Promise.all(deletions).then(() => {
+                            console.log("Indexes of deleted records: " + deletedIndexes);
+                            let newData = data.filter((_, index) => {
+                                return !deletedIndexes.includes(index);
                             });
-
-                            if (response.status === 200) {
-                                data.splice(row.index, 1);
-                                setData([...data]);
-                                console.log("Record with id: " + row.original.id + " deleted");
-                            } else {
-                                console.log("Record with id: " + row.original.id + " could not be deleted. Status code: " + response.status);
-                            }
-
-                            return null;
+                            setData([...newData]);
                         });
                     }
                 };
