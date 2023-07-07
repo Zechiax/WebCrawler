@@ -1,6 +1,7 @@
 import React from "react";
 import {DataSet, Network} from "vis-network/standalone/esm/vis-network";
-import {useLocation} from "react-router";
+import { useLocation } from "react-router";
+import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
 // import { ProgressBar } from 'react-bootstrap';
 
@@ -42,6 +43,7 @@ interface IState {
     errorMessage?: string;
     intervalId?: NodeJS.Timeout;
     liveGraphUrlBase: GraphView;
+    staticView: boolean;
 }
 
 enum GraphView {
@@ -66,6 +68,7 @@ class ViewGraphNGInternal extends React.Component<
             errorMessage: undefined,
             intervalId: undefined,
             liveGraphUrlBase: GraphView.Domain,
+            staticView: false,
         };
     }
 
@@ -90,6 +93,8 @@ class ViewGraphNGInternal extends React.Component<
             this.stopLiveUpdate();
             await this.updateGraphAsync();
             this.initializeGraph();
+            this.setState({ staticView: false });
+            console.log("Graph view changed to: " + this.state.liveGraphUrlBase);
             this.startLiveUpdate();
         }
     }
@@ -354,7 +359,65 @@ class ViewGraphNGInternal extends React.Component<
 
         return (
             <>
-                <div ref={this.graphRef} className="full-height"/>
+                <div ref={this.graphRef} className="full-height" />
+
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateAreas: "'top''middle''bottom'",
+                        position: "absolute",
+                        top: "70px",
+                        right: "10px",
+                        gap: "10px",
+                    }}
+                >
+                    <Button
+                        style={{
+                            gridArea: "top",
+                        }}
+                        onClick={() => {
+                            if (this.state.liveGraphUrlBase === GraphView.Domain) {
+                                console.log("Changing to website view");
+                                this.setState({ liveGraphUrlBase: GraphView.Website });
+                            } else {
+                                console.log("Changing to domain view");
+                                this.setState({ liveGraphUrlBase: GraphView.Domain });
+                            }
+                        }}
+
+                    >
+                        { this.state.liveGraphUrlBase === GraphView.Domain ? "Website view" : "Domain view" }
+                    </Button>
+                    <Button
+                        style={{
+                            gridArea: "middle",
+                        }}
+                        onClick={() => {
+                            if (this.state.staticView) {
+                                this.setState({ staticView: false });
+                                this.startLiveUpdate();
+                            } else {
+                                this.setState({ staticView: true });
+                                this.stopLiveUpdate();
+                            }
+                        }}
+
+                    >
+                        {this.state.staticView ? "Dynamic View" : "Static View"}
+                    </Button>
+                    <Button
+                        style={{
+                            gridArea: "bottom",
+                            visibility: this.state.staticView ? "visible" : "hidden",
+                        }}
+                        onClick={() => {
+                            this.updateGraphAsync();
+                        }}
+                    >
+                        Update Graph
+                    </Button>
+
+                </div>
             </>
         );
     }
