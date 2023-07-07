@@ -88,7 +88,9 @@ export class CreateWebsiteRecordModalWindow extends Component {
 
             try {
                 const id = await response.json();
-                await this.props.passCreatedRecordId(id);
+                if (this.props.passCreatedRecordId !== undefined) {
+                    await this.props.passCreatedRecordId(id);
+                }
             } catch {
                 console.log(
                     "Server returning id from server failed, when created new website record."
