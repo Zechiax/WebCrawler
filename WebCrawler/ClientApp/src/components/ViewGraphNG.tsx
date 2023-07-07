@@ -1,6 +1,7 @@
 import React from "react";
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
+import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
 //import { ProgressBar } from 'react-bootstrap';
 
@@ -41,6 +42,7 @@ interface IState {
   graphsIds: number[];
   stabilizationProgress: number;
   errorMessage?: string;
+  staticView: boolean;
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -60,6 +62,7 @@ class ViewGraphNGInternal extends React.Component<
       graphsIds: [...this.props.graphsIds],
       stabilizationProgress: 0,
       errorMessage: undefined,
+      staticView: false
     };
   }
 
@@ -291,7 +294,50 @@ class ViewGraphNGInternal extends React.Component<
       );
     }
 
-    return <div ref={this.graphRef} className="full-height" />;
+    return (
+        <>
+            <div ref={this.graphRef} className="full-height" />
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateAreas: "'top''middle''bottom'",
+                    position: "absolute",
+                    top: "70px",
+                    right: "10px",
+                    gap: "10px",
+                }}
+            >
+                <Button
+                    style={{
+                        gridArea: "top",
+                    }}
+                >
+                    "Websites view X Domains view"
+                </Button>
+                <Button
+                    style={{
+                        gridArea: "middle",
+                    }}
+                    onClick={() => {
+                        this.setState({ staticView: !this.state.staticView });
+                    }}
+
+                >
+                    { this.state.staticView ? "Dynamic View" : "Static View" }
+                </Button>
+                <Button
+                    style={{
+                        gridArea: "bottom",
+                        visibility: this.state.staticView ? "visible" : "hidden",
+                    }}
+                >
+                    "Update Graph"
+                </Button>
+
+            </div>
+        </>
+    );
   }
 
 
