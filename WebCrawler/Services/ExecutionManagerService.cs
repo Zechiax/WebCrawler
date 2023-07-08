@@ -112,12 +112,6 @@ public class ExecutionManagerService : IExecutionManagerService
         WebsiteExecutionJob job = jobs[jobId];
         lock(job)
         {
-            if(job.JobStatus is JobStatus.WaitingInQueue)
-            {
-                Monitor.Wait(job);
-                return true;
-            }
-
             // already stopped
             if(job.JobStatus is JobStatus.Stopped or JobStatus.Finished)
             {

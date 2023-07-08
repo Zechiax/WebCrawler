@@ -5,7 +5,7 @@ import * as d3 from "d3";
 import Modal from "react-bootstrap/Modal";
 import ListGroup from "react-bootstrap/ListGroup";
 import { Label } from "reactstrap";
-import { CreateWebsiteRecordModalWindow } from "./CreateWebsiteRecordModalWindow";
+import { WebsiteRecordInfoModal } from "./CreateWebsiteRecordModalWindow";
 
 export const ViewGraph = (props) => {
   const location = useLocation();
@@ -229,9 +229,9 @@ class ViewGraphInternal extends Component {
 
       for (const node of graphJson.Graph) {
         // if regex doesn't match is orange
-        const color = new RegExp(recordForGraph.crawlInfoData.regexPattern).test(
-          node.Url
-        )
+        const color = new RegExp(
+          recordForGraph.crawlInfoData.regexPattern
+        ).test(node.Url)
           ? ViewGraphInternal.stringToColour(recordForGraph.label)
           : "orange";
 
@@ -261,7 +261,9 @@ class ViewGraphInternal extends Component {
             url: node.Url,
             title: node.Title,
             crawlTime: node.CrawlTime,
-            started: Date.parse(recordForGraph.crawlInfoData.lastExecutionData.started),
+            started: Date.parse(
+              recordForGraph.crawlInfoData.lastExecutionData.started
+            ),
             inWhichRecords: [
               { label: recordForGraph.label, id: recordForGraph.id },
             ],
@@ -503,7 +505,7 @@ class ViewGraphInternal extends Component {
           </div>
         </Modal>
 
-        <CreateWebsiteRecordModalWindow
+        <WebsiteRecordInfoModal
           show={this.state.createNewWebsiteRecord.show}
           passCreatedRecordId={(id) => {
             this.setState((oldState, props) => ({

@@ -52,14 +52,6 @@ class Executor : IExecutor
 
         while (!CrawlFinished())
         {
-            lock (ExecutionJob)
-            {
-                if (ExecutionJob.JobStatus == JobStatus.Stopped)
-                {
-                    return;
-                }
-            }
-
             await ProcessOne();
         }
     }
@@ -74,7 +66,20 @@ class Executor : IExecutor
 
     public bool CrawlFinished()
     {
-        return toCrawl.Count <= 0;
+        if(toCrawl.Count <= 0)
+        {
+            return true;
+        }
+
+        lock (ExecutionJob)
+        {
+            if (ExecutionJob.JobStatus is JobStatus.Stopped)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task ProcessOne()

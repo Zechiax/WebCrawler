@@ -175,7 +175,7 @@ public class RecordController : OurControllerBase
 
     [HttpPost]
     [Route("rerun/{id:int}")]
-    public IActionResult RerunExecutionOnRecord(int id)
+    public async Task<IActionResult> RerunExecutionOnRecord(int id)
     {
         if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
@@ -187,15 +187,18 @@ public class RecordController : OurControllerBase
         ulong jobId = (ulong)crawlInfo.WebsiteRecordId;
         if (_executionManager.JobExists(jobId))
         {
-            _executionManager.ResetJobAsync(jobId);
+            await _executionManager.ResetJobAsync(jobId);
         }
+
+        record.IsActive = true;
+        await _dataService.UpdateWebsiteRecord(id, record);
 
         return Ok();
     }
 
     [HttpPost]
     [Route("run/{id:int}")]
-    public IActionResult RunExecutionOnRecord(int id)
+    public async Task<IActionResult> RunExecutionOnRecord(int id)
     {
         if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
@@ -204,13 +207,16 @@ public class RecordController : OurControllerBase
         
         var crawlInfo = _mapper.Map<CrawlInfo>(record.CrawlInfo);
 
+        record.IsActive = true;
+        await _dataService.UpdateWebsiteRecord(id, record);
+
         _executionManager.EnqueueForPeriodicCrawl(crawlInfo, (ulong)crawlInfo.WebsiteRecordId);
         return Ok();
     }
 
     [HttpPost]
     [Route("stop/{id:int}")]
-    public IActionResult StopExecutionOnRecord(int id)
+    public async Task<IActionResult> StopExecutionOnRecord(int id)
     {
         if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
@@ -225,6 +231,9 @@ public class RecordController : OurControllerBase
         }
         
         bool didIJustStopped = _executionManager.StopPeriodicExecution(jobId);
+
+        record.IsActive = false;
+        await _dataService.UpdateWebsiteRecord(id, record);
 
         if (!didIJustStopped)
         {

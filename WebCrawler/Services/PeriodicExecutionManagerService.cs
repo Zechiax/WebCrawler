@@ -89,9 +89,10 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
 
     private async Task<bool> RemovePeriodicJob(ulong jobId)
     {
+        // already removed
         if (!periodicJobs.ContainsKey(jobId))
         {
-            throw new JobIdInvalidException($"Periodic job with {jobId} doesn't exist.");
+            return false;
         }
 
         PeriodicWebsiteExecutionJob job = periodicJobs[jobId];
