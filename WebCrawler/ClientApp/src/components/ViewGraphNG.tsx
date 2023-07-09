@@ -89,14 +89,20 @@ class ViewGraphNGInternal extends React.Component<
 
     async componentDidUpdate(prevProps: {}, prevState: IState) {
         if (prevState.liveGraphUrlBase !== this.state.liveGraphUrlBase) {
-            this.removeGraph();
+            console.log("Graph view changed to: " + this.state.liveGraphUrlBase);
             this.stopLiveUpdate();
+            this.clearGraph();
+            this.removeGraph();
             await this.updateGraphAsync();
             this.initializeGraph();
             this.setState({ staticView: false });
-            console.log("Graph view changed to: " + this.state.liveGraphUrlBase);
             this.startLiveUpdate();
         }
+    }
+
+    clearGraph() {
+        this.nodes.clear();
+        this.edges.clear();
     }
 
     async updateGraphAsync() {
