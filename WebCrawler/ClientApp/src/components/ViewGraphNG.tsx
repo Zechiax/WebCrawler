@@ -370,9 +370,17 @@ class ViewGraphNGInternal extends React.Component<
         return (
             <>
                 {this.state.stabilizationProgress < 100 && (
-                    <div>
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "25%",
+                            width: "50%",
+                        }}
+                    >
                         <ProgressBar
                             striped
+                            animated
                             variant="info"
                             now={this.state.stabilizationProgress}
                             label={`${this.state.stabilizationProgress}%`}
