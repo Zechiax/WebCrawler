@@ -3,7 +3,7 @@ import {DataSet, Network} from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
 import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
-// import { ProgressBar } from 'react-bootstrap';
+import { ProgressBar } from 'react-bootstrap';
 
 export const ViewGraphNG = (props: any) => {
     const location = useLocation();
@@ -334,10 +334,12 @@ class ViewGraphNGInternal extends React.Component<
             this.setState({
                 stabilizationProgress: (params.iterations / params.total) * 100,
             });
+            console.log("Stabilization progress: " + this.state.stabilizationProgress);
         });
 
         this.network.on("stabilizationIterationsDone", () => {
             this.setState({stabilizationProgress: 100});
+            console.log("Stabilization done");
             this.network!.fit();
         });
     }
@@ -353,25 +355,21 @@ class ViewGraphNGInternal extends React.Component<
             );
         }
 
-        // We show progress bar if the graph is not yet stabilized
-        // if (this.state.stabilizationProgress < 100) {
-        //   return (
-        //       // We use bootstrap progress bar
-        //       <div className="progress">
-        //         <ProgressBar
-        //             striped
-        //             variant="info"
-        //             now={this.state.stabilizationProgress}
-        //             label={`${this.state.stabilizationProgress}%`}
-        //         />
-        //       </div>
-        //   );
-        // }
-
         return (
             <>
-                <div ref={this.graphRef} className="full-height" />
+                {this.state.stabilizationProgress < 100 && (
+                    <div>
+                        <ProgressBar
+                            striped
+                            variant="info"
+                            now={this.state.stabilizationProgress}
+                            label={`${this.state.stabilizationProgress}%`}
+                        />
+                    </div>
+                )}
 
+                <div ref={this.graphRef} className="full-height" />
+                
                 <div
                     style={{
                         display: "grid",
