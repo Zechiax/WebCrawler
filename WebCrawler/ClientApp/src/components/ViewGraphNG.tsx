@@ -74,6 +74,28 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     async componentDidMount() {
+        this.edges.on("add", (event, properties, senderId) => {
+            console.log("Edges added ( " + properties.items.length + " )");
+            for (const edgeId of properties.items) {
+                const edge = this.edges.get(edgeId);
+                const fromNode = this.nodes.get(edge.from);
+                const toNode = this.nodes.get(edge.to);
+
+                if (fromNode) {
+                    console.log("Updating from node");
+                    fromNode.value = (fromNode.value || 1) + 1;
+                    fromNode.mass = (fromNode.mass || 1) + 1;
+                    this.nodes.update(fromNode);
+                }
+
+                if (toNode) {
+                    toNode.value = (toNode.value || 1) + 1;
+                    toNode.mass = (toNode.mass || 1) + 1;
+                    this.nodes.update(toNode);
+                }
+            }
+        });
+
         console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
         await this.updateGraphAsync().then(r => {
             console.log("Graph data loaded");
@@ -105,8 +127,8 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     clearGraph() {
-        this.nodes.clear();
         this.edges.clear();
+        this.nodes.clear();
     }
 
     async updateGraphAsync() {
@@ -176,7 +198,7 @@ class ViewGraphNGInternal extends React.Component<
                     (n) => n.id === node.Url
                 );
 
-                let element = node.Url;
+                let element = "Url: " + node.Url + "\n";
 
                 let numberOfNeighbours = node.Neighbours.length;
 
@@ -192,8 +214,8 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.label = node.Title;
                         alreadyPresentNode.color = color;
                         alreadyPresentNode.title = element;
-                        alreadyPresentNode.value = numberOfNeighbours;
-                        alreadyPresentNode.mass = numberOfNeighbours;
+                        // alreadyPresentNode.value = numberOfNeighbours;
+                        // alreadyPresentNode.mass = numberOfNeighbours;
                     }
                 } else {
                     graphData.nodes.push({
@@ -202,8 +224,8 @@ class ViewGraphNGInternal extends React.Component<
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
                         title: element,
-                        value: numberOfNeighbours,
-                        mass: numberOfNeighbours,
+                        // value: numberOfNeighbours,
+                        // mass: numberOfNeighbours,
                     });
                 }
 
@@ -218,6 +240,17 @@ class ViewGraphNGInternal extends React.Component<
                 }
             }
         }
+
+        // const nodeDegrees = new Map<string, number>();
+        // this.nodes.forEach((node: INode) => {
+        //     nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
+        // });
+        //
+        // this.nodes.forEach((node: INode) => {
+        //     node.value = nodeDegrees.get(node.id);
+        //     node.mass = nodeDegrees.get(node.id);
+        //     this.nodes.update(node);
+        // });
 
         return graphData;
     }
