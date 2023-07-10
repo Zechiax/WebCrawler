@@ -62,7 +62,20 @@ export class Home extends Component {
             <Button
               variant="primary"
               onClick={() =>
-                this.setState({ isCreateWebsiteRecordModalShown: true })
+                  this.setState({
+                      isCreateWebsiteRecordModalShown: true,
+                      modalWindowContext: {
+                          id: 0,
+                          name: "",
+                          isActive: true,
+                          tags: [],
+                          periodicity: 10,
+                          regexPattern: ".*",
+                          entryUrl: "",
+                          isEditing: false,
+                        },
+                  })
+
               }
             >
               Create new website record
