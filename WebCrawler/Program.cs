@@ -101,6 +101,13 @@ if (app.Environment.IsDevelopment())
     logger.LogInformation("Data seeded");
 }
 
+// We initialize the execution manager service
+using (var scope = app.Services.CreateScope())
+{
+    var executionManagerService = scope.ServiceProvider.GetRequiredService<IPeriodicExecutionManagerService>();
+    await executionManagerService.InitializeAsync();
+}
+
 try
 {
     app.Run();

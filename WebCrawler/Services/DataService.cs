@@ -18,7 +18,29 @@ public class DataService : IDataService
         _serviceProvider = serviceProvider;
         _logger = logger;
     }
-    
+
+    public async Task<IList<CrawlInfo>> GetActiveCrawlInfos()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrawlerContext>();
+        
+        // Is Active information is stored in the Record, so we need to get all the records
+        var recordsDataList = await context.WebsiteRecords
+            .AsNoTracking()
+            // We want all the tags for each website record
+            .Include(wr => wr.Tags)
+            // Also if there is an execution, we want to include it too
+            .Include(wr => wr.CrawlInfoData)
+            // We should be able to suppress nullable warning, as EF Core should handle that
+            .ThenInclude(wr => wr.LastExecutionData)
+            .Where(wr => wr.IsActive)
+            .ToListAsync();
+        
+        var crawlInfos = recordsDataList.Select(record => _mapper.Map<CrawlInfo>(record.CrawlInfoData)).ToList();
+        
+        return crawlInfos;
+    }
+
     public async Task MigrateAsync()
     {
         using var scope = _serviceProvider.CreateScope();

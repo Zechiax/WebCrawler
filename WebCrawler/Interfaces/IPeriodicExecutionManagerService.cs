@@ -5,6 +5,8 @@ namespace WebCrawler.Interfaces;
 public interface IPeriodicExecutionManagerService
 {
     ExecutionManagerConfig Config { get; }
+    
+    Task InitializeAsync();
 
     /// <summary>
     /// Enques crawling job according to <paramref name="crawlInfo"/>. 

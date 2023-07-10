@@ -10,6 +10,8 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
     public ExecutionManagerConfig Config { get; }
 
     private ExecutionManagerService executionManager;
+    private readonly IDataService _data;
+    private readonly ILogger<PeriodicExecutionManagerService> _logger;
 
     private readonly Dictionary<ulong, PeriodicWebsiteExecutionJob> periodicJobs = new();
 
@@ -20,7 +22,24 @@ public class PeriodicExecutionManagerService : IPeriodicExecutionManagerService
             CrawlersCount = 20
         };
         
+        _data = services.GetRequiredService<IDataService>();
+        _logger = services.GetRequiredService<ILogger<PeriodicExecutionManagerService>>();
+        
         executionManager = new ExecutionManagerService(services, Config);
+    }
+
+    public async Task InitializeAsync()
+    {
+        _logger.LogInformation("Initializing periodic execution manager service");
+        // We have to load the jobs from the database and start them
+        var crawlInfos = await _data.GetActiveCrawlInfos();
+        _logger.LogInformation("Found {CrawlInfosCount} active periodic jobs", crawlInfos.Count);
+        
+        foreach (var crawlInfo in crawlInfos)
+        {
+            _logger.LogInformation("Enqueuing crawl info {CrawlInfoId} for periodic crawl", crawlInfo.WebsiteRecordId);
+            EnqueueForPeriodicCrawl(crawlInfo, (ulong)crawlInfo.WebsiteRecordId);
+        }
     }
 
     public void EnqueueForPeriodicCrawl(CrawlInfo crawlInfo, ulong jobId)

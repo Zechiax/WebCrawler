@@ -232,8 +232,6 @@ public class RecordController : OurControllerBase
         }
         
         bool didIJustStopped = _executionManager.StopPeriodicExecution(jobId);
-        
-        
 
         if (!didIJustStopped)
         {

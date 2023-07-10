@@ -4,6 +4,7 @@ namespace WebCrawler.Interfaces;
 
 public interface IDataService
 {
+    public Task<IList<CrawlInfo>> GetActiveCrawlInfos();
     public Task MigrateAsync();
     public Task<IEnumerable<WebsiteRecord>> GetWebsiteRecords();
     
