@@ -206,9 +206,8 @@ public class RecordController : OurControllerBase
         }
         
         var crawlInfo = _mapper.Map<CrawlInfo>(record.CrawlInfo);
-
-        record.IsActive = true;
-        await _dataService.UpdateWebsiteRecord(id, record);
+        
+        await _dataService.ActivateWebsiteRecord(id);
 
         _executionManager.EnqueueForPeriodicCrawl(crawlInfo, (ulong)crawlInfo.WebsiteRecordId);
         return Ok();
@@ -231,9 +230,8 @@ public class RecordController : OurControllerBase
         }
         
         bool didIJustStopped = _executionManager.StopPeriodicExecution(jobId);
-
-        record.IsActive = false;
-        await _dataService.UpdateWebsiteRecord(id, record);
+        
+        await _dataService.DeactivateWebsiteRecord(id);
 
         if (!didIJustStopped)
         {
