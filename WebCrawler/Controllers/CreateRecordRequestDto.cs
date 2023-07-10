@@ -5,11 +5,11 @@ namespace WebCrawler.Controllers;
 
 public class CreateRecordRequestDto
 {
-    public string Label { get; set; }
-    public string Url { get; set; }
-    public string Regex { get; set; }
+    public string Label { get; set; } = null!;
+    public string Url { get; set; } = null!;
+    public string Regex { get; set; } = null!;
     public int Periodicity { get; set; }
-    public List<string> Tags { get; set; }
+    public List<string> Tags { get; set; } = null!;
     public bool IsActive { get; set; }
 }
 
