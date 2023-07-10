@@ -211,7 +211,7 @@ const Records: React.FC<{
 
           setData(
             data.map((record) => {
-              if (record.id == row.original.id) {
+              if (record.id === row.original.id) {
                 record.isActive = true;
               }
 
