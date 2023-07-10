@@ -59,6 +59,7 @@ class ViewGraphNGInternal extends React.Component<
     private network?: Network;
     private nodes = new DataSet<INode>();
     private edges = new DataSet<IEdge>();
+    private error : boolean = false;
 
     constructor(props: { graphsIds: [] }) {
         super(props);
@@ -76,9 +77,12 @@ class ViewGraphNGInternal extends React.Component<
         console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
         await this.updateGraphAsync().then(r => {
             console.log("Graph data loaded");
-            if (!this.state.errorMessage) {
+            if (!this.error) {
                 this.initializeGraph();
                 console.log("Graph initialized");
+            }
+            else {
+                return;
             }
         });
 
@@ -130,6 +134,7 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     showErrorMessage() {
+        this.error = true;
         console.log("Showing error message");
         this.setState({
             errorMessage: "The graph for this record could not be fetched. Please try again later.",
