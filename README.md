@@ -23,7 +23,7 @@ cd WebCrawler
 Run the project
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 Navigate to [localhost:8080](http://localhost:8080), you can change the port in the `docker-compose.yml` file.
