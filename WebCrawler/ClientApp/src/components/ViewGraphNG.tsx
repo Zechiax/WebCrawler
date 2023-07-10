@@ -200,12 +200,6 @@ class ViewGraphNGInternal extends React.Component<
 
                 let element = "Url: " + node.Url + "\n";
 
-                let numberOfNeighbours = node.Neighbours.length;
-
-                if (numberOfNeighbours <= 0) {
-                    numberOfNeighbours = 1;
-                }
-
                 if (alreadyPresentNode) {
                     if (
                         Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
@@ -214,8 +208,6 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.label = node.Title;
                         alreadyPresentNode.color = color;
                         alreadyPresentNode.title = element;
-                        // alreadyPresentNode.value = numberOfNeighbours;
-                        // alreadyPresentNode.mass = numberOfNeighbours;
                     }
                 } else {
                     graphData.nodes.push({
@@ -224,8 +216,6 @@ class ViewGraphNGInternal extends React.Component<
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
                         title: element,
-                        // value: numberOfNeighbours,
-                        // mass: numberOfNeighbours,
                     });
                 }
 
@@ -240,17 +230,6 @@ class ViewGraphNGInternal extends React.Component<
                 }
             }
         }
-
-        // const nodeDegrees = new Map<string, number>();
-        // this.nodes.forEach((node: INode) => {
-        //     nodeDegrees.set(node.id, this.network!.getConnectedEdges(node.id).length);
-        // });
-        //
-        // this.nodes.forEach((node: INode) => {
-        //     node.value = nodeDegrees.get(node.id);
-        //     node.mass = nodeDegrees.get(node.id);
-        //     this.nodes.update(node);
-        // });
 
         return graphData;
     }
