@@ -124,6 +124,7 @@ public class DataService : IDataService
         }
 
         context.Entry(record).CurrentValues.SetValues(recordFromData);
+        context.Entry(record.CrawlInfoData).CurrentValues.SetValues(recordFromData.CrawlInfo);
     
         // In case the execution was not null, we want to keep it
         if (execution is not null)
