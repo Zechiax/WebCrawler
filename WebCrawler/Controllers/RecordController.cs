@@ -221,6 +221,8 @@ public class RecordController : OurControllerBase
         {
             return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
         }
+        
+        await _dataService.DeactivateWebsiteRecord(id);
 
         ulong jobId = (ulong) id;
         
@@ -231,7 +233,7 @@ public class RecordController : OurControllerBase
         
         bool didIJustStopped = _executionManager.StopPeriodicExecution(jobId);
         
-        await _dataService.DeactivateWebsiteRecord(id);
+        
 
         if (!didIJustStopped)
         {
