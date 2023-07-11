@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {DataSet, Network} from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
 import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
 import { ProgressBar } from 'react-bootstrap';
+import { NodeInfo } from "./NodeInfo";
 
 export const ViewGraphNG = (props: any) => {
     const location = useLocation();
@@ -44,6 +45,12 @@ interface IState {
     intervalId?: NodeJS.Timeout;
     liveGraphUrlBase: GraphView;
     staticView: boolean;
+    nodeModalContext: {
+        show: boolean;
+        title: string;
+        url: string;
+        crawlTime: string;
+    };
 }
 
 enum GraphView {
@@ -70,6 +77,12 @@ class ViewGraphNGInternal extends React.Component<
             intervalId: undefined,
             liveGraphUrlBase: GraphView.Domain,
             staticView: false,
+            nodeModalContext: {
+                show: false,
+                title: "",
+                url: "",
+                crawlTime: "",
+            },
         };
     }
 
@@ -124,7 +137,7 @@ class ViewGraphNGInternal extends React.Component<
             this.setState({ staticView: false });
             this.startLiveUpdate();
         }
-    }
+    }        
 
     clearGraph() {
         this.edges.clear();
@@ -354,6 +367,22 @@ class ViewGraphNGInternal extends React.Component<
             console.log("Stabilization done");
             this.network!.fit();
         });
+
+        this.network.on("click", (params) => {
+            if (params.nodes.length === 0) {
+                return;
+            }
+            let node = this.nodes.get(params.nodes[0]);
+            console.log(node);
+            this.setState({
+                nodeModalContext: {
+                    show: true,
+                    title: node.label,
+                    url: node.id,
+                    crawlTime: "",
+                }
+            })
+        });
     }
 
     render() {
@@ -447,11 +476,27 @@ class ViewGraphNGInternal extends React.Component<
                     </Button>
 
                 </div>
+
+                <NodeInfo
+                    show={this.state.nodeModalContext.show}
+                    title={this.state.nodeModalContext.title}
+                    url={this.state.nodeModalContext.url}
+                    crawlTime={this.state.nodeModalContext.crawlTime}
+                    records={[]}
+                    onHide={() => {
+                        this.setState({
+                            nodeModalContext: {
+                                show: false,
+                                title: "",
+                                url: "",
+                                crawlTime: "",
+                            }
+                        })
+                    }}
+                />
             </>
         );
     }
-
-
 }
 
 export default ViewGraphNG;

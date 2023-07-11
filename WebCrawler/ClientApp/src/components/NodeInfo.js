@@ -77,14 +77,18 @@ export class NodeInfo extends Component {
         </Modal>
 
         <WebsiteRecordInfoModal
-          show={this.state.createNewWebsiteRecord.show}
-          onClose={() =>
-            this.setState({
-              createNewWebsiteRecord: {
-                show: false,
-              },
-            })
-          }
+            show={this.state.createNewWebsiteRecord.show}
+            urlPresetValue={this.props.url}
+            isActivePresetValue={true}
+            regexPresetValue={".*"}
+            isEditing={false}
+            onClose={() =>
+                this.setState({
+                    createNewWebsiteRecord: {
+                        show: false,
+                    },
+                })
+            }
         />
       </>
     );
