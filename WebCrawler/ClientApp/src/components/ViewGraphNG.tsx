@@ -52,6 +52,7 @@ interface IState {
         title: string;
         url: string;
         crawlTime: string;
+        crawledByRecordIds?: string[];
     };
 }
 
@@ -84,6 +85,7 @@ class ViewGraphNGInternal extends React.Component<
                 title: "",
                 url: "",
                 crawlTime: "",
+                crawledByRecordIds: [],
             },
         };
     }
@@ -97,7 +99,6 @@ class ViewGraphNGInternal extends React.Component<
                 const toNode = this.nodes.get(edge.to);
 
                 if (fromNode) {
-                    console.log("Updating from node");
                     fromNode.value = (fromNode.value || 1) + 1;
                     fromNode.mass = (fromNode.mass || 1) + 1;
                     this.nodes.update(fromNode);
@@ -235,7 +236,7 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.color = color;
                         alreadyPresentNode.title = element;
                         alreadyPresentNode.started = recordForGraph.crawlInfo.lastExecution.started;
-                        alreadyPresentNode.crawlTime = recordForGraph.crawlInfo.lastExecution.crawlTime;
+                        alreadyPresentNode.crawlTime = node.CrawlTime;
                     }
                 } else {
                     graphData.nodes.push({
@@ -243,7 +244,7 @@ class ViewGraphNGInternal extends React.Component<
                         label: node.Title,
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
-                        crawlTime: recordForGraph.crawlInfo.lastExecution.crawlTime,
+                        crawlTime: node.CrawlTime,
                         title: element,
                         crawledByRecordIds: [recordId],
                     });
@@ -389,14 +390,16 @@ class ViewGraphNGInternal extends React.Component<
             if (params.nodes.length === 0) {
                 return;
             }
-            let node = this.nodes.get(params.nodes[0]);
+            const id: string = params.nodes[0];
+            let node = this.nodes.get(id);
             console.log(node);
             this.setState({
                 nodeModalContext: {
                     show: true,
                     title: node.label,
                     url: node.id,
-                    crawlTime: "",
+                    crawlTime: node.crawlTime,
+                    crawledByRecordIds: [...node.crawledByRecordIds],
                 }
             })
         });
@@ -426,7 +429,6 @@ class ViewGraphNGInternal extends React.Component<
                     >
                         <ProgressBar
                             striped
-                            animated
                             variant="info"
                             now={this.state.stabilizationProgress}
                             label={`${this.state.stabilizationProgress}%`}
@@ -499,7 +501,7 @@ class ViewGraphNGInternal extends React.Component<
                     title={this.state.nodeModalContext.title}
                     url={this.state.nodeModalContext.url}
                     crawlTime={this.state.nodeModalContext.crawlTime}
-                    records={[]}
+                    records={this.state.nodeModalContext.crawledByRecordIds}
                     onHide={() => {
                         this.setState({
                             nodeModalContext: {
@@ -507,6 +509,7 @@ class ViewGraphNGInternal extends React.Component<
                                 title: "",
                                 url: "",
                                 crawlTime: "",
+                                crawledByRecordIds: []
                             }
                         })
                     }}

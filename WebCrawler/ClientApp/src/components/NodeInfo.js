@@ -79,7 +79,9 @@ export class NodeInfo extends Component {
         <WebsiteRecordInfoModal
             show={this.state.createNewWebsiteRecord.show}
             urlPresetValue={this.props.url}
+            labelPresetValue={this.props.title}
             isActivePresetValue={true}
+            periodicityPresetValue={10}
             regexPresetValue={".*"}
             isEditing={false}
             onClose={() =>
