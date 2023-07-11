@@ -403,16 +403,26 @@ class ViewGraphNGInternal extends React.Component<
 
             console.log(crawledByRecords);
 
+            const url = addHttpOrHttps(node.id);
+
             this.setState({
                 nodeModalContext: {
                     show: true,
                     title: node.label,
-                    url: node.id,
+                    url: url,
                     crawlTime: node.crawlTime,
                     crawledByRecords: [...crawledByRecords],
                 }
             })
         });
+
+        function addHttpOrHttps(url: string): string {
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                return `https://${url}`;
+            }
+            return url;
+        }
+
     }
 
     render() {
