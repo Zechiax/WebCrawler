@@ -30,7 +30,9 @@ interface Tag {
 const Records: React.FC<{
   showEditModalWindow: Function;
   registerDataUpdateHandler: Function;
-}> = ({ showEditModalWindow, registerDataUpdateHandler }) => {
+  loadingStart: Function;
+  loadingStop: Function;
+}> = ({ showEditModalWindow, registerDataUpdateHandler, loadingStart, loadingStop }) => {
   const [data, setData] = useState<WebsiteRecord[]>([]);
   const navigate = useNavigate();
 
@@ -354,87 +356,92 @@ const Records: React.FC<{
         </MenuItem>,
       ]}
       renderTopToolbarCustomActions={({ table }) => {
-        const handleDeactivate = () => {
-          table.getSelectedRowModel().flatRows.forEach(async (row) => {
-            console.log("Deactivating record with id: " + row.original.id);
+          const handleDeactivate = () => {
+              loadingStart();
+              let deactivated: number[] = [];
+              let responses = table.getSelectedRowModel().flatRows.map((row) => {
+                  console.log("Deactivating record with id: " + row.original.id);
 
-            let response = await fetch(`record/stop/${row.original.id}`, {
-              method: "POST",
-            });
+                  return fetch(`record/stop/${row.original.id}`, {
+                      method: "POST",
+                  }).then(async (response) => {
+                      if (response.status === 200) {
+                          console.log("Record with id: " + row.original.id + " deactivated");
+                          data.forEach((record) => {
+                             if (record.id === row.original.id) {
+                                 deactivated.push(row.index);
+                             }
+                          });
+                      } else {
+                          console.log(
+                              "Record with id: " +
+                              row.original.id +
+                              " failed to deactivate. Status code: " +
+                              response.status
+                          );
+                      }
+                  })
+              });
 
-            if (response.status === 200) {
-              console.log(
-                "Record with id: " + row.original.id + " deactivated"
-              );
-              response = await fetch(`record/${row.original.id}`, {
-                method: "GET",
+              Promise.all(responses).then(() => {
+                  let newData = [...data];
+                  deactivated.forEach((index) => {
+                      newData[index].isActive = false;
+                  });
+                  setData(newData);
+                  loadingStop();
               });
-              let newRecord = await response.json();
-              console.log("new record data:");
-              console.log(newRecord);
-              let newData = data.map((record) => {
-                if (record.id === newRecord.id) {
-                  return newRecord;
-                }
-                return record;
-              });
-              setData([...newData]);
-            } else {
-              console.log(
-                "Record with id: " +
-                  row.original.id +
-                  " could not be deactivated"
-              );
-            }
-          });
-        };
+          };
 
         const handleActivate = () => {
-          table.getSelectedRowModel().flatRows.forEach(async (row) => {
-            console.log("Activating record with id: " + row.original.id);
+            let activated: number[] = [];
+            loadingStart();
+            let responses = table.getSelectedRowModel().flatRows.map((row) => {
+                console.log("Activating record with id: " + row.original.id);
 
-            let response = await fetch(`record/run/${row.original.id}`, {
-              method: "POST",
+                return fetch(`record/run/${row.original.id}`, {
+                    method: "POST",
+                }).then(async (response) => {
+                    if (response.status === 200) {
+                        console.log("Record with id: " + row.original.id + " activated");
+                        data.forEach((record) => {
+                           if (record.id === row.original.id) {
+                               activated.push(row.index);
+                           }
+                        });
+                    } else {
+                        console.log(
+                        "Record with id: " +
+                        row.original.id +
+                        " failed to activate. Status code: " +
+                        response.status
+                        );
+                    }
+                })
             });
 
-            if (response.status === 200) {
-              console.log("Record with id: " + row.original.id + " activated");
-              response = await fetch(`record/${row.original.id}`, {
-                method: "GET",
-              });
-              let newRecord = await response.json();
-              console.log("new record data:");
-              console.log(newRecord);
-              let newData = data.map((record) => {
-                if (record.id === newRecord.id) {
-                  return newRecord;
-                }
-                return record;
-              });
-              setData([...newData]);
-            } else {
-              console.log(
-                "Record with id: " +
-                  row.original.id +
-                  " failed to activate. Status code: " +
-                  response.status
-              );
-            }
-          });
+            Promise.all(responses).then(() => {
+                let newData = [...data];
+                activated.forEach((index) => {
+                    newData[index].isActive = true;
+                });
+                setData(newData);
+                loadingStop();
+            });
         };
 
         const handleViewGraph = () => {
           const selectedGraphsIds: number[] = [];
 
-          table.getSelectedRowModel().flatRows.map((row) => {
+          table.getSelectedRowModel().flatRows.forEach((row) => {
             selectedGraphsIds.push(row.original.id);
-            return null;
           });
 
           navigate("/Graph", { state: { graphsIds: selectedGraphsIds } });
         };
 
         const handleDelete = () => {
+          
           const confirmed = window.confirm(
             "Are you sure you want to delete records with ids: " +
               table
@@ -445,11 +452,9 @@ const Records: React.FC<{
           );
 
           let deletedIndexes: number[] = [];
-          console.log(
-            table.getSelectedRowModel().flatRows.map((row) => row.original.id)
-          );
 
           if (confirmed) {
+            loadingStart();
             let deletions = table.getSelectedRowModel().flatRows.map((row) => {
               console.log("Deleting record with id: " + row.original.id);
               return fetch(`record/${row.original.id}`, {
@@ -468,8 +473,6 @@ const Records: React.FC<{
                       response.status
                   );
                 }
-
-                row.toggleSelected();
               });
             });
 
@@ -478,7 +481,9 @@ const Records: React.FC<{
               let newData = data.filter((_, index) => {
                 return !deletedIndexes.includes(index);
               });
+              table.resetRowSelection();
               setData([...newData]);
+              loadingStop();
             });
           }
         };
@@ -529,7 +534,7 @@ const Records: React.FC<{
               }}
             >
               Delete
-              <Delete />
+              <Delete/>
             </Button>
           </div>
         );

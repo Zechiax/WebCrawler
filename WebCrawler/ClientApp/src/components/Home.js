@@ -3,6 +3,8 @@ import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { WebsiteRecordInfoModal } from "./WebsiteRecordInfoModal";
 import PaginatedView from "./PaginatedView";
+import Modal from "react-bootstrap/Modal";
+import Spinner from 'react-bootstrap/Spinner';
 
 export class Home extends Component {
   static displayName = Home.name;
@@ -13,6 +15,7 @@ export class Home extends Component {
     this.state = {
       isCreateWebsiteRecordModalShown: false,
       dataUpdatehandler: null,
+      loading: false,
       modalWindowContext: {
         id: 0,
         name: "",
@@ -42,7 +45,17 @@ export class Home extends Component {
 
   registerDataUpdateHandler = (handler) => {
     this.setState({ dataUpdatehandler: handler });
-  };
+    };
+
+    loadingStart = () => {
+        this.setState({ loading: true });
+        console.log("loading start");
+    };
+
+    loadingStop = () => {
+        this.setState({ loading: false });
+        console.log("loading stop");
+    };
 
   render() {
     return (
@@ -55,6 +68,8 @@ export class Home extends Component {
             <PaginatedView
               showEditModalWindow={this.handleEditWebsiteRecord}
               registerDataUpdateHandler={this.registerDataUpdateHandler}
+              loadingStart={this.loadingStart}
+              loadingStop={this.loadingStop}
             />
           </div>
 
@@ -82,6 +97,28 @@ export class Home extends Component {
             </Button>
           </div>
         </Container>
+
+        <Modal
+          show={this.state.loading}
+          centered
+          size="sm"
+        >
+          <Modal.Body>
+            <div
+                style={{ 
+                    display: "flex",
+                    justifyContent: "center",
+                }}>
+                <Spinner
+                    animation="border"
+                    role="status"
+                />
+                <span style={{ marginLeft: "0.5rem", fontWeight: "bold" }}>
+                    Loading...
+                </span>
+            </div>
+          </Modal.Body>
+        </Modal>
 
         <WebsiteRecordInfoModal
           show={this.state.isCreateWebsiteRecordModalShown}
