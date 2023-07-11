@@ -17,6 +17,7 @@ interface INode {
     label: string;
     color: string;
     started?: string;
+    crawlTime?: string;
     fixed?: {
         x: boolean;
         y: boolean;
@@ -220,6 +221,8 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.label = node.Title;
                         alreadyPresentNode.color = color;
                         alreadyPresentNode.title = element;
+                        alreadyPresentNode.started = recordForGraph.crawlInfo.lastExecution.started;
+                        alreadyPresentNode.crawlTime = recordForGraph.crawlInfo.lastExecution.crawlTime;
                     }
                 } else {
                     graphData.nodes.push({
@@ -227,6 +230,7 @@ class ViewGraphNGInternal extends React.Component<
                         label: node.Title,
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
+                        crawlTime: recordForGraph.crawlInfo.lastExecution.crawlTime,
                         title: element,
                         crawledByRecordIds: [recordId],
                     });
