@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {DataSet, Network} from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
 import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
 import { ProgressBar } from 'react-bootstrap';
+import { NodeInfo } from "./NodeInfo";
 
 export const ViewGraphNG = (props: any) => {
     const location = useLocation();
@@ -46,6 +47,13 @@ interface IState {
     intervalId?: NodeJS.Timeout;
     liveGraphUrlBase: GraphView;
     staticView: boolean;
+    nodeModalContext: {
+        show: boolean;
+        title: string;
+        url: string;
+        crawlTime: string;
+        crawledByRecords?: string[];
+    };
 }
 
 enum GraphView {
@@ -62,6 +70,7 @@ class ViewGraphNGInternal extends React.Component<
     private nodes = new DataSet<INode>();
     private edges = new DataSet<IEdge>();
     private error : boolean = false;
+    private recordsDictionary: { [key: string]: any } = {};
 
     constructor(props: { graphsIds: [] }) {
         super(props);
@@ -72,6 +81,13 @@ class ViewGraphNGInternal extends React.Component<
             intervalId: undefined,
             liveGraphUrlBase: GraphView.Domain,
             staticView: false,
+            nodeModalContext: {
+                show: false,
+                title: "",
+                url: "",
+                crawlTime: "",
+                crawledByRecords: [],
+            },
         };
     }
 
@@ -84,7 +100,6 @@ class ViewGraphNGInternal extends React.Component<
                 const toNode = this.nodes.get(edge.to);
 
                 if (fromNode) {
-                    console.log("Updating from node");
                     fromNode.value = (fromNode.value || 1) + 1;
                     fromNode.mass = (fromNode.mass || 1) + 1;
                     this.nodes.update(fromNode);
@@ -126,7 +141,7 @@ class ViewGraphNGInternal extends React.Component<
             this.setState({ staticView: false });
             this.startLiveUpdate();
         }
-    }
+    }        
 
     clearGraph() {
         this.edges.clear();
@@ -191,6 +206,9 @@ class ViewGraphNGInternal extends React.Component<
 
             const recordForGraph = await recordForGraphResponse.json();
 
+            // We update the dictionary of records with the new record
+            this.recordsDictionary[recordId] = recordForGraph;
+
             for (const node of graphJson.Graph) {
                 const color = new RegExp(
                     recordForGraph.crawlInfo.regexPattern
@@ -222,7 +240,7 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.color = color;
                         alreadyPresentNode.title = element;
                         alreadyPresentNode.started = recordForGraph.crawlInfo.lastExecution.started;
-                        alreadyPresentNode.crawlTime = recordForGraph.crawlInfo.lastExecution.crawlTime;
+                        alreadyPresentNode.crawlTime = node.CrawlTime;
                     }
                 } else {
                     graphData.nodes.push({
@@ -230,7 +248,7 @@ class ViewGraphNGInternal extends React.Component<
                         label: node.Title,
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
-                        crawlTime: recordForGraph.crawlInfo.lastExecution.crawlTime,
+                        crawlTime: node.CrawlTime,
                         title: element,
                         crawledByRecordIds: [recordId],
                     });
@@ -371,6 +389,30 @@ class ViewGraphNGInternal extends React.Component<
             console.log("Stabilization done");
             this.network!.fit();
         });
+
+        this.network.on("click", (params) => {
+            if (params.nodes.length === 0) {
+                return;
+            }
+            const id: string = params.nodes[0];
+            let node = this.nodes.get(id);
+
+            let crawledByRecords = node.crawledByRecordIds.map((recordId) => {
+                return this.recordsDictionary[recordId];
+            });
+
+            console.log(crawledByRecords);
+
+            this.setState({
+                nodeModalContext: {
+                    show: true,
+                    title: node.label,
+                    url: node.id,
+                    crawlTime: node.crawlTime,
+                    crawledByRecords: [...crawledByRecords],
+                }
+            })
+        });
     }
 
     render() {
@@ -397,7 +439,6 @@ class ViewGraphNGInternal extends React.Component<
                     >
                         <ProgressBar
                             striped
-                            animated
                             variant="info"
                             now={this.state.stabilizationProgress}
                             label={`${this.state.stabilizationProgress}%`}
@@ -464,11 +505,28 @@ class ViewGraphNGInternal extends React.Component<
                     </Button>
 
                 </div>
+
+                <NodeInfo
+                    show={this.state.nodeModalContext.show}
+                    title={this.state.nodeModalContext.title}
+                    url={this.state.nodeModalContext.url}
+                    crawlTime={this.state.nodeModalContext.crawlTime}
+                    records={this.state.nodeModalContext.crawledByRecords}
+                    onHide={() => {
+                        this.setState({
+                            nodeModalContext: {
+                                show: false,
+                                title: "",
+                                url: "",
+                                crawlTime: "",
+                                crawledByRecords: []
+                            }
+                        })
+                    }}
+                />
             </>
         );
     }
-
-
 }
 
 export default ViewGraphNG;
