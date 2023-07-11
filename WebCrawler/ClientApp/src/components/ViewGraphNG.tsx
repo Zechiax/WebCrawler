@@ -24,6 +24,7 @@ interface INode {
     value?: number;
     title?: string | HTMLElement;
     mass?: number;
+    crawledByRecordIds?: string[];
 }
 
 interface IEdge {
@@ -185,6 +186,8 @@ class ViewGraphNGInternal extends React.Component<
                 return;
             }
 
+            const recordId = graphJson.websiteRecordId;
+
             const recordForGraph = await recordForGraphResponse.json();
 
             for (const node of graphJson.Graph) {
@@ -202,6 +205,15 @@ class ViewGraphNGInternal extends React.Component<
 
                 if (alreadyPresentNode) {
                     if (
+                        !alreadyPresentNode.crawledByRecordIds.includes(
+                            recordId
+                        )
+                    ) {
+                        alreadyPresentNode.crawledByRecordIds.push(
+                            recordId
+                        );
+                    }
+                    if (
                         Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
                         Date.parse(alreadyPresentNode.started)
                     ) {
@@ -216,6 +228,7 @@ class ViewGraphNGInternal extends React.Component<
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
                         title: element,
+                        crawledByRecordIds: [recordId],
                     });
                 }
 
