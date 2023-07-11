@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {DataSet, Network} from "vis-network/standalone/esm/vis-network";
 import { useLocation } from "react-router";
 import Button from "react-bootstrap/Button";
