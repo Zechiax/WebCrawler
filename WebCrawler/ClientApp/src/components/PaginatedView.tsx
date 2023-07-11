@@ -208,20 +208,9 @@ const Records: React.FC<{
       initialState={{ showColumnFilters: true }}
       positionToolbarAlertBanner="bottom"
       renderDetailPanel={({ row }) => {
-        const handleRunNow = async () => {
+        const handleRunNow = () => {
           console.log("Run now clicked for id: " + row.original.id);
-
-          setData(
-            data.map((record) => {
-              if (record.id === row.original.id) {
-                record.isActive = true;
-              }
-
-              return record;
-            })
-          );
-
-          await fetch(`record/rerun/${row.original.id}`, {
+          fetch(`record/rerun/${row.original.id}`, {
             method: "POST",
           });
         };
