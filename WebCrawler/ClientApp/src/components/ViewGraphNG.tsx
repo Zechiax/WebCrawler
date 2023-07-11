@@ -52,7 +52,7 @@ interface IState {
         title: string;
         url: string;
         crawlTime: string;
-        crawledByRecordIds?: string[];
+        crawledByRecords?: string[];
     };
 }
 
@@ -86,7 +86,7 @@ class ViewGraphNGInternal extends React.Component<
                 title: "",
                 url: "",
                 crawlTime: "",
-                crawledByRecordIds: [],
+                crawledByRecords: [],
             },
         };
     }
@@ -396,14 +396,20 @@ class ViewGraphNGInternal extends React.Component<
             }
             const id: string = params.nodes[0];
             let node = this.nodes.get(id);
-            console.log(node);
+
+            let crawledByRecords = node.crawledByRecordIds.map((recordId) => {
+                return this.recordsDictionary[recordId];
+            });
+
+            console.log(crawledByRecords);
+
             this.setState({
                 nodeModalContext: {
                     show: true,
                     title: node.label,
                     url: node.id,
                     crawlTime: node.crawlTime,
-                    crawledByRecordIds: [...node.crawledByRecordIds],
+                    crawledByRecords: [...crawledByRecords],
                 }
             })
         });
@@ -505,7 +511,7 @@ class ViewGraphNGInternal extends React.Component<
                     title={this.state.nodeModalContext.title}
                     url={this.state.nodeModalContext.url}
                     crawlTime={this.state.nodeModalContext.crawlTime}
-                    records={this.state.nodeModalContext.crawledByRecordIds}
+                    records={this.state.nodeModalContext.crawledByRecords}
                     onHide={() => {
                         this.setState({
                             nodeModalContext: {
@@ -513,7 +519,7 @@ class ViewGraphNGInternal extends React.Component<
                                 title: "",
                                 url: "",
                                 crawlTime: "",
-                                crawledByRecordIds: []
+                                crawledByRecords: []
                             }
                         })
                     }}
