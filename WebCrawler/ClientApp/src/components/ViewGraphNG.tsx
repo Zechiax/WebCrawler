@@ -69,6 +69,7 @@ class ViewGraphNGInternal extends React.Component<
     private nodes = new DataSet<INode>();
     private edges = new DataSet<IEdge>();
     private error : boolean = false;
+    private recordsDictionary: { [key: string]: any } = {};
 
     constructor(props: { graphsIds: [] }) {
         super(props);
@@ -203,6 +204,9 @@ class ViewGraphNGInternal extends React.Component<
             const recordId = graphJson.websiteRecordId;
 
             const recordForGraph = await recordForGraphResponse.json();
+
+            // We update the dictionary of records with the new record
+            this.recordsDictionary[recordId] = recordForGraph;
 
             for (const node of graphJson.Graph) {
                 const color = new RegExp(
