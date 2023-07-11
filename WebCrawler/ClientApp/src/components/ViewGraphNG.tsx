@@ -18,6 +18,7 @@ interface INode {
     label: string;
     color: string;
     started?: string;
+    crawlTime?: string;
     fixed?: {
         x: boolean;
         y: boolean;
@@ -25,6 +26,7 @@ interface INode {
     value?: number;
     title?: string | HTMLElement;
     mass?: number;
+    crawledByRecordIds?: string[];
 }
 
 interface IEdge {
@@ -198,6 +200,8 @@ class ViewGraphNGInternal extends React.Component<
                 return;
             }
 
+            const recordId = graphJson.websiteRecordId;
+
             const recordForGraph = await recordForGraphResponse.json();
 
             for (const node of graphJson.Graph) {
@@ -215,12 +219,23 @@ class ViewGraphNGInternal extends React.Component<
 
                 if (alreadyPresentNode) {
                     if (
+                        !alreadyPresentNode.crawledByRecordIds.includes(
+                            recordId
+                        )
+                    ) {
+                        alreadyPresentNode.crawledByRecordIds.push(
+                            recordId
+                        );
+                    }
+                    if (
                         Date.parse(recordForGraph.crawlInfo.lastExecution.started) >
                         Date.parse(alreadyPresentNode.started)
                     ) {
                         alreadyPresentNode.label = node.Title;
                         alreadyPresentNode.color = color;
                         alreadyPresentNode.title = element;
+                        alreadyPresentNode.started = recordForGraph.crawlInfo.lastExecution.started;
+                        alreadyPresentNode.crawlTime = recordForGraph.crawlInfo.lastExecution.crawlTime;
                     }
                 } else {
                     graphData.nodes.push({
@@ -228,7 +243,9 @@ class ViewGraphNGInternal extends React.Component<
                         label: node.Title,
                         color: color,
                         started: recordForGraph.crawlInfo.lastExecution.started,
+                        crawlTime: recordForGraph.crawlInfo.lastExecution.crawlTime,
                         title: element,
+                        crawledByRecordIds: [recordId],
                     });
                 }
 
