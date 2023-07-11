@@ -7,8 +7,11 @@ export class Layout extends Component {
     render() {
         return (
             <div className="full-height">
-                <NavMenu />
-                <div className="full-height" tag="main">
+                <NavMenu/>
+                <div
+                    tag="main"
+                    style={{ height: "calc(100% - 75px)" }}
+                >
                     {this.props.children}
                 </div>
             </div>

@@ -447,6 +447,14 @@ class ViewGraphNGInternal extends React.Component<
                             width: "50%",
                         }}
                     >
+                        <span
+                            style={{
+                                fontWeight: "bold",
+                                fontSize: "20px",
+                            }}
+                        >
+                            Generating { this.state.liveGraphUrlBase === GraphView.Domain ? "Domain view" : "Website view" } graph...
+                        </span>
                         <ProgressBar
                             striped
                             variant="info"

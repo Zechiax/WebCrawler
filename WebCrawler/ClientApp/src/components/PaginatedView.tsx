@@ -282,7 +282,7 @@ const Records: React.FC<{
           </Box>
         );
       }}
-      renderRowActionMenuItems={({ closeMenu, row }) => [
+      renderRowActionMenuItems={({ closeMenu, row, table }) => [
         <MenuItem
           key={0}
           onClick={async () => {
@@ -308,7 +308,9 @@ const Records: React.FC<{
                     response.status
                 );
               }
-            }
+              }
+            table.resetRowSelection();
+            table.resetExpanded();
             closeMenu();
           }}
           sx={{ m: 0 }}
@@ -471,6 +473,7 @@ const Records: React.FC<{
                 return !deletedIndexes.includes(index);
               });
               table.resetRowSelection();
+              table.resetExpanded();
               setData([...newData]);
               loadingStop();
             });
