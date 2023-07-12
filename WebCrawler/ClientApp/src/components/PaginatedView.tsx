@@ -325,7 +325,7 @@ const Records: React.FC<{
           onClick={() => {
             closeMenu();
             var divided = row.original.crawlInfo.periodicity.split(":");
-            var periodicity = +divided[0] * 60 + +divided[1];
+            var periodicity = +divided[0] * 3600 + +divided[1] * 60 + +divided[2];
             const context = {
               id: row.original.id,
               name: row.original.label,

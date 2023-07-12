@@ -61,7 +61,7 @@ public class RecordController : OurControllerBase
             Label = record.Label,
             IsActive = record.IsActive,
             Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList(),
-            CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromMinutes(record.Periodicity))
+            CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromSeconds(record.Periodicity))
         };
 
         // We have to use the return crawl info data, as the job id is not set yet
@@ -107,7 +107,7 @@ public class RecordController : OurControllerBase
         websiteRecord.Label = record.Label;
         websiteRecord.IsActive = record.IsActive;
         websiteRecord.Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList();
-        websiteRecord.CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromMinutes(record.Periodicity));
+        websiteRecord.CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromSeconds(record.Periodicity));
 
         await _dataService.UpdateWebsiteRecord(id, websiteRecord);
 
