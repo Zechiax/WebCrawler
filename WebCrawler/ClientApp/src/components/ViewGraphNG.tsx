@@ -93,7 +93,7 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     async componentDidMount() {
-        this.edges.on("add", (event, properties, senderId) => {
+        this.edges.on("add", (event, properties) => {
             console.log("Edges added ( " + properties.items.length + " )");
             for (const edgeId of properties.items) {
                 const edge = this.edges.get(edgeId);
@@ -115,7 +115,7 @@ class ViewGraphNGInternal extends React.Component<
         });
 
         console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
-        await this.updateGraphAsync().then(r => {
+        await this.updateGraphAsync().then(() => {
             console.log("Graph data loaded");
             if (!this.error) {
                 this.initializeGraph();
