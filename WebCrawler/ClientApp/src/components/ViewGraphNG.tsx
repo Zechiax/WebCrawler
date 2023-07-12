@@ -5,6 +5,7 @@ import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
 import { ProgressBar } from 'react-bootstrap';
 import { NodeInfo } from "./NodeInfo";
+import {EasingFunction} from "vis-network/dist/types";
 
 export const ViewGraphNG = (props: any) => {
     const location = useLocation();
@@ -12,6 +13,19 @@ export const ViewGraphNG = (props: any) => {
         <ViewGraphNGInternal graphsIds={location.state.graphsIds} {...props} />
     );
 };
+
+// Class for defaults for the graph
+class GraphDefaults {
+    static readonly RootNodeShape : string = "diamond";
+
+    // ANIMATION
+    // Whether to start the animation from root node after stabilization is complete
+    static readonly OnStartAnimation : boolean = true;
+    static readonly AnimationDuration : number = 2000;
+    static readonly AnimationEasingFunction : EasingFunction = "easeInOutQuad";
+
+    static readonly DefaultCursor : string = "default";
+}
 
 interface INode {
     id: string;
@@ -27,12 +41,15 @@ interface INode {
     title?: string | HTMLElement;
     mass?: number;
     crawledByRecordIds?: string[];
+    shape?: string;
+    group?: string;
 }
 
 interface IEdge {
     id: string;
     from: string;
     to: string;
+    arrows: string;
 }
 
 interface IGraphData {
@@ -71,6 +88,7 @@ class ViewGraphNGInternal extends React.Component<
     private edges = new DataSet<IEdge>();
     private error : boolean = false;
     private recordsDictionary: { [key: string]: any } = {};
+    private rootNodesIds: string[] = [];
 
     constructor(props: { graphsIds: [] }) {
         super(props);
@@ -92,29 +110,10 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     async componentDidMount() {
-        this.edges.on("add", (event, properties, senderId) => {
-            console.log("Edges added ( " + properties.items.length + " )");
-            for (const edgeId of properties.items) {
-                const edge = this.edges.get(edgeId);
-                const fromNode = this.nodes.get(edge.from);
-                const toNode = this.nodes.get(edge.to);
-
-                if (fromNode) {
-                    fromNode.value = (fromNode.value || 1) + 1;
-                    fromNode.mass = (fromNode.mass || 1) + 1;
-                    this.nodes.update(fromNode);
-                }
-
-                if (toNode) {
-                    toNode.value = (toNode.value || 1) + 1;
-                    toNode.mass = (toNode.mass || 1) + 1;
-                    this.nodes.update(toNode);
-                }
-            }
-        });
+        this.edges.on("add", this.edgeAddedHandler.bind(this));
 
         console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
-        await this.updateGraphAsync().then(r => {
+        await this.updateGraphAsync().then(() => {
             console.log("Graph data loaded");
             if (!this.error) {
                 this.initializeGraph();
@@ -130,6 +129,27 @@ class ViewGraphNGInternal extends React.Component<
         this.startLiveUpdate();
     }
 
+    edgeAddedHandler(event: any, properties: { items: string[] }) {
+        console.log("Edges added ( " + properties.items.length + " )");
+        for (const edgeId of properties.items) {
+            const edge = this.edges.get(edgeId);
+            const fromNode = this.nodes.get(edge.from);
+            const toNode = this.nodes.get(edge.to);
+
+            if (fromNode) {
+                fromNode.value = (fromNode.value || 1) + 1;
+                fromNode.mass = (fromNode.mass || 1) + 1;
+                this.nodes.update(fromNode);
+            }
+
+            if (toNode) {
+                toNode.value = (toNode.value || 1) + 1;
+                toNode.mass = (toNode.mass || 1) + 1;
+                this.nodes.update(toNode);
+            }
+        }
+    }
+
     async componentDidUpdate(prevProps: {}, prevState: IState) {
         if (prevState.liveGraphUrlBase !== this.state.liveGraphUrlBase) {
             console.log("Graph view changed to: " + this.state.liveGraphUrlBase);
@@ -141,11 +161,12 @@ class ViewGraphNGInternal extends React.Component<
             this.setState({ staticView: false });
             this.startLiveUpdate();
         }
-    }        
+    }
 
     clearGraph() {
         this.edges.clear();
         this.nodes.clear();
+        this.rootNodesIds = [];
     }
 
     async updateGraphAsync() {
@@ -209,6 +230,8 @@ class ViewGraphNGInternal extends React.Component<
             // We update the dictionary of records with the new record
             this.recordsDictionary[recordId] = recordForGraph;
 
+            let firstNode : boolean = true;
+
             for (const node of graphJson.Graph) {
                 const color = new RegExp(
                     recordForGraph.crawlInfo.regexPattern
@@ -241,9 +264,10 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.title = element;
                         alreadyPresentNode.started = recordForGraph.crawlInfo.lastExecution.started;
                         alreadyPresentNode.crawlTime = node.CrawlTime;
+                        alreadyPresentNode.group = recordId;
                     }
                 } else {
-                    graphData.nodes.push({
+                    const newNode : INode = {
                         id: node.Url,
                         label: node.Title,
                         color: color,
@@ -251,16 +275,41 @@ class ViewGraphNGInternal extends React.Component<
                         crawlTime: node.CrawlTime,
                         title: element,
                         crawledByRecordIds: [recordId],
-                    });
+                        group: recordId
+                    }
+
+                    if (firstNode) {
+                        newNode.shape = GraphDefaults.RootNodeShape;
+                        firstNode = false;
+                        if (!this.rootNodesIds.includes(newNode.id))
+                        {
+                            this.rootNodesIds.push(newNode.id);
+                        }
+                    }
+
+                    graphData.nodes.push(newNode);
                 }
 
                 for (const neighbourUrl of node.Neighbours) {
                     // Ids are from url to url
                     const id = `${node.Url} -> ${neighbourUrl}`;
+                    const id_reverse = `${neighbourUrl} -> ${node.Url}`;
+
+                    // We add arrows from if the node in reverse is present
+                    const alreadyPresentEdge = graphData.edges.find(
+                        (e) => e.id === id_reverse
+                    );
+
+                    if (alreadyPresentEdge) {
+                        alreadyPresentEdge.arrows += ",from";
+                        continue;
+                    }
+
                     graphData.edges.push({
                         id: `${id}`,
                         from: node.Url,
                         to: neighbourUrl,
+                        arrows: "to",
                     });
                 }
             }
@@ -281,7 +330,7 @@ class ViewGraphNGInternal extends React.Component<
             this.stopLiveUpdate();
         }
 
-        console.log("Starting interval");
+        console.log("Starting live update");
         const intervalId = setInterval(async () => {
             await this.updateGraphAsync();
         }, interval);
@@ -291,7 +340,7 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     stopLiveUpdate() {
-        console.log("Stopping interval");
+        console.log("Stopping live update");
         // Clear the interval right before component unmount
         if (this.state.intervalId) {
             clearInterval(this.state.intervalId);
@@ -309,16 +358,15 @@ class ViewGraphNGInternal extends React.Component<
         for (let i = 0; i < 3; i++) {
             // tslint:disable-next-line:no-bitwise
             const value = (hash >> (i * 8)) & 0xff;
-            colour += ("00" + value.toString(16)).substr(-2);
+            colour += ("00" + value.toString(16)).slice(-2);
         }
         return colour;
     };
 
     componentWillUnmount() {
-        console.log("Component unmounting, clearing interval");
         // Clear the interval right before component unmount
         this.stopLiveUpdate();
-
+        this.clearGraph();
         this.removeGraph();
     }
 
@@ -330,6 +378,7 @@ class ViewGraphNGInternal extends React.Component<
         };
 
         const options = {
+            autoResize: true,
             physics: {
                 stabilization: {
                     enabled: true,
@@ -353,6 +402,7 @@ class ViewGraphNGInternal extends React.Component<
                     color: "#E6E5E6",
                     inherit: false,
                 },
+
             },
             nodes: {
                 shape: "dot",
@@ -370,6 +420,8 @@ class ViewGraphNGInternal extends React.Component<
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
                 hideEdgesOnZoom: true,
+                navigationButtons: true,
+                keyboard: true,
             },
             height: "100%",
         };
@@ -387,42 +439,90 @@ class ViewGraphNGInternal extends React.Component<
         this.network.on("stabilizationIterationsDone", () => {
             this.setState({stabilizationProgress: 100});
             console.log("Stabilization done");
-            this.network!.fit();
         });
 
-        this.network.on("click", (params) => {
-            if (params.nodes.length === 0) {
-                return;
+        this.network.once("afterDrawing", () => {
+            if (GraphDefaults.OnStartAnimation) {
+                // We focus on the root nodes
+                this.network!.focus(this.rootNodesIds[0], {
+                    scale: 1,
+                });
+                console.log("Focusing on root node, starting animation");
+                // After the stabilization we fit the graph
+                this.network!.fit({
+                    animation: {
+                        duration: GraphDefaults.AnimationDuration,
+                        easingFunction: GraphDefaults.AnimationEasingFunction,
+                    }
+                });
+            } else {
+                this.network!.fit();
             }
-            const id: string = params.nodes[0];
-            let node = this.nodes.get(id);
-
-            let crawledByRecords = node.crawledByRecordIds.map((recordId) => {
-                return this.recordsDictionary[recordId];
-            });
-
-            console.log(crawledByRecords);
-
-            const url = addHttpOrHttps(node.id);
-
-            this.setState({
-                nodeModalContext: {
-                    show: true,
-                    title: node.label,
-                    url: url,
-                    crawlTime: node.crawlTime,
-                    crawledByRecords: [...crawledByRecords],
-                }
-            })
         });
 
-        function addHttpOrHttps(url: string): string {
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                return `https://${url}`;
-            }
-            return url;
+        this.network.on("click", this.clickNodeEventHandler);
+
+        this.registerCursorEvents(this.network);
+    }
+
+    changeCursor(cursorType: string) {
+        const networkCanvas = document
+            .getElementById("network")!
+            .getElementsByTagName("canvas")[0];
+
+        networkCanvas.style.cursor = cursorType;
+    }
+
+    registerCursorEvents(network: Network) {
+        network.on("dragStart", () => {
+            this.changeCursor("grabbing");
+        });
+        network.on("dragging", () => {
+            this.changeCursor("grabbing");
+        });
+        network.on("dragEnd", () => {
+            this.changeCursor(GraphDefaults.DefaultCursor);
+        });
+
+        network.on("hoverNode", () => {
+            this.changeCursor("pointer");
+        });
+        network.on("blurNode", () => {
+            this.changeCursor(GraphDefaults.DefaultCursor);
+        });
+    }
+
+    addHttpOrHttps(url: string): string {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            return `https://${url}`;
         }
+        return url;
+    }
 
+    clickNodeEventHandler = (params: any) => {
+        if (params.nodes.length === 0) {
+            return;
+        }
+        const id: string = params.nodes[0];
+        let node = this.nodes.get(id);
+
+        let crawledByRecords = node.crawledByRecordIds.map((recordId) => {
+            return this.recordsDictionary[recordId];
+        });
+
+        console.log(crawledByRecords);
+
+        const url = this.addHttpOrHttps(node.id);
+
+        this.setState({
+            nodeModalContext: {
+                show: true,
+                title: node.label,
+                url: url,
+                crawlTime: node.crawlTime,
+                crawledByRecords: [...crawledByRecords],
+            }
+        })
     }
 
     render() {
@@ -464,7 +564,7 @@ class ViewGraphNGInternal extends React.Component<
                     </div>
                 )}
 
-                <div ref={this.graphRef} className="full-height" />
+                <div id="network" ref={this.graphRef} className="full-height" />
                 
                 <div
                     style={{
@@ -515,8 +615,8 @@ class ViewGraphNGInternal extends React.Component<
                             gridArea: "bottom",
                             visibility: this.state.staticView ? "visible" : "hidden",
                         }}
-                        onClick={() => {
-                            this.updateGraphAsync();
+                        onClick={async () => {
+                            await this.updateGraphAsync();
                         }}
                     >
                         Update Graph
