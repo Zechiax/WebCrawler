@@ -373,6 +373,7 @@ class ViewGraphNGInternal extends React.Component<
         };
 
         const options = {
+            autoResize: true,
             physics: {
                 stabilization: {
                     enabled: true,
@@ -432,6 +433,9 @@ class ViewGraphNGInternal extends React.Component<
         this.network.on("stabilizationIterationsDone", () => {
             this.setState({stabilizationProgress: 100});
             console.log("Stabilization done");
+        });
+
+        this.network.once("afterDrawing", () => {
             if (GraphDefaults.OnStartAnimation) {
                 // We focus on the root nodes
                 this.network!.focus(this.rootNodesIds[0], {
