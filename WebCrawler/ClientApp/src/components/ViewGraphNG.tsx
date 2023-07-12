@@ -93,26 +93,7 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     async componentDidMount() {
-        this.edges.on("add", (event, properties) => {
-            console.log("Edges added ( " + properties.items.length + " )");
-            for (const edgeId of properties.items) {
-                const edge = this.edges.get(edgeId);
-                const fromNode = this.nodes.get(edge.from);
-                const toNode = this.nodes.get(edge.to);
-
-                if (fromNode) {
-                    fromNode.value = (fromNode.value || 1) + 1;
-                    fromNode.mass = (fromNode.mass || 1) + 1;
-                    this.nodes.update(fromNode);
-                }
-
-                if (toNode) {
-                    toNode.value = (toNode.value || 1) + 1;
-                    toNode.mass = (toNode.mass || 1) + 1;
-                    this.nodes.update(toNode);
-                }
-            }
-        });
+        this.edges.on("add", this.edgeAddedHandler.bind(this));
 
         console.log("Component mounted, loading graphs with ids: " + this.state.graphsIds);
         await this.updateGraphAsync().then(() => {
@@ -129,6 +110,27 @@ class ViewGraphNGInternal extends React.Component<
         console.log("Starting periodic graph update");
         // Start the interval timer to update the graph every 5 seconds
         this.startLiveUpdate();
+    }
+
+    edgeAddedHandler(event: any, properties: { items: string[] }) {
+        console.log("Edges added ( " + properties.items.length + " )");
+        for (const edgeId of properties.items) {
+            const edge = this.edges.get(edgeId);
+            const fromNode = this.nodes.get(edge.from);
+            const toNode = this.nodes.get(edge.to);
+
+            if (fromNode) {
+                fromNode.value = (fromNode.value || 1) + 1;
+                fromNode.mass = (fromNode.mass || 1) + 1;
+                this.nodes.update(fromNode);
+            }
+
+            if (toNode) {
+                toNode.value = (toNode.value || 1) + 1;
+                toNode.mass = (toNode.mass || 1) + 1;
+                this.nodes.update(toNode);
+            }
+        }
     }
 
     async componentDidUpdate(prevProps: {}, prevState: IState) {
