@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
-import { WebsiteRecordInfoModal } from "./WebsiteRecordInfoModal";
+import WebsiteRecordInfoModal from "./WebsiteRecordInfoModal";
 import PaginatedView from "./PaginatedView";
 import Modal from "react-bootstrap/Modal";
 import Spinner from 'react-bootstrap/Spinner';

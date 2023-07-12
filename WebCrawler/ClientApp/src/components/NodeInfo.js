@@ -3,7 +3,7 @@ import Modal from "react-bootstrap/Modal";
 import ListGroup from "react-bootstrap/ListGroup";
 import { Label } from "reactstrap";
 import Button from "react-bootstrap/Button";
-import { WebsiteRecordInfoModal } from "./WebsiteRecordInfoModal";
+import WebsiteRecordInfoModal from "./WebsiteRecordInfoModal";
 
 export class NodeInfo extends Component {
   constructor(props) {

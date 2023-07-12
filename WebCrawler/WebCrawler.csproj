@@ -46,6 +46,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="ClientApp\src\components\WebsiteRecordInfoModal.tsx" />
+    </ItemGroup>
+
+    <ItemGroup>
       <None Include="..\.editorconfig" Link=".editorconfig" />
     </ItemGroup>
 
@@ -58,6 +62,9 @@
 	<ItemGroup>
 	  <Folder Include="Data\Migrations\" />
 	  <Folder Include="logs\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <TypeScriptCompile Include="ClientApp\src\components\WebsiteRecordInfoModal.tsx" />
 	</ItemGroup>
 
     <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
