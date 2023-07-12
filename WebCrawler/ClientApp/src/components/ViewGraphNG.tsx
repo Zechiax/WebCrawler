@@ -23,6 +23,8 @@ class GraphDefaults {
     static readonly OnStartAnimation : boolean = true;
     static readonly AnimationDuration : number = 2000;
     static readonly AnimationEasingFunction : EasingFunction = "easeInOutQuad";
+
+    static readonly DefaultCursor : string = "default";
 }
 
 interface INode {
@@ -40,6 +42,7 @@ interface INode {
     mass?: number;
     crawledByRecordIds?: string[];
     shape?: string;
+    group?: string;
 }
 
 interface IEdge {
@@ -158,7 +161,7 @@ class ViewGraphNGInternal extends React.Component<
             this.setState({ staticView: false });
             this.startLiveUpdate();
         }
-    }        
+    }
 
     clearGraph() {
         this.edges.clear();
@@ -261,6 +264,7 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.title = element;
                         alreadyPresentNode.started = recordForGraph.crawlInfo.lastExecution.started;
                         alreadyPresentNode.crawlTime = node.CrawlTime;
+                        alreadyPresentNode.group = recordId;
                     }
                 } else {
                     const newNode : INode = {
@@ -271,6 +275,7 @@ class ViewGraphNGInternal extends React.Component<
                         crawlTime: node.CrawlTime,
                         title: element,
                         crawledByRecordIds: [recordId],
+                        group: recordId
                     }
 
                     if (firstNode) {
@@ -397,6 +402,7 @@ class ViewGraphNGInternal extends React.Component<
                     color: "#E6E5E6",
                     inherit: false,
                 },
+
             },
             nodes: {
                 shape: "dot",
@@ -455,6 +461,35 @@ class ViewGraphNGInternal extends React.Component<
         });
 
         this.network.on("click", this.clickNodeEventHandler);
+
+        this.registerCursorEvents(this.network);
+    }
+
+    changeCursor(cursorType: string) {
+        const networkCanvas = document
+            .getElementById("network")!
+            .getElementsByTagName("canvas")[0];
+
+        networkCanvas.style.cursor = cursorType;
+    }
+
+    registerCursorEvents(network: Network) {
+        network.on("dragStart", () => {
+            this.changeCursor("grabbing");
+        });
+        network.on("dragging", () => {
+            this.changeCursor("grabbing");
+        });
+        network.on("dragEnd", () => {
+            this.changeCursor(GraphDefaults.DefaultCursor);
+        });
+
+        network.on("hoverNode", () => {
+            this.changeCursor("pointer");
+        });
+        network.on("blurNode", () => {
+            this.changeCursor(GraphDefaults.DefaultCursor);
+        });
     }
 
     addHttpOrHttps(url: string): string {
@@ -529,7 +564,7 @@ class ViewGraphNGInternal extends React.Component<
                     </div>
                 )}
 
-                <div ref={this.graphRef} className="full-height" />
+                <div id="network" ref={this.graphRef} className="full-height" />
                 
                 <div
                     style={{
