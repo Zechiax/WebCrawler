@@ -331,10 +331,9 @@ class ViewGraphNGInternal extends React.Component<
     };
 
     componentWillUnmount() {
-        console.log("Component unmounting, clearing interval");
         // Clear the interval right before component unmount
         this.stopLiveUpdate();
-
+        this.clearGraph();
         this.removeGraph();
     }
 
@@ -408,39 +407,40 @@ class ViewGraphNGInternal extends React.Component<
             this.network!.fit();
         });
 
-        this.network.on("click", (params) => {
-            if (params.nodes.length === 0) {
-                return;
-            }
-            const id: string = params.nodes[0];
-            let node = this.nodes.get(id);
+        this.network.on("click", this.clickNodeEventHandler);
+    }
 
-            let crawledByRecords = node.crawledByRecordIds.map((recordId) => {
-                return this.recordsDictionary[recordId];
-            });
+    addHttpOrHttps(url: string): string {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            return `https://${url}`;
+        }
+        return url;
+    }
 
-            console.log(crawledByRecords);
+    clickNodeEventHandler = (params: any) => {
+        if (params.nodes.length === 0) {
+            return;
+        }
+        const id: string = params.nodes[0];
+        let node = this.nodes.get(id);
 
-            const url = addHttpOrHttps(node.id);
-
-            this.setState({
-                nodeModalContext: {
-                    show: true,
-                    title: node.label,
-                    url: url,
-                    crawlTime: node.crawlTime,
-                    crawledByRecords: [...crawledByRecords],
-                }
-            })
+        let crawledByRecords = node.crawledByRecordIds.map((recordId) => {
+            return this.recordsDictionary[recordId];
         });
 
-        function addHttpOrHttps(url: string): string {
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                return `https://${url}`;
-            }
-            return url;
-        }
+        console.log(crawledByRecords);
 
+        const url = this.addHttpOrHttps(node.id);
+
+        this.setState({
+            nodeModalContext: {
+                show: true,
+                title: node.label,
+                url: url,
+                crawlTime: node.crawlTime,
+                crawledByRecords: [...crawledByRecords],
+            }
+        })
     }
 
     render() {
