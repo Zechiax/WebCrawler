@@ -351,7 +351,7 @@ class ViewGraphNGInternal extends React.Component<
         for (let i = 0; i < 3; i++) {
             // tslint:disable-next-line:no-bitwise
             const value = (hash >> (i * 8)) & 0xff;
-            colour += ("00" + value.toString(16)).substr(-2);
+            colour += ("00" + value.toString(16)).slice(-2);
         }
         return colour;
     };
