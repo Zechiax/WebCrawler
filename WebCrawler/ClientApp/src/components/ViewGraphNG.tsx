@@ -27,6 +27,7 @@ interface INode {
     title?: string | HTMLElement;
     mass?: number;
     crawledByRecordIds?: string[];
+    shape?: string;
 }
 
 interface IEdge {
@@ -212,6 +213,8 @@ class ViewGraphNGInternal extends React.Component<
             // We update the dictionary of records with the new record
             this.recordsDictionary[recordId] = recordForGraph;
 
+            let firstNode : boolean = true;
+
             for (const node of graphJson.Graph) {
                 const color = new RegExp(
                     recordForGraph.crawlInfo.regexPattern
@@ -246,7 +249,7 @@ class ViewGraphNGInternal extends React.Component<
                         alreadyPresentNode.crawlTime = node.CrawlTime;
                     }
                 } else {
-                    graphData.nodes.push({
+                    const newNode : INode = {
                         id: node.Url,
                         label: node.Title,
                         color: color,
@@ -254,7 +257,14 @@ class ViewGraphNGInternal extends React.Component<
                         crawlTime: node.CrawlTime,
                         title: element,
                         crawledByRecordIds: [recordId],
-                    });
+                    }
+
+                    if (firstNode) {
+                        newNode.shape = "square"
+                        firstNode = false;
+                    }
+
+                    graphData.nodes.push(newNode);
                 }
 
                 for (const neighbourUrl of node.Neighbours) {
