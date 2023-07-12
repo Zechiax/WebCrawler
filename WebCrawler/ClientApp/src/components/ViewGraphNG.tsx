@@ -5,6 +5,7 @@ import Button from "react-bootstrap/Button";
 import "./ViewGraphNG.css";
 import { ProgressBar } from 'react-bootstrap';
 import { NodeInfo } from "./NodeInfo";
+import {EasingFunction} from "vis-network/dist/types";
 
 export const ViewGraphNG = (props: any) => {
     const location = useLocation();
@@ -68,6 +69,8 @@ class GraphDefaults {
     static readonly RootNodeShape : string = "diamond";
     // Whether to start the animation from root node after stabilization is complete
     static readonly OnStartAnimation : boolean = true;
+    static readonly AnimationDuration : number = 2000;
+    static readonly AnimationEasingFunction : EasingFunction = "easeInOutQuad";
 }
 
 class ViewGraphNGInternal extends React.Component<
@@ -436,8 +439,8 @@ class ViewGraphNGInternal extends React.Component<
                 // After the stabilization we fit the graph
                 this.network!.fit({
                     animation: {
-                        duration: 2000,
-                        easingFunction: "easeInOutQuad",
+                        duration: GraphDefaults.AnimationDuration,
+                        easingFunction: GraphDefaults.AnimationEasingFunction,
                     }
                 });
             } else {
@@ -571,8 +574,8 @@ class ViewGraphNGInternal extends React.Component<
                             gridArea: "bottom",
                             visibility: this.state.staticView ? "visible" : "hidden",
                         }}
-                        onClick={() => {
-                            this.updateGraphAsync();
+                        onClick={async () => {
+                            await this.updateGraphAsync();
                         }}
                     >
                         Update Graph
