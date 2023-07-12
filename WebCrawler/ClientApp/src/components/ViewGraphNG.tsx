@@ -14,6 +14,17 @@ export const ViewGraphNG = (props: any) => {
     );
 };
 
+// Class for defaults for the graph
+class GraphDefaults {
+    static readonly RootNodeShape : string = "diamond";
+
+    // ANIMATION
+    // Whether to start the animation from root node after stabilization is complete
+    static readonly OnStartAnimation : boolean = true;
+    static readonly AnimationDuration : number = 2000;
+    static readonly AnimationEasingFunction : EasingFunction = "easeInOutQuad";
+}
+
 interface INode {
     id: string;
     label: string;
@@ -62,15 +73,6 @@ interface IState {
 enum GraphView {
     Domain = "Record/livegraph/domains/",
     Website = "Record/livegraph/websites/",
-}
-
-// Class for defaults for the graph
-class GraphDefaults {
-    static readonly RootNodeShape : string = "diamond";
-    // Whether to start the animation from root node after stabilization is complete
-    static readonly OnStartAnimation : boolean = true;
-    static readonly AnimationDuration : number = 2000;
-    static readonly AnimationEasingFunction : EasingFunction = "easeInOutQuad";
 }
 
 class ViewGraphNGInternal extends React.Component<
