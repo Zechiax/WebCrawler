@@ -297,7 +297,7 @@ class ViewGraphNGInternal extends React.Component<
             this.stopLiveUpdate();
         }
 
-        console.log("Starting interval");
+        console.log("Starting live update");
         const intervalId = setInterval(async () => {
             await this.updateGraphAsync();
         }, interval);
@@ -307,7 +307,7 @@ class ViewGraphNGInternal extends React.Component<
     }
 
     stopLiveUpdate() {
-        console.log("Stopping interval");
+        console.log("Stopping live update");
         // Clear the interval right before component unmount
         if (this.state.intervalId) {
             clearInterval(this.state.intervalId);
