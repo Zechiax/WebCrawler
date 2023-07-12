@@ -33,6 +33,7 @@ interface IEdge {
     id: string;
     from: string;
     to: string;
+    arrows: string;
 }
 
 interface IGraphData {
@@ -257,10 +258,23 @@ class ViewGraphNGInternal extends React.Component<
                 for (const neighbourUrl of node.Neighbours) {
                     // Ids are from url to url
                     const id = `${node.Url} -> ${neighbourUrl}`;
+                    const id_reverse = `${neighbourUrl} -> ${node.Url}`;
+
+                    // We add arrows from if the node in reverse is present
+                    const alreadyPresentEdge = graphData.edges.find(
+                        (e) => e.id === id_reverse
+                    );
+
+                    if (alreadyPresentEdge) {
+                        alreadyPresentEdge.arrows += ",from";
+                        continue;
+                    }
+
                     graphData.edges.push({
                         id: `${id}`,
                         from: node.Url,
                         to: neighbourUrl,
+                        arrows: "to",
                     });
                 }
             }
@@ -370,6 +384,8 @@ class ViewGraphNGInternal extends React.Component<
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
                 hideEdgesOnZoom: true,
+                navigationButtons: true,
+                keyboard: true,
             },
             height: "100%",
         };
