@@ -66,6 +66,7 @@ enum GraphView {
 // Class for defaults for the graph
 class GraphDefaults {
     static readonly RootNodeShape : string = "diamond";
+    // Whether to start the animation from root node after stabilization is complete
     static readonly OnStartAnimation : boolean = true;
 }
 
