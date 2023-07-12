@@ -63,6 +63,12 @@ enum GraphView {
     Website = "Record/livegraph/websites/",
 }
 
+// Class for defaults for the graph
+class GraphDefaults {
+    static readonly RootNodeShape : string = "diamond";
+    static readonly OnStartAnimation : boolean = true;
+}
+
 class ViewGraphNGInternal extends React.Component<
     { graphsIds: number[] },
     IState
@@ -73,6 +79,7 @@ class ViewGraphNGInternal extends React.Component<
     private edges = new DataSet<IEdge>();
     private error : boolean = false;
     private recordsDictionary: { [key: string]: any } = {};
+    private rootNodesIds: string[] = [];
 
     constructor(props: { graphsIds: [] }) {
         super(props);
@@ -150,6 +157,7 @@ class ViewGraphNGInternal extends React.Component<
     clearGraph() {
         this.edges.clear();
         this.nodes.clear();
+        this.rootNodesIds = [];
     }
 
     async updateGraphAsync() {
@@ -260,8 +268,12 @@ class ViewGraphNGInternal extends React.Component<
                     }
 
                     if (firstNode) {
-                        newNode.shape = "square"
+                        newNode.shape = GraphDefaults.RootNodeShape;
                         firstNode = false;
+                        if (!this.rootNodesIds.includes(newNode.id))
+                        {
+                            this.rootNodesIds.push(newNode.id);
+                        }
                     }
 
                     graphData.nodes.push(newNode);
@@ -414,7 +426,22 @@ class ViewGraphNGInternal extends React.Component<
         this.network.on("stabilizationIterationsDone", () => {
             this.setState({stabilizationProgress: 100});
             console.log("Stabilization done");
-            this.network!.fit();
+            if (GraphDefaults.OnStartAnimation) {
+                // We focus on the root nodes
+                this.network!.focus(this.rootNodesIds[0], {
+                    scale: 1,
+                });
+                console.log("Focusing on root node, starting animation");
+                // After the stabilization we fit the graph
+                this.network!.fit({
+                    animation: {
+                        duration: 2000,
+                        easingFunction: "easeInOutQuad",
+                    }
+                });
+            } else {
+                this.network!.fit();
+            }
         });
 
         this.network.on("click", this.clickNodeEventHandler);
