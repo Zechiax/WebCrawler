@@ -31,17 +31,13 @@ export class NodeInfo extends Component {
               margin: 10,
             }}
           >
-            <ListGroup.Item>title: {this.props.title}</ListGroup.Item>
-            <ListGroup.Item>url: {this.props.url}</ListGroup.Item>
-            <ListGroup.Item>crawl time: {this.props.crawlTime}</ListGroup.Item>
-            <Label
-              style={{
-                marginTop: "20px",
-                marginLeft: "16px",
-              }}
-            >
-              Website records
-            </Label>
+            <Label>Title:</Label>
+            <ListGroup.Item> {this.props.title}</ListGroup.Item>
+            <Label style={{ marginTop: "10px" }}>Url:</Label>
+            <ListGroup.Item>{this.props.url}</ListGroup.Item>
+            <Label style={{ marginTop: "10px" }}>Crawl time:</Label>
+            <ListGroup.Item>{this.props.crawlTime}</ListGroup.Item>
+            <Label style={{ marginTop: "10px" }}>Crawled by website records:</Label>
             <ListGroup>
               {this.props.records.map((record, i) => {
                 return (
@@ -50,14 +46,16 @@ export class NodeInfo extends Component {
                   <ListGroup.Item
                     key={i}
                     variant="light"
-                  >{`${record.label}(${record.id})`}</ListGroup.Item>
+                  >{`${record.label} (id: ${record.id})`}</ListGroup.Item>
                 );
               })}
             </ListGroup>
           </ListGroup>
           <div
             style={{
-              margin: 10,
+                margin: 10,
+                display: "flex",
+                justifyContent: "flex-end"
             }}
           >
             <Button
