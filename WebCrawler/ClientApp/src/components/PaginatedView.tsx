@@ -32,7 +32,12 @@ const Records: React.FC<{
   registerDataUpdateHandler: Function;
   loadingStart: Function;
   loadingStop: Function;
-}> = ({ showEditModalWindow, registerDataUpdateHandler, loadingStart, loadingStop }) => {
+}> = ({
+  showEditModalWindow,
+  registerDataUpdateHandler,
+  loadingStart,
+  loadingStop,
+}) => {
   const [data, setData] = useState<WebsiteRecord[]>([]);
   const navigate = useNavigate();
 
@@ -208,9 +213,9 @@ const Records: React.FC<{
       initialState={{ showColumnFilters: true }}
       positionToolbarAlertBanner="bottom"
       renderDetailPanel={({ row }) => {
-        const handleRunNow = () => {
+        const handleRunNow = async () => {
           console.log("Run now clicked for id: " + row.original.id);
-          fetch(`record/rerun/${row.original.id}`, {
+          await fetch(`record/rerun/${row.original.id}`, {
             method: "POST",
           });
         };
@@ -308,7 +313,7 @@ const Records: React.FC<{
                     response.status
                 );
               }
-              }
+            }
             table.resetRowSelection();
             table.resetExpanded();
             closeMenu();
@@ -325,7 +330,8 @@ const Records: React.FC<{
           onClick={() => {
             closeMenu();
             var divided = row.original.crawlInfo.periodicity.split(":");
-            var periodicity = +divided[0] * 3600 + +divided[1] * 60 + +divided[2];
+            var periodicity =
+              +divided[0] * 3600 + +divided[1] * 60 + +divided[2];
             const context = {
               id: row.original.id,
               name: row.original.label,
@@ -347,78 +353,82 @@ const Records: React.FC<{
         </MenuItem>,
       ]}
       renderTopToolbarCustomActions={({ table }) => {
-          const handleDeactivate = () => {
-              loadingStart();
-              let deactivated: number[] = [];
-              let responses = table.getSelectedRowModel().flatRows.map((row) => {
-                  console.log("Deactivating record with id: " + row.original.id);
+        const handleDeactivate = () => {
+          loadingStart();
+          let deactivated: number[] = [];
+          let responses = table.getSelectedRowModel().flatRows.map((row) => {
+            console.log("Deactivating record with id: " + row.original.id);
 
-                  return fetch(`record/stop/${row.original.id}`, {
-                      method: "POST",
-                  }).then(async (response) => {
-                      if (response.status === 200) {
-                          console.log("Record with id: " + row.original.id + " deactivated");
-                          data.forEach((record) => {
-                             if (record.id === row.original.id) {
-                                 deactivated.push(row.index);
-                             }
-                          });
-                      } else {
-                          console.log(
-                              "Record with id: " +
-                              row.original.id +
-                              " failed to deactivate. Status code: " +
-                              response.status
-                          );
-                      }
-                  })
-              });
+            return fetch(`record/stop/${row.original.id}`, {
+              method: "POST",
+            }).then(async (response) => {
+              if (response.status === 200) {
+                console.log(
+                  "Record with id: " + row.original.id + " deactivated"
+                );
+                data.forEach((record) => {
+                  if (record.id === row.original.id) {
+                    deactivated.push(row.index);
+                  }
+                });
+              } else {
+                console.log(
+                  "Record with id: " +
+                    row.original.id +
+                    " failed to deactivate. Status code: " +
+                    response.status
+                );
+              }
+            });
+          });
 
-              Promise.all(responses).then(() => {
-                  let newData = [...data];
-                  deactivated.forEach((index) => {
-                      newData[index].isActive = false;
-                  });
-                  setData(newData);
-                  loadingStop();
-              });
-          };
+          Promise.all(responses).then(() => {
+            let newData = [...data];
+            deactivated.forEach((index) => {
+              newData[index].isActive = false;
+            });
+            setData(newData);
+            loadingStop();
+          });
+        };
 
         const handleActivate = () => {
-            let activated: number[] = [];
-            loadingStart();
-            let responses = table.getSelectedRowModel().flatRows.map((row) => {
-                console.log("Activating record with id: " + row.original.id);
+          let activated: number[] = [];
+          loadingStart();
+          let responses = table.getSelectedRowModel().flatRows.map((row) => {
+            console.log("Activating record with id: " + row.original.id);
 
-                return fetch(`record/run/${row.original.id}`, {
-                    method: "POST",
-                }).then(async (response) => {
-                    if (response.status === 200) {
-                        console.log("Record with id: " + row.original.id + " activated");
-                        data.forEach((record) => {
-                           if (record.id === row.original.id) {
-                               activated.push(row.index);
-                           }
-                        });
-                    } else {
-                        console.log(
-                        "Record with id: " +
-                        row.original.id +
-                        " failed to activate. Status code: " +
-                        response.status
-                        );
-                    }
-                })
-            });
-
-            Promise.all(responses).then(() => {
-                let newData = [...data];
-                activated.forEach((index) => {
-                    newData[index].isActive = true;
+            return fetch(`record/run/${row.original.id}`, {
+              method: "POST",
+            }).then(async (response) => {
+              if (response.status === 200) {
+                console.log(
+                  "Record with id: " + row.original.id + " activated"
+                );
+                data.forEach((record) => {
+                  if (record.id === row.original.id) {
+                    activated.push(row.index);
+                  }
                 });
-                setData(newData);
-                loadingStop();
+              } else {
+                console.log(
+                  "Record with id: " +
+                    row.original.id +
+                    " failed to activate. Status code: " +
+                    response.status
+                );
+              }
             });
+          });
+
+          Promise.all(responses).then(() => {
+            let newData = [...data];
+            activated.forEach((index) => {
+              newData[index].isActive = true;
+            });
+            setData(newData);
+            loadingStop();
+          });
         };
 
         const handleViewGraph = () => {
@@ -432,7 +442,6 @@ const Records: React.FC<{
         };
 
         const handleDelete = () => {
-          
           const confirmed = window.confirm(
             "Are you sure you want to delete records with ids: " +
               table
@@ -526,7 +535,7 @@ const Records: React.FC<{
               }}
             >
               Delete
-              <Delete/>
+              <Delete />
             </Button>
           </div>
         );
