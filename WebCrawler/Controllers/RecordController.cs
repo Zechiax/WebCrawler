@@ -194,9 +194,6 @@ public class RecordController : OurControllerBase
             _executionManager.EnqueueForPeriodicCrawl(crawlInfo, (ulong)crawlInfo.WebsiteRecordId);
         }
 
-        record.IsActive = true;
-        await _dataService.UpdateWebsiteRecord(id, record);
-
         return Ok();
     }
 
