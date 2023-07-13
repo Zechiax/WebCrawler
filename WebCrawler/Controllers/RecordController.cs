@@ -18,8 +18,8 @@ public class RecordController : OurControllerBase
     private readonly IValidator<CreateRecordRequestDto> _recordValidator;
     private readonly IMapper _mapper;
     private readonly ILogger<RecordController> _logger;
-    
-    public RecordController(ILogger<RecordController> logger, IMapper mapper, IValidator<CreateRecordRequestDto> recordValidator,IDataService dataService, IPeriodicExecutionManagerService executionManager) {
+
+    public RecordController(ILogger<RecordController> logger, IMapper mapper, IValidator<CreateRecordRequestDto> recordValidator, IDataService dataService, IPeriodicExecutionManagerService executionManager) {
         _mapper = mapper;
         _dataService = dataService;
         _executionManager = executionManager;
@@ -35,7 +35,7 @@ public class RecordController : OurControllerBase
         {
             return StatusCode(InternalErrorCode);
         }
-        
+
         // BUG: Currently, client side needs an website execution to not be null, so we'll just return an empty one
         record.CrawlInfo.LastExecution ??= new WebsiteExecution()
         {
@@ -50,12 +50,12 @@ public class RecordController : OurControllerBase
     public async Task<IActionResult> CreateRecord([FromBody] CreateRecordRequestDto record)
     {
         ValidationResult result = await _recordValidator.ValidateAsync(record);
-        
+
         if (!result.IsValid)
         {
             return BadRequest(JsonConvert.SerializeObject(result.Errors));
         }
-        
+
         var websiteRecord = new WebsiteRecord
         {
             Label = record.Label,
@@ -66,11 +66,11 @@ public class RecordController : OurControllerBase
 
         // We have to use the return crawl info data, as the job id is not set yet
         var id = await _dataService.AddWebsiteRecord(websiteRecord);
-        
+
         var returnedRecord = await _dataService.GetWebsiteRecordData(id);
 
         var crawlInfo = returnedRecord.CrawlInfo;
-        
+
         _logger.LogInformation("Created record with id {ReturnedRecordId}", returnedRecord.Id);
         if (returnedRecord.IsActive)
         {
@@ -129,7 +129,7 @@ public class RecordController : OurControllerBase
     {
         WebsiteGraphSnapshot? graph = GetLiveGraph(id);
 
-        if(graph is null)
+        if (graph is null)
         {
             return StatusCode(BadRequestCode, "There is no graph");
         }
@@ -144,20 +144,20 @@ public class RecordController : OurControllerBase
     {
         WebsiteGraphSnapshot? graph = GetLiveGraph(id);
 
-        if(graph is null)
+        if (graph is null)
         {
             return StatusCode(BadRequestCode, "There is no graph");
         }
-        
+
         string graphJson = WebsiteGraphSnapshot.JsonConverter.Serialize(graph.Value);
         return Ok(graphJson);
     }
 
     private WebsiteGraphSnapshot? GetLiveGraph(int id)
     {
-        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
+        if (!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
-            return null; 
+            return null;
         }
 
         ulong jobId = (ulong)record.CrawlInfo.WebsiteRecordId;
@@ -165,11 +165,11 @@ public class RecordController : OurControllerBase
         try
         {
             WebsiteGraphSnapshot graph = _executionManager.GetLiveGraph(jobId);
-            return graph; 
+            return graph;
         }
         catch
         {
-            return null; 
+            return null;
         }
     }
 
@@ -177,11 +177,11 @@ public class RecordController : OurControllerBase
     [Route("rerun/{id:int}")]
     public async Task<IActionResult> RerunExecutionOnRecord(int id)
     {
-        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
+        if (!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
             return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
         }
-        
+
         var crawlInfo = _mapper.Map<CrawlInfo>(record!.CrawlInfo);
 
         ulong jobId = (ulong)crawlInfo.WebsiteRecordId;
@@ -201,13 +201,13 @@ public class RecordController : OurControllerBase
     [Route("run/{id:int}")]
     public async Task<IActionResult> RunExecutionOnRecord(int id)
     {
-        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
+        if (!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
             return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
         }
-        
+
         var crawlInfo = _mapper.Map<CrawlInfo>(record.CrawlInfo);
-        
+
         await _dataService.ActivateWebsiteRecord(id);
 
         _executionManager.EnqueueForPeriodicCrawl(crawlInfo, (ulong)crawlInfo.WebsiteRecordId);
@@ -218,20 +218,20 @@ public class RecordController : OurControllerBase
     [Route("stop/{id:int}")]
     public async Task<IActionResult> StopExecutionOnRecord(int id)
     {
-        if(!TryGetWebsiteRecord(id, out WebsiteRecord? record))
+        if (!TryGetWebsiteRecord(id, out WebsiteRecord? record))
         {
             return StatusCode(BadRequestCode, $"Website record with given id: {id} not found.");
         }
-        
+
         await _dataService.DeactivateWebsiteRecord(id);
 
-        ulong jobId = (ulong) id;
-        
+        ulong jobId = (ulong)id;
+
         if (!_executionManager.JobExists(jobId))
         {
             return Ok("Job already stopped.");
         }
-        
+
         bool didIJustStopped = _executionManager.StopPeriodicExecution(jobId);
 
         if (!didIJustStopped)
@@ -248,10 +248,10 @@ public class RecordController : OurControllerBase
     {
         try
         {
-            if(TryGetWebsiteRecord(id, out WebsiteRecord? record))
+            if (TryGetWebsiteRecord(id, out WebsiteRecord? record))
             {
                 ulong jobId = (ulong)record.Id;
-                if(_executionManager.JobExists(jobId))
+                if (_executionManager.JobExists(jobId))
                 {
                     _executionManager.StopPeriodicExecution(jobId);
                 }
@@ -267,8 +267,43 @@ public class RecordController : OurControllerBase
         }
         catch
         {
-            return StatusCode(InternalErrorCode);   
+            return StatusCode(InternalErrorCode);
         }
+    }
+
+    [HttpGet]
+    [Route("statuses")]
+    public IActionResult GetStatuses([FromQuery(Name = "ids")] int[] ids)
+    {
+        string[] statuses = new string[ids.Length];
+
+        try
+        {
+            for(int i = 0; i < ids.Length; i++)
+            {
+                int id = ids[i];
+                if (TryGetWebsiteRecord(id, out WebsiteRecord? record))
+                {
+                    ulong jobId = (ulong)record.Id;
+
+                    if (_executionManager.JobExists(jobId))
+                    {
+                        JobStatus status = _executionManager.GetJobStatus(jobId);
+                        statuses[i] = status.ToString();
+                    }
+                }
+            }
+        }
+        catch (EntryNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch
+        {
+            return StatusCode(InternalErrorCode);
+        }
+
+        return Ok(statuses);
     }
 
     private bool TryGetWebsiteRecord(int id, [NotNullWhen(true)] out WebsiteRecord? record)
