@@ -7,7 +7,7 @@ namespace WebCrawler.GraphQl;
 
 public class Query
 {
-    public IQueryable<WebPageQl> GetWebPages([Service] CrawlerContext context)
+    public IQueryable<WebPageQl> GetWebPages([Service(ServiceKind.Synchronized)] CrawlerContext context)
     {
         return context.WebsiteRecords
             .Where(record => record.IsActive)
@@ -23,8 +23,8 @@ public class Query
                 Active = record.IsActive
             });   
     }
-
-    public IQueryable<NodeQl> GetNodes([Service] CrawlerContext context, List<int> webPages)
+    
+    public IQueryable<NodeQl> GetNodes([Service(ServiceKind.Synchronized)] CrawlerContext context, List<int> webPages)
     {
         var records = context.WebsiteRecords
             .AsNoTracking()
