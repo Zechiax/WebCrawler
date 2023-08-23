@@ -3,7 +3,7 @@
 public enum JobStatus
 {
     WaitingInQueue,
-    Active,
+    Running,
     Stopped,
     Finished,
 }

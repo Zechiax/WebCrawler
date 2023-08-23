@@ -271,41 +271,6 @@ public class RecordController : OurControllerBase
         }
     }
 
-    [HttpGet]
-    [Route("statuses")]
-    public IActionResult GetStatuses([FromQuery(Name = "ids")] int[] ids)
-    {
-        string[] statuses = new string[ids.Length];
-
-        try
-        {
-            for(int i = 0; i < ids.Length; i++)
-            {
-                int id = ids[i];
-                if (TryGetWebsiteRecord(id, out WebsiteRecord? record))
-                {
-                    ulong jobId = (ulong)record.Id;
-
-                    if (_executionManager.JobExists(jobId))
-                    {
-                        JobStatus status = _executionManager.GetJobStatus(jobId);
-                        statuses[i] = status.ToString();
-                    }
-                }
-            }
-        }
-        catch (EntryNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch
-        {
-            return StatusCode(InternalErrorCode);
-        }
-
-        return Ok(statuses);
-    }
-
     private bool TryGetWebsiteRecord(int id, [NotNullWhen(true)] out WebsiteRecord? record)
     {
         record = null;

@@ -4,6 +4,7 @@ import { Box, Button, ListItemIcon, MenuItem, Typography } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import Chip from "@mui/material/Chip";
 import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
+import Spinner from 'react-bootstrap/Spinner';
 
 interface WebsiteRecord {
   id: number;
@@ -27,6 +28,11 @@ interface Tag {
   name: string;
 }
 
+interface JobStatus {
+    id: number;
+    status: string;
+}
+
 const Records: React.FC<{
   showEditModalWindow: Function;
   registerDataUpdateHandler: Function;
@@ -39,6 +45,7 @@ const Records: React.FC<{
   loadingStop,
 }) => {
   const [data, setData] = useState<WebsiteRecord[]>([]);
+  const [jobStatuses, setJobStatuses] = useState<JobStatus[]>([]);
   const navigate = useNavigate();
 
   const addNewRecord = async (id: Number) => {
@@ -70,13 +77,26 @@ const Records: React.FC<{
     });
   };
 
+    const updateStatuses = async (data: WebsiteRecord[]) => {
+        let ids = "ids=" + data.map((record) => record.id).join("&ids=");
+        let response = await fetch(`records/statuses?${ids}`);
+        let statuses = (await response.json()) as JobStatus[];
+        setJobStatuses(statuses);
+        console.log("Statuses updated:");
+        console.log(statuses);
+        return true;
+    };
+
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch("records");
-      const recordsData = await response.json();
-      setData(recordsData);
-      console.log(recordsData);
-      registerDataUpdateHandler(addNewRecord);
+        let response = await fetch("records");
+        const recordsData = await response.json();
+        console.log("Records data:");
+        registerDataUpdateHandler(addNewRecord);
+        let result = await updateStatuses(recordsData);
+        if (result) {
+            setData(recordsData);
+        }
     };
 
     fetchData();
@@ -274,6 +294,44 @@ const Records: React.FC<{
                   {row.original.crawlInfo.periodicity}
                 </Typography>
               </li>
+                <li>
+                    <Typography variant="body1">
+                        <strong>Status: </strong>{" "}
+                    </Typography>
+
+                    <Box
+                        component="span"
+                        sx={(theme) => ({
+                            backgroundColor:
+                                (jobStatuses[row.index].status === "WaitingInQueue" || jobStatuses[row.index].status === "Running")
+                                    ? theme.palette.success.dark
+                                    : theme.palette.error.dark,
+                            borderRadius: "0.25rem",
+                            color: "#fff",
+                            maxWidth: "9ch",
+                            p: "0.25rem",
+                        })}
+                    >
+                        {jobStatuses[row.index].status === "WaitingInQueue" || jobStatuses[row.index].status === "Running" ? (
+                            <>
+                                Running
+                                <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                            </>
+                        ) : jobStatuses[row.index].status === "Finished" ? (
+                            <>
+                                Finished
+                            </>
+
+                        ) : jobStatuses[row.index].status === "Stopped" ? (
+                                        <>
+                                            Stopped
+                                        </>
+                        ) : (
+                            jobStatuses[row.index].status
+                        )}
+                    </Box>
+                </li>
+
             </ul>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button

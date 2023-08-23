@@ -99,7 +99,7 @@ public class Crawler
                     continue;
                 }
 
-                _currentJob.JobStatus = JobStatus.Active;
+                _currentJob.JobStatus = JobStatus.Running;
                 _currentJob.Crawler = this;
 
                 #region ExecutorInit
