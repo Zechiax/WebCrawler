@@ -6,6 +6,7 @@ using WebCrawler.Interfaces;
 using WebCrawler.Models;
 using Serilog;
 using WebCrawler.Formatters;
+using WebCrawler.GraphQl;
 using WebCrawler.Models.AutomapperProfiles;
 using WebCrawler.Services;
 using Path = System.IO.Path;
@@ -53,7 +54,9 @@ builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddAutoMapper(typeof(DbToFromDomainProfile));
 
 // We add GraphQL
-builder.Services.AddGraphQLServer();
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<Query>();
 
 //builder.Services.AddGraphQL();
 
