@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Immutable;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using WebCrawler.Data;
 
@@ -46,9 +47,9 @@ public class Query
             {
                 continue;
             }
-
+            
             // BUG: Not working
-            var document = JsonSerializer.SerializeToDocument(json);
+            var document = JsonDocument.Parse(json);
 
             // This is array of "nodes"
             var graph = document.RootElement.GetProperty("Graph");
