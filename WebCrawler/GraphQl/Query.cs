@@ -48,7 +48,6 @@ public class Query
                 continue;
             }
             
-            // BUG: Not working
             var document = JsonDocument.Parse(json);
 
             // This is array of "nodes"
