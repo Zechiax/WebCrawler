@@ -60,7 +60,7 @@ public class RecordController : OurControllerBase
         {
             Label = record.Label,
             IsActive = record.IsActive,
-            Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList(),
+            Tags = record.Tags.Select(tagName => new WebTag(tagName)).ToList(),
             CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromSeconds(record.Periodicity))
         };
 
@@ -106,7 +106,7 @@ public class RecordController : OurControllerBase
 
         websiteRecord.Label = record.Label;
         websiteRecord.IsActive = record.IsActive;
-        websiteRecord.Tags = record.Tags.Select(tagName => new Tag(tagName)).ToList();
+        websiteRecord.Tags = record.Tags.Select(tagName => new WebTag(tagName)).ToList();
         websiteRecord.CrawlInfo = new CrawlInfo(record.Url, record.Regex, TimeSpan.FromSeconds(record.Periodicity));
 
         await _dataService.UpdateWebsiteRecord(id, websiteRecord);

@@ -19,13 +19,13 @@ public static class SeedData
             {
                 IsActive = true,
                 Created = DateTime.Now - TimeSpan.FromDays(1),
-                Tags = new List<Tag>()
+                Tags = new List<WebTag>()
                 {
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Search engine"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Google"
                     }
@@ -45,17 +45,17 @@ public static class SeedData
             },
             new WebsiteRecord()
             {
-                Tags = new List<Tag>()
+                Tags = new List<WebTag>()
                 {
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Extreamly long tag name to see what happens"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Social Media"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Facebook"
                     }
@@ -71,25 +71,25 @@ public static class SeedData
             },
             new WebsiteRecord()
             {
-                Tags = new List<Tag>()
+                Tags = new List<WebTag>()
                 {
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "E-commerce"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Amazon"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Shopping"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Books"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Electronics"
                     }
@@ -111,13 +111,13 @@ public static class SeedData
             new WebsiteRecord()
             {
                 IsActive = true,
-                Tags = new List<Tag>()
+                Tags = new List<WebTag>()
                 {
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Technology News"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "TechCrunch"
                     }
@@ -135,45 +135,45 @@ public static class SeedData
             new WebsiteRecord()
             {
                 Created = DateTime.Now + TimeSpan.FromDays(42),
-                Tags = new List<Tag>()
+                Tags = new List<WebTag>()
                 {
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Programming"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "StackOverflow"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "C#"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Java"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Python"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "C++"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "C"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "JavaScript"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "PHP"
                     },
-                    new Tag()
+                    new WebTag()
                     {
                         Name = "Go"
                     }

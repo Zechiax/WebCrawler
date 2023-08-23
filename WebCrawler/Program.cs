@@ -8,6 +8,7 @@ using Serilog;
 using WebCrawler.Formatters;
 using WebCrawler.Models.AutomapperProfiles;
 using WebCrawler.Services;
+using Path = System.IO.Path;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,11 @@ builder.Services.AddMvcCore(options =>
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddAutoMapper(typeof(DbToFromDomainProfile));
 
+// We add GraphQL
+builder.Services.AddGraphQLServer();
+
+//builder.Services.AddGraphQL();
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -74,6 +80,10 @@ app.MapControllerRoute(
     pattern: "{controller}/{action=Index}/{id?}");
 
 app.MapFallbackToFile("index.html");
+
+app.MapGraphQL();
+
+//app.MapGraphQL();
 
 // For when we create database migrations
 if (args.Length > 0 && args[0].Equals("migration", StringComparison.InvariantCultureIgnoreCase))

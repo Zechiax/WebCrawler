@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace WebCrawler.Models;
 
 [Table("Tag")]
-public class Tag
+public class WebTag
 {
     [Key]
     public int Id { get; set; }
@@ -14,12 +14,12 @@ public class Tag
     /// <summary>
     /// Constructor for EF.
     /// </summary>
-    public Tag()
+    public WebTag()
     {
 
     }
 
-    public Tag(string name)
+    public WebTag(string name)
     {
         Name = name;
     }

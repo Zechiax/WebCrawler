@@ -13,7 +13,7 @@ public class WebsiteRecordData
     public int Id { get; set; }
     public string Label { get; set; } = string.Empty;
     public bool IsActive { get; set; }
-    public List<Tag> Tags { get; set; } = new();
+    public List<WebTag> Tags { get; set; } = new();
     public DateTime Created { get; set; } = DateTime.Now;
     public CrawlInfoData CrawlInfoData { get; set; } = null!;
 }

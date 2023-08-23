@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using InputFormatter = Microsoft.AspNetCore.Mvc.Formatters.InputFormatter;
 
 namespace WebCrawler.Formatters;
 

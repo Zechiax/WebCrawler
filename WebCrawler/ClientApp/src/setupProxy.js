@@ -10,7 +10,8 @@ const context = [
     "/Records",
     "/Record",
     "/weatherforecast",
-    "/swagger"
+    "/swagger",
+    "/graphql"
 ];
 
 const onError = (err, req, resp, target) => {

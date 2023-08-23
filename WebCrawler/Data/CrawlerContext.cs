@@ -8,7 +8,7 @@ namespace WebCrawler.Data;
 public class CrawlerContext : DbContext
 {
     public DbSet<WebsiteRecordData> WebsiteRecords { get; set; } = null!;
-    public DbSet<Tag> Tags { get; set; } = null!;
+    public DbSet<WebTag> Tags { get; set; } = null!;
     public DbSet<WebsiteExecutionData> Executions { get; set; } = null!;
     public DbSet<CrawlInfoData> CrawlInfos { get; set; } = null!;
     
@@ -29,7 +29,7 @@ public class CrawlerContext : DbContext
             .WithMany()
             .UsingEntity<Dictionary<string, object>>(
                 "TagWebsiteRecord",
-                r => r.HasOne<Tag>().WithMany().HasForeignKey("TagsId").OnDelete(DeleteBehavior.Cascade),
+                r => r.HasOne<WebTag>().WithMany().HasForeignKey("TagsId").OnDelete(DeleteBehavior.Cascade),
                 l => l.HasOne<WebsiteRecordData>().WithMany().HasForeignKey("WebsiteRecordsDataId").OnDelete(DeleteBehavior.Cascade)
             );
 
